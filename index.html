@@ -3,94 +3,143 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>工作待办</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<title>工作待办</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
 <style>
+/* ============================================================
+   DESIGN SYSTEM — 暖奶油 · 高密度
+   ============================================================ */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg: #f2f2f7;
+  --bg: #fdf9f1;
   --card-bg: #ffffff;
-  --sidebar-bg: rgba(242,242,247,0.8);
-  --text: #1d1d1f;
-  --text-secondary: #6e6e73;
-  --text-muted: #aeaeb2;
-  --border: #e5e5ea;
-  --border-light: #f0f0f5;
-  --blue: #007aff;
-  --blue-light: #e8f2ff;
-  --green: #34c759;
-  --green-light: #e8f8ed;
-  --red: #ff3b30;
-  --red-light: #ffecea;
-  --orange: #ff9500;
-  --orange-light: #fff4e5;
-  --gray-light: #f5f5f7;
-  --sidebar-w: 220px;
-  --detail-w: 420px;
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
-  --shadow-md: 0 2px 8px rgba(0,0,0,0.06);
-  --shadow-lg: 0 8px 32px rgba(0,0,0,0.1);
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --transition: 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
+  --sidebar-bg: #f5edde;
+  --surface-2: #faf3e6;
+  --text: #2d2417;
+  --text-secondary: #6b5a3f;
+  --text-muted: #b8a280;
+  --border: #ede4cf;
+  --border-light: #f3ead6;
+  --accent: #b8965a;
+  --accent-hover: #a37a3d;
+  --accent-subtle: #f4e4c3;
+  --green: #6b9e85;
+  --green-bg: #eef5f0;
+  --red: #c4554d;
+  --priority-p1: #b8965a;
+  --priority-p2: #c8a679;
+  --priority-p3: #d9c9a8;
+  --focus-bg: rgba(45,36,23,0.94);
+
+  --shadow-sm: 0 1px 2px rgba(150,110,50,0.06);
+  --shadow-md: 0 2px 8px rgba(150,110,50,0.12);
+  --shadow-lg: 0 8px 24px rgba(150,110,50,0.18);
+
+  --sidebar-w: 240px;
+  --detail-w: 440px;
+  --radius-xs: 4px;
+  --radius-sm: 7px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --transition: 0.2s cubic-bezier(0.22, 0.11, 0.12, 1);
+  --transition-slow: 0.35s cubic-bezier(0.22, 0.11, 0.12, 1);
+
+  --font-stack: 'Inter', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', '微软雅黑', 'Helvetica Neue', sans-serif;
 }
 
+html { scrollbar-gutter: stable; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border); }
+
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+  font-family: var(--font-stack);
   background: var(--bg);
   color: var(--text);
   line-height: 1.5;
   height: 100vh;
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-size: 14px;
+  letter-spacing: -0.01em;
+  cursor: pointer;
 }
 
-/* ===== Layout ===== */
+/* ============================================================
+   LAYOUT
+   ============================================================ */
 .app-layout { display: flex; height: 100vh; }
 
-/* ===== Sidebar ===== */
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
 .sidebar {
   width: var(--sidebar-w);
   background: var(--sidebar-bg);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border-right: 0.5px solid rgba(0,0,0,0.08);
+  border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  padding: 24px 0;
   flex-shrink: 0;
+  user-select: none;
+  overflow: hidden;
 }
 .sidebar-brand {
-  padding: 0 20px 20px;
-  font-size: 13px;
-  font-weight: 600;
+  padding: 28px 24px 20px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  gap: 12px;
+  flex-shrink: 0;
 }
-.nav-list { list-style: none; padding: 0 10px; flex: 1; }
+.brand-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+.brand-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+.brand-date {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-top: 1px;
+}
+
+.sidebar-scroll { flex: 1; overflow-y: auto; padding: 0 12px; }
+
+.nav-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
 .nav-item {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 9px 14px;
+  padding: 10px 14px;
   border-radius: var(--radius-sm);
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text);
+  font-size: 13.5px;
+  font-weight: 550;
+  color: var(--text-secondary);
   transition: all var(--transition);
-  margin-bottom: 1px;
-  user-select: none;
 }
-.nav-item:hover { background: rgba(0,0,0,0.04); }
-.nav-item.active { background: rgba(0,122,255,0.1); color: var(--blue); }
-.nav-item .nav-icon { font-size: 18px; width: 24px; text-align: center; }
+.nav-item:hover { background: var(--accent-subtle); color: var(--text); }
+.nav-item.active { background: var(--accent); color: #fff; }
+.nav-item .nav-icon { font-size: 15px; width: 22px; text-align: center; opacity: 0.7; }
+.nav-item.active .nav-icon { opacity: 1; }
 .nav-badge {
   margin-left: auto;
   background: rgba(0,0,0,0.06);
@@ -102,85 +151,193 @@ body {
   min-width: 22px;
   text-align: center;
 }
-.nav-item.active .nav-badge { background: var(--blue); color: #fff; }
-.sidebar-footer {
-  padding: 12px 20px;
+.nav-item.active .nav-badge { background: rgba(255,255,255,0.2); color: #fff; }
+
+/* Tag filter in sidebar */
+.sidebar-tags {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+.sidebar-tags-header {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0 14px;
+  margin-bottom: 8px;
+}
+.sidebar-tag-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  transition: all var(--transition);
+}
+.sidebar-tag-item:hover { background: var(--accent-subtle); color: var(--text); }
+.sidebar-tag-item.active { background: var(--accent); color: #fff; }
+.sidebar-tag-count {
+  margin-left: auto;
   font-size: 11px;
   color: var(--text-muted);
+  font-weight: 500;
+}
+.sidebar-tag-item.active .sidebar-tag-count { color: rgba(255,255,255,0.7); }
+
+.sidebar-footer {
+  padding: 16px 24px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  border-top: 1px solid var(--border);
+  margin: 0 12px;
+  flex-shrink: 0;
+}
+.progress-ring-wrap {
+  position: relative;
+  width: 52px; height: 52px;
+}
+.progress-ring-wrap svg { transform: rotate(-90deg); }
+.progress-ring-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-weight: 500;
+  text-align: center;
+  letter-spacing: 0.02em;
 }
 
-/* ===== Main Area ===== */
+/* Export buttons */
+.export-section {
+  display: flex;
+  gap: 4px;
+}
+.export-btn {
+  padding: 5px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  background: transparent;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  font-family: inherit;
+  transition: all var(--transition);
+}
+.export-btn:hover { border-color: var(--accent); color: var(--text); }
+
+/* ============================================================
+   MAIN AREA
+   ============================================================ */
 .main-area {
   flex: 1;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   position: relative;
+  background: var(--bg);
 }
+.view-panel { display: flex; flex-direction: column; height: 100%; }
 
-/* View header */
 .view-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px 28px;
+  padding: 28px 32px 20px;
   flex-shrink: 0;
 }
-.view-header h2 {
-  font-size: 28px;
-  font-weight: 700;
-  letter-spacing: -0.5px;
-}
+.view-header h2 { font-size: 26px; font-weight: 700; letter-spacing: -0.03em; }
 .view-actions { display: flex; gap: 8px; align-items: center; }
 
-/* View content */
+.toolbar-row {
+  padding: 4px 28px 16px;
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
 .view-content {
   flex: 1;
   overflow-y: auto;
-  padding: 0 28px 28px;
+  padding: 0 32px 32px;
 }
 
-/* Common */
+/* Active tag indicator */
+.active-tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.active-tag-chip:hover { background: var(--accent-hover); }
+.active-tag-chip .tag-chip-x { font-size: 13px; line-height: 1; opacity: 0.8; }
+
+/* ============================================================
+   BUTTONS & INPUTS
+   ============================================================ */
 .btn {
-  padding: 8px 18px;
+  padding: 9px 20px;
   border: none;
   border-radius: 20px;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: all var(--transition);
+  font-family: inherit;
+  letter-spacing: -0.01em;
 }
-.btn-primary { background: var(--blue); color: #fff; }
-.btn-primary:hover { background: #0070e9; }
-.btn-ghost { background: transparent; color: var(--blue); }
-.btn-ghost:hover { background: var(--blue-light); }
-.btn-sm { padding: 5px 14px; font-size: 12px; }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent-hover); transform: translateY(-0.5px); box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
+.btn-primary:active { transform: translateY(0); }
+.btn-ghost { background: transparent; color: var(--text-secondary); }
+.btn-ghost:hover { background: var(--accent-subtle); color: var(--text); }
+.btn-sm { padding: 6px 14px; font-size: 12px; }
+.btn-xs { padding: 3px 10px; font-size: 11px; border-radius: 12px; }
 .btn-danger { background: var(--red); color: #fff; }
-.btn-danger:hover { background: #e0352d; }
+.btn-danger:hover { background: #b04a44; }
 
 input, select, textarea {
-  padding: 9px 14px;
+  padding: 10px 14px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  font-size: 14px;
+  font-size: 13.5px;
   outline: none;
-  background: #f9f9f9;
+  background: var(--card-bg);
   color: var(--text);
   font-family: inherit;
   transition: all var(--transition);
+  letter-spacing: -0.01em;
 }
-input:focus, select:focus, textarea:focus { border-color: var(--blue); background: #fff; box-shadow: 0 0 0 3px rgba(0,122,255,0.1); }
+input:focus, select:focus, textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(0,0,0,0.06);
+}
 textarea { resize: vertical; min-height: 60px; }
 
 .filter-group {
   display: flex;
   gap: 2px;
-  background: rgba(0,0,0,0.04);
+  background: var(--border-light);
   border-radius: var(--radius-sm);
   padding: 3px;
 }
 .filter-btn {
-  padding: 5px 14px;
+  padding: 6px 14px;
   border: none;
   border-radius: 6px;
   font-size: 12px;
@@ -190,132 +347,227 @@ textarea { resize: vertical; min-height: 60px; }
   color: var(--text-secondary);
   transition: all var(--transition);
   white-space: nowrap;
+  font-family: inherit;
 }
-.filter-btn.active { background: #fff; color: var(--text); box-shadow: var(--shadow-sm); }
+.filter-btn.active { background: var(--card-bg); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
+.filter-btn:hover:not(.active) { color: var(--text); }
 
 .search-input {
-  width: 200px;
-  padding: 8px 14px;
+  width: 180px;
+  padding: 9px 16px;
   border: 1px solid var(--border);
   border-radius: 20px;
   font-size: 13px;
-  background: #f9f9f9;
+  background: var(--card-bg);
 }
-.search-input:focus { border-color: var(--blue); background: #fff; box-shadow: 0 0 0 3px rgba(0,122,255,0.1); }
+.search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,0,0,0.06); }
 .search-input::placeholder { color: var(--text-muted); }
 
-/* ===== View: Task List ===== */
+/* ============================================================
+   TASK CARDS — Dense Grid
+   ============================================================ */
 .task-tree { display: flex; flex-direction: column; gap: 1px; }
 .task-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 28px 18px 1fr auto;
   align-items: center;
-  gap: 10px;
-  padding: 11px 14px;
+  gap: 8px;
+  padding: 5px 14px;
+  background: var(--card-bg);
+  border-bottom: 1px solid var(--border-light);
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all var(--transition);
+  transition: background var(--transition), box-shadow var(--transition);
+  position: relative;
+  min-height: 34px;
 }
-.task-row:hover { background: rgba(0,0,0,0.03); }
-.task-row.completed .task-row-title { text-decoration: line-through; color: var(--text-muted); }
+.task-row:hover {
+  background: var(--surface-2);
+  box-shadow: var(--shadow-sm);
+}
+.task-row.completed { background: #faf7f1; }
+.task-row.completed .task-row-title { color: var(--text-muted); text-decoration: line-through; }
+.task-row.status-in-progress { border-left: 3px solid var(--accent); }
+.task-row.priority-p1 { border-left: 3px solid var(--accent); }
+.task-row.priority-p2 { border-left: 3px solid var(--accent-hover); }
+.task-row.priority-p3 { border-left: 3px solid var(--border); }
 
 .expand-btn {
   width: 22px; height: 22px;
   border: none;
   background: transparent;
   cursor: pointer;
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text-muted);
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   flex-shrink: 0;
-  transition: transform 0.2s ease;
+  transition: transform var(--transition);
+  order: -1;
 }
-.expand-btn:hover { color: var(--text); }
+.expand-btn:hover { color: var(--text); background: var(--accent-subtle); }
 .expand-btn.expanded { transform: rotate(90deg); }
 .expand-btn.placeholder { visibility: hidden; }
 
 .status-dot {
-  width: 12px; height: 12px;
+  width: 9px; height: 9px;
   border-radius: 50%;
   flex-shrink: 0;
-  border: 2px solid transparent;
+  justify-self: center;
 }
-.status-dot.completed { background: var(--green); border-color: var(--green); }
-.status-dot.in-progress { background: var(--blue); border-color: var(--blue); }
-.status-dot.not-started { background: transparent; border-color: #c7c7cc; }
+.status-dot.completed { background: var(--green); }
+.status-dot.in-progress { background: var(--accent); }
+.status-dot.not-started { background: transparent; border: 2px solid var(--border); }
 
-.task-row-body { flex: 1; min-width: 0; }
-.task-row-title { font-size: 14px; font-weight: 500; }
-.task-row-meta { display: flex; gap: 8px; margin-top: 3px; align-items: center; flex-wrap: wrap; }
-.task-row-meta .date-range { font-size: 12px; color: var(--text-muted); }
-
-.badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 10px;
-  border-radius: 20px;
-  font-size: 11px;
-  font-weight: 600;
+.task-row-body { display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1; overflow: hidden; }
+.task-row-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: -0.01em;
 }
-.badge-work { background: var(--blue-light); color: var(--blue); }
+.task-row-meta { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
 
-.status-badge {
+.status-badge { display: none; } /* hide old text badge, use dot instead */
+
+.priority-badge {
   display: inline-flex;
   align-items: center;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 10px;
   font-weight: 600;
 }
-.status-completed { background: var(--green-light); color: var(--green); }
-.status-in-progress { background: var(--blue-light); color: var(--blue); }
-.status-not-started { background: var(--gray-light); color: var(--text-muted); }
+.priority-badge.p1 { background: var(--accent-subtle); color: var(--accent-hover); }
+.priority-badge.p2 { background: #ede4cf; color: #6b5a3f; }
+.priority-badge.p3 { background: #f3ead6; color: #a8916a; }
 
-.progress-tag {
-  font-size: 11px;
-  color: var(--text-secondary);
+.tag-chips { display: flex; gap: 3px; flex-shrink: 0; }
+.tag-chip {
+  display: inline-flex;
+  padding: 1px 7px;
+  background: var(--accent-subtle);
+  color: #6b5a3f;
+  border-radius: 10px;
+  font-size: 10px;
   font-weight: 500;
 }
 
+.progress-tag { font-size: 11px; color: var(--text-muted); font-weight: 500; }
+
+.date-range { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+
+.task-row.key-focused {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  background: var(--accent-subtle);
+}
+
+@keyframes cardEnter {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.task-row.card-enter { animation: cardEnter 0.25s ease; }
+
+/* ============================================================
+   EMPTY STATE
+   ============================================================ */
 .empty-state {
   text-align: center;
-  padding: 80px 20px;
+  padding: 100px 20px;
   color: var(--text-muted);
 }
-.empty-state .empty-icon { font-size: 40px; margin-bottom: 16px; opacity: 0.6; }
-.empty-state p { font-size: 15px; }
+.empty-state .empty-icon { font-size: 36px; margin-bottom: 16px; opacity: 0.4; }
+.empty-state p { font-size: 14px; font-weight: 500; }
 
-/* ===== View: Daily Work ===== */
-.daily-section { margin-bottom: 28px; }
+/* ============================================================
+   DAILY WORK
+   ============================================================ */
+.daily-section { margin-bottom: 32px; }
 .daily-section h3 {
-  font-size: 13px;
-  font-weight: 600;
-  margin-bottom: 12px;
-  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 14px;
+  color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.05em;
 }
 .daily-list { display: flex; flex-direction: column; gap: 8px; }
 .daily-item {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 16px 18px;
+  padding: 9px 16px;
   background: var(--card-bg);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
+  border-bottom: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all var(--transition);
+  min-height: 34px;
 }
-.daily-item:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.daily-item:hover {
+  background: var(--surface-2);
+  box-shadow: var(--shadow-sm);
+}
 .daily-item-body { flex: 1; min-width: 0; }
-.daily-item-title { font-size: 15px; font-weight: 500; }
+.daily-item-title { font-size: 15px; font-weight: 550; }
 .daily-item-parent { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
 
-/* ===== View: Calendar ===== */
+/* Daily Note */
+.daily-note-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  margin-bottom: 24px;
+  transition: border-color var(--transition);
+}
+.daily-note-card:focus-within { border-color: var(--accent); }
+.daily-note-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.daily-note-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.daily-note-saved {
+  font-size: 11px;
+  color: var(--green);
+  font-weight: 500;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.daily-note-saved.visible { opacity: 1; }
+.daily-note-input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  font-size: 13.5px;
+  font-family: inherit;
+  color: var(--text);
+  resize: vertical;
+  min-height: 60px;
+  padding: 0;
+  outline: none;
+  line-height: 1.6;
+  letter-spacing: -0.01em;
+}
+.daily-note-input::placeholder { color: var(--text-muted); }
+
+/* ============================================================
+   CALENDAR
+   ============================================================ */
 .calendar-nav {
   display: flex;
   align-items: center;
@@ -323,23 +575,24 @@ textarea { resize: vertical; min-height: 60px; }
   margin-bottom: 24px;
 }
 .calendar-nav h3 { font-size: 20px; font-weight: 600; min-width: 140px; text-align: center; }
+.calendar-nav .btn { padding: 8px 12px; }
 
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
+  gap: 2px;
   background: var(--card-bg);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 12px;
-  box-shadow: var(--shadow-sm);
 }
 .calendar-day-header {
   text-align: center;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-muted);
-  padding: 8px 0;
-  text-transform: uppercase;
+  padding: 10px 0 6px;
+  letter-spacing: 0.03em;
 }
 .calendar-day {
   aspect-ratio: 1;
@@ -352,10 +605,10 @@ textarea { resize: vertical; min-height: 60px; }
   align-items: center;
   min-height: 56px;
 }
-.calendar-day:hover { background: rgba(0,0,0,0.03); }
-.calendar-day.other-month { opacity: 0.25; }
-.calendar-day.today { background: var(--blue); }
-.calendar-day .day-num { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+.calendar-day:hover { background: var(--accent-subtle); }
+.calendar-day.other-month { opacity: 0.2; }
+.calendar-day.today { background: var(--accent); }
+.calendar-day .day-num { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
 .calendar-day.today .day-num { color: #fff; font-weight: 700; }
 .calendar-dots { display: flex; gap: 3px; flex-wrap: wrap; justify-content: center; }
 .calendar-dot {
@@ -364,29 +617,28 @@ textarea { resize: vertical; min-height: 60px; }
   flex-shrink: 0;
 }
 .calendar-dot.completed { background: var(--green); }
-.calendar-dot.in-progress { background: var(--blue); }
-.calendar-dot.not-started { background: #c7c7cc; }
-.calendar-day.today .calendar-dot.completed { background: #fff; opacity: 0.9; }
-.calendar-day.today .calendar-dot.in-progress { background: #fff; opacity: 0.9; }
-.calendar-day.today .calendar-dot.not-started { background: rgba(255,255,255,0.5); }
+.calendar-dot.in-progress { background: var(--accent); }
+.calendar-dot.not-started { background: var(--border); }
+.calendar-day.today .calendar-dot.completed,
+.calendar-day.today .calendar-dot.in-progress { background: rgba(255,255,255,0.9); }
+.calendar-day.today .calendar-dot.not-started { background: rgba(255,255,255,0.45); }
 
 .calendar-popover {
   display: none;
   position: fixed;
   background: var(--card-bg);
+  border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-lg);
-  padding: 14px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.1);
+  padding: 16px;
   z-index: 100;
   min-width: 220px;
   max-width: 320px;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
 }
-.calendar-popover.show { display: block; }
-.calendar-popover h4 { font-size: 13px; font-weight: 600; margin-bottom: 10px; color: var(--text); }
+.calendar-popover.show { display: block; animation: fadeIn 0.15s ease; }
+.calendar-popover h4 { font-size: 13px; font-weight: 600; margin-bottom: 10px; }
 .calendar-popover .popover-task {
-  padding: 7px 10px;
+  padding: 8px 10px;
   border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: 13px;
@@ -395,9 +647,11 @@ textarea { resize: vertical; min-height: 60px; }
   gap: 8px;
   transition: background var(--transition);
 }
-.calendar-popover .popover-task:hover { background: rgba(0,0,0,0.04); }
+.calendar-popover .popover-task:hover { background: var(--accent-subtle); }
 
-/* ===== View: Gantt ===== */
+/* ============================================================
+   GANTT
+   ============================================================ */
 .gantt-container { overflow-x: auto; overflow-y: auto; flex: 1; }
 .gantt-chart { position: relative; min-width: 100%; }
 .gantt-header {
@@ -408,14 +662,33 @@ textarea { resize: vertical; min-height: 60px; }
   z-index: 2;
   border-bottom: 1px solid var(--border);
 }
-.gantt-label-col { width: 220px; flex-shrink: 0; padding: 8px 14px; font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3px; }
+.gantt-label-col {
+  width: 220px; flex-shrink: 0;
+  padding: 8px 14px;
+  font-size: 10px; font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
 .gantt-timeline-col { flex: 1; display: flex; }
-.gantt-day-cell { flex: 1; min-width: 28px; text-align: center; font-size: 10px; padding: 8px 0; color: var(--text-muted); border-left: 0.5px solid var(--border-light); }
+.gantt-day-cell {
+  flex: 1; min-width: 28px;
+  text-align: center;
+  font-size: 10px;
+  padding: 8px 0;
+  color: var(--text-muted);
+  border-left: 0.5px solid var(--border-light);
+}
 .gantt-month-row { display: flex; border-bottom: 1px solid var(--border); }
-.gantt-month-cell { text-align: center; font-size: 11px; padding: 5px 0; color: var(--text-secondary); font-weight: 600; }
-
+.gantt-month-cell {
+  text-align: center;
+  font-size: 11px;
+  padding: 5px 0;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
 .gantt-row { display: flex; border-bottom: 0.5px solid var(--border-light); }
-.gantt-row:hover { background: rgba(0,0,0,0.02); }
+.gantt-row:hover { background: var(--accent-subtle); }
 .gantt-row-label {
   width: 220px; flex-shrink: 0;
   padding: 8px 14px;
@@ -434,37 +707,39 @@ textarea { resize: vertical; min-height: 60px; }
 .gantt-bar {
   position: absolute;
   top: 8px; bottom: 8px;
-  border-radius: 5px;
+  border-radius: 4px;
   cursor: pointer;
   transition: all var(--transition);
   min-width: 4px;
 }
-.gantt-bar:hover { opacity: 0.85; transform: scaleY(1.3); }
+.gantt-bar:hover { opacity: 0.85; }
 .gantt-bar.completed { background: var(--green); }
-.gantt-bar.in-progress { background: var(--blue); }
-.gantt-bar.not-started { background: #c7c7cc; }
-
+.gantt-bar.in-progress { background: var(--accent); }
+.gantt-bar.not-started { background: var(--border); }
 .gantt-section-title {
   padding: 10px 14px;
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 10px; font-weight: 700;
   color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.05em;
   border-bottom: 1px solid var(--border);
 }
 
-/* ===== Detail Panel ===== */
+/* ============================================================
+   DETAIL PANEL
+   ============================================================ */
 .overlay {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.2);
+  background: rgba(0,0,0,0.15);
   z-index: 50;
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
 }
-.overlay.show { display: block; }
+.overlay.show { display: block; animation: fadeIn 0.25s ease; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
 .detail-panel {
   position: fixed;
@@ -472,13 +747,11 @@ textarea { resize: vertical; min-height: 60px; }
   width: var(--detail-w);
   max-width: 100vw;
   height: 100vh;
-  background: rgba(255,255,255,0.95);
-  backdrop-filter: blur(30px) saturate(180%);
-  -webkit-backdrop-filter: blur(30px) saturate(180%);
-  box-shadow: -2px 0 40px rgba(0,0,0,0.12);
+  background: var(--card-bg);
+  box-shadow: -4px 0 40px rgba(0,0,0,0.08);
   z-index: 60;
   transform: translateX(100%);
-  transition: transform 0.35s cubic-bezier(0.25, 0.1, 0.25, 1);
+  transition: transform var(--transition-slow);
   display: flex;
   flex-direction: column;
 }
@@ -488,15 +761,15 @@ textarea { resize: vertical; min-height: 60px; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 18px 24px;
+  padding: 20px 28px;
   flex-shrink: 0;
-  border-bottom: 0.5px solid rgba(0,0,0,0.08);
+  border-bottom: 1px solid var(--border);
 }
-.detail-header h3 { font-size: 17px; font-weight: 600; }
+.detail-header h3 { font-size: 17px; font-weight: 650; }
 .detail-close {
-  width: 28px; height: 28px;
+  width: 30px; height: 30px;
   border: none;
-  background: rgba(0,0,0,0.05);
+  background: var(--accent-subtle);
   cursor: pointer;
   font-size: 16px;
   border-radius: 50%;
@@ -511,24 +784,30 @@ textarea { resize: vertical; min-height: 60px; }
 .detail-body {
   flex: 1;
   overflow-y: auto;
-  padding: 24px;
+  padding: 28px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 22px;
 }
 .detail-field { display: flex; flex-direction: column; gap: 6px; }
-.detail-field label { font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.3px; }
+.detail-field label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
 .detail-field input, .detail-field textarea, .detail-field select { width: 100%; }
 
 .status-select {
   display: inline-flex;
   gap: 2px;
-  background: rgba(0,0,0,0.04);
+  background: var(--border-light);
   border-radius: var(--radius-sm);
   padding: 3px;
 }
 .status-select button {
-  padding: 6px 16px;
+  padding: 7px 18px;
   border: none;
   border-radius: 6px;
   font-size: 12px;
@@ -537,13 +816,66 @@ textarea { resize: vertical; min-height: 60px; }
   background: transparent;
   color: var(--text-secondary);
   transition: all var(--transition);
+  font-family: inherit;
 }
-.status-select button.active { background: #fff; color: var(--text); box-shadow: var(--shadow-sm); }
+.status-select button.active { background: var(--card-bg); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
+.status-select button:hover:not(.active) { color: var(--text); }
+
+/* Priority selector in detail */
+.priority-select {
+  display: inline-flex;
+  gap: 2px;
+  background: var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: 3px;
+}
+.priority-select button {
+  padding: 7px 14px;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  background: transparent;
+  color: var(--text-secondary);
+  transition: all var(--transition);
+  font-family: inherit;
+}
+.priority-select button.active { background: var(--card-bg); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
+.priority-select button:hover:not(.active) { color: var(--text); }
+.priority-select button.p1.active { color: var(--priority-p1); }
+.priority-select button.p2.active { color: var(--priority-p2); }
+.priority-select button.p3.active { color: var(--priority-p3); }
+
+/* Tag input in detail */
+.tag-edit-wrap {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.tag-edit-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 10px;
+  background: var(--accent-subtle);
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+}
+.tag-edit-chip .tag-remove {
+  cursor: pointer;
+  font-size: 13px;
+  opacity: 0.4;
+  transition: opacity var(--transition);
+}
+.tag-edit-chip .tag-remove:hover { opacity: 0.8; }
 
 .detail-subtasks { margin-top: 4px; }
 .detail-subtasks h4 {
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 650;
   color: var(--text);
   margin-bottom: 10px;
   display: flex;
@@ -555,35 +887,362 @@ textarea { resize: vertical; min-height: 60px; }
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 9px 12px;
+  padding: 10px 12px;
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all var(--transition);
 }
-.subtask-item:hover { background: rgba(0,0,0,0.03); }
-.subtask-item.completed .subtask-title { text-decoration: line-through; color: var(--text-muted); }
-.subtask-title { font-size: 13px; }
-
-.add-subtask-form {
-  display: flex;
-  gap: 8px;
-  margin-top: 10px;
+.subtask-item:hover { background: var(--accent-subtle); }
+.subtask-item.completed .subtask-title {
+  text-decoration: line-through;
+  color: var(--text-muted);
+  text-decoration-color: var(--text-muted);
 }
+.subtask-title { font-size: 13px; }
+.add-subtask-form { display: flex; gap: 8px; margin-top: 10px; }
 .add-subtask-form input { flex: 1; font-size: 13px; }
 
-/* ===== Responsive ===== */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  background: var(--accent-subtle);
+  color: var(--text-secondary);
+}
+
+/* Focus button in detail */
+.btn-focus {
+  background: var(--accent);
+  color: #fff;
+  padding: 10px 24px;
+  border: none;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all var(--transition);
+}
+.btn-focus:hover { background: var(--accent-hover); transform: translateY(-0.5px); }
+
+/* ============================================================
+   QUICK ADD (FAB + MODAL)
+   ============================================================ */
+.fab {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  transition: all var(--transition);
+  z-index: 40;
+  font-family: inherit;
+  line-height: 1;
+}
+.fab:hover { background: var(--accent-hover); transform: scale(1.06); box-shadow: 0 6px 28px rgba(0,0,0,0.2); }
+.fab:active { transform: scale(0.96); }
+
+.quick-add-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.3);
+  z-index: 70;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  align-items: center;
+  justify-content: center;
+}
+.quick-add-overlay.show { display: flex; animation: fadeIn 0.2s ease; }
+.quick-add-modal {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  width: 480px;
+  max-width: 90vw;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+}
+.quick-add-modal h3 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+.quick-add-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+.quick-add-hint code {
+  background: var(--accent-subtle);
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 11px;
+}
+.quick-add-input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 16px;
+  font-family: inherit;
+  outline: none;
+  transition: all var(--transition);
+}
+.quick-add-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,0,0,0.06); }
+.quick-add-preview {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  min-height: 24px;
+  align-items: center;
+}
+.quick-add-preview .preview-item {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 10px;
+  background: var(--accent-subtle);
+  color: var(--text-secondary);
+}
+.quick-add-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+/* ============================================================
+   FOCUS MODE
+   ============================================================ */
+.focus-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: var(--focus-bg);
+  z-index: 80;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.focus-overlay.show { display: flex; animation: fadeIn 0.3s ease; }
+.focus-card {
+  text-align: center;
+  color: #fff;
+}
+.focus-task-title {
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 32px;
+  max-width: 400px;
+  opacity: 0.9;
+  letter-spacing: -0.02em;
+}
+.focus-ring-wrap {
+  position: relative;
+  width: 220px; height: 220px;
+  margin: 0 auto;
+}
+.focus-ring-wrap svg { transform: rotate(-90deg); }
+.focus-time {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 52px;
+  font-weight: 200;
+  letter-spacing: -0.03em;
+  color: #fff;
+}
+.focus-presets {
+  display: flex;
+  gap: 8px;
+  margin-top: 28px;
+  justify-content: center;
+}
+.focus-preset-btn {
+  padding: 7px 18px;
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 20px;
+  background: transparent;
+  color: rgba(255,255,255,0.7);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all var(--transition);
+}
+.focus-preset-btn:hover { border-color: rgba(255,255,255,0.5); color: #fff; }
+.focus-preset-btn.active { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.5); color: #fff; }
+.focus-controls {
+  display: flex;
+  gap: 16px;
+  margin-top: 24px;
+  justify-content: center;
+  align-items: center;
+}
+.focus-ctrl-btn {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.25);
+  background: transparent;
+  color: rgba(255,255,255,0.8);
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition);
+}
+.focus-ctrl-btn:hover { border-color: rgba(255,255,255,0.5); color: #fff; background: rgba(255,255,255,0.08); }
+.focus-ctrl-btn.play-btn { width: 64px; height: 64px; font-size: 24px; }
+.focus-exit {
+  margin-top: 32px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.4);
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  transition: color var(--transition);
+}
+.focus-exit:hover { color: rgba(255,255,255,0.7); }
+
+/* ============================================================
+   COMMAND PALETTE
+   ============================================================ */
+.cmdk-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(45,36,23,0.25);
+  z-index: 90;
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 18vh;
+}
+.cmdk-overlay.show { display: flex; animation: fadeIn 0.15s ease; }
+.cmdk-modal {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  width: 560px;
+  max-width: 90vw;
+  max-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.cmdk-input {
+  width: 100%;
+  padding: 16px 20px;
+  border: none;
+  border-bottom: 1px solid var(--border-light);
+  font-size: 16px;
+  font-family: var(--font-stack);
+  outline: none;
+  background: transparent;
+  color: var(--text);
+}
+.cmdk-input::placeholder { color: var(--text-muted); }
+.cmdk-list { flex: 1; overflow-y: auto; padding: 8px; }
+.cmdk-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text);
+  transition: background var(--transition);
+}
+.cmdk-item.active { background: var(--accent-subtle); }
+.cmdk-item .cmdk-icon { font-size: 16px; width: 24px; text-align: center; opacity: 0.7; flex-shrink: 0; }
+.cmdk-item .cmdk-label { flex: 1; }
+.cmdk-item .cmdk-hint { font-size: 11px; color: var(--text-muted); }
+.cmdk-group-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 12px 14px 4px;
+}
+.cmdk-footer {
+  padding: 8px 16px;
+  font-size: 11px;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border-light);
+  text-align: center;
+  display: flex; gap: 12px; justify-content: center;
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--text);
+  color: var(--bg);
+  padding: 10px 24px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  z-index: 100;
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  transform: translateX(-50%) translateY(10px);
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
 @media (max-width: 768px) {
   .sidebar { width: 56px; }
-  .sidebar-brand { font-size: 0; justify-content: center; padding: 0 0 16px; gap: 0; }
-  .sidebar-brand::before { content: '📋'; font-size: 20px; }
+  .sidebar-brand { padding: 16px 8px; justify-content: center; }
+  .brand-title, .brand-date { display: none; }
+  .sidebar-tags { display: none; }
   .nav-item { justify-content: center; padding: 10px; }
   .nav-item span:not(.nav-icon) { display: none; }
   .nav-badge { display: none; }
+  .sidebar-footer { padding: 12px 8px; margin: 0 4px; }
+  .progress-ring-wrap { width: 32px; height: 32px; }
+  .progress-ring-wrap svg { width: 32px; height: 32px; }
+  .progress-ring-label { display: none; }
+  .export-section { display: none; }
   .detail-panel { width: 100%; }
-  .view-header { flex-wrap: wrap; gap: 8px; }
-  .view-header h2 { font-size: 22px; }
+  .view-header { padding: 20px 16px; flex-wrap: wrap; gap: 8px; }
+  .view-header h2 { font-size: 20px; }
+  .toolbar-row { padding: 4px 12px 12px; }
   .search-input { width: 120px; }
-  .view-content { padding: 0 16px 16px; }
+  .view-content { padding: 0 12px 12px; }
+  .task-row { padding: 12px 14px; }
+  .fab { bottom: 20px; right: 20px; width: 44px; height: 44px; font-size: 20px; }
+  .quick-add-modal { width: 95vw; padding: 20px; }
+  .cmdk-modal { width: 95vw; }
+  .task-row { padding: 5px 10px; grid-template-columns: 22px 15px 1fr auto; gap: 6px; }
+  .focus-ring-wrap { width: 180px; height: 180px; }
+  .focus-time { font-size: 42px; }
 }
 </style>
 </head>
@@ -591,37 +1250,67 @@ textarea { resize: vertical; min-height: 60px; }
 <div class="app-layout">
   <!-- Sidebar -->
   <nav class="sidebar">
-    <div class="sidebar-brand"><span>📋</span> 工作待办</div>
-    <ul class="nav-list">
-      <li class="nav-item active" data-view="list">
-        <span class="nav-icon">📂</span> 总任务列表
-        <span class="nav-badge" id="navCountTotal">0</span>
-      </li>
-      <li class="nav-item" data-view="daily">
-        <span class="nav-icon">📅</span> 每日工作
-        <span class="nav-badge" id="navCountDaily">0</span>
-      </li>
-      <li class="nav-item" data-view="calendar">
-        <span class="nav-icon">📆</span> 日历表
-      </li>
-      <li class="nav-item" data-view="gantt">
-        <span class="nav-icon">📊</span> 甘特图
-      </li>
-    </ul>
-    <div class="sidebar-footer">数据自动保存到本地</div>
+    <div class="sidebar-brand">
+      <div class="brand-dot"></div>
+      <div>
+        <div class="brand-title">工作待办</div>
+        <div class="brand-date" id="sidebarDate"></div>
+      </div>
+    </div>
+    <div class="sidebar-scroll">
+      <ul class="nav-list">
+        <li class="nav-item active" data-view="list">
+          <span class="nav-icon">☰</span> 总任务列表
+          <span class="nav-badge" id="navCountTotal">0</span>
+        </li>
+        <li class="nav-item" data-view="daily">
+          <span class="nav-icon">☀</span> 每日工作
+          <span class="nav-badge" id="navCountDaily">0</span>
+        </li>
+        <li class="nav-item" data-view="calendar">
+          <span class="nav-icon">◷</span> 日历表
+        </li>
+        <li class="nav-item" data-view="gantt">
+          <span class="nav-icon">▦</span> 甘特图
+        </li>
+      </ul>
+      <div class="sidebar-tags" id="sidebarTags">
+        <div class="sidebar-tags-header">标签</div>
+        <div id="sidebarTagList"></div>
+      </div>
+    </div>
+    <div class="sidebar-footer">
+      <div class="progress-ring-wrap">
+        <svg width="52" height="52" viewBox="0 0 52 52">
+          <circle cx="26" cy="26" r="22" fill="none" stroke="var(--border)" stroke-width="3"/>
+          <circle cx="26" cy="26" r="22" fill="none" stroke="var(--accent)" stroke-width="3"
+                  stroke-dasharray="138.23" stroke-dashoffset="138.23"
+                  stroke-linecap="round" id="progressRing"/>
+        </svg>
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
+          <span style="font-size:11px;font-weight:700;color:var(--text);" id="progressText">--</span>
+        </div>
+      </div>
+      <div class="progress-ring-label">今日完成</div>
+      <div class="export-section">
+        <button class="export-btn" onclick="exportData('json')">JSON</button>
+        <button class="export-btn" onclick="exportData('md')">Markdown</button>
+        <button class="export-btn" onclick="generatePPT()" style="background:var(--accent);color:#fff;border-color:var(--accent);">PPT报告</button>
+      </div>
+    </div>
   </nav>
 
   <!-- Main Area -->
   <main class="main-area" id="mainArea">
     <!-- View: Task List -->
-    <div class="view-panel" id="view-list" style="display:flex; flex-direction:column; height:100%;">
+    <div class="view-panel" id="view-list" style="display:flex;">
       <div class="view-header">
         <h2>总任务列表</h2>
         <div class="view-actions">
           <button class="btn btn-primary btn-sm" id="btnAddRoot">+ 新建任务</button>
         </div>
       </div>
-      <div style="padding:12px 24px; display:flex; gap:8px; flex-shrink:0; flex-wrap:wrap;">
+      <div class="toolbar-row">
         <input type="text" class="search-input" id="listSearch" placeholder="搜索...">
         <div class="filter-group" id="listStatusFilter">
           <button class="filter-btn active" data-status="all">全部</button>
@@ -629,32 +1318,44 @@ textarea { resize: vertical; min-height: 60px; }
           <button class="filter-btn" data-status="not-started">未开始</button>
           <button class="filter-btn" data-status="completed">已完成</button>
         </div>
+        <div class="filter-group" id="listPriorityFilter">
+          <button class="filter-btn active" data-priority="all">全部</button>
+          <button class="filter-btn" data-priority="1">P1</button>
+          <button class="filter-btn" data-priority="2">P2</button>
+          <button class="filter-btn" data-priority="3">P3</button>
+        </div>
+        <span id="activeTagChip"></span>
       </div>
       <div class="view-content" id="listContent"></div>
     </div>
 
     <!-- View: Daily Work -->
-    <div class="view-panel" id="view-daily" style="display:none; flex-direction:column; height:100%;">
+    <div class="view-panel" id="view-daily" style="display:none;">
       <div class="view-header">
         <h2>每日工作</h2>
         <span style="font-size:13px; color:var(--text-muted);" id="dailyDate"></span>
       </div>
-      <div class="view-content" id="dailyContent"></div>
+      <div class="view-content" id="dailyContent">
+        <div class="daily-note-card">
+          <div class="daily-note-header">
+            <span class="daily-note-label">便签</span>
+            <span class="daily-note-saved" id="dailyNoteSaved">已保存</span>
+          </div>
+          <textarea class="daily-note-input" id="dailyNoteInput" placeholder="记录今天的小任务或备忘..."></textarea>
+        </div>
+        <div id="dailyTasksContainer"></div>
+      </div>
     </div>
 
     <!-- View: Calendar -->
-    <div class="view-panel" id="view-calendar" style="display:none; flex-direction:column; height:100%;">
-      <div class="view-header">
-        <h2>日历表</h2>
-      </div>
+    <div class="view-panel" id="view-calendar" style="display:none;">
+      <div class="view-header"><h2>日历表</h2></div>
       <div class="view-content" id="calendarContent"></div>
     </div>
 
     <!-- View: Gantt -->
-    <div class="view-panel" id="view-gantt" style="display:none; flex-direction:column; height:100%;">
-      <div class="view-header">
-        <h2>甘特图</h2>
-      </div>
+    <div class="view-panel" id="view-gantt" style="display:none;">
+      <div class="view-header"><h2>甘特图</h2></div>
       <div class="gantt-container view-content" id="ganttContent" style="padding:8px;"></div>
     </div>
   </main>
@@ -675,8 +1376,50 @@ textarea { resize: vertical; min-height: 60px; }
 <!-- Calendar Popover -->
 <div class="calendar-popover" id="calendarPopover"></div>
 
+<!-- FAB -->
+<button class="fab" id="fabBtn" title="快速添加 (Cmd+K)">+</button>
+
 <!-- Quick Add Modal -->
-<div class="overlay" id="modalOverlay" style="display:none;"></div>
+<div class="quick-add-overlay" id="quickAddOverlay">
+  <div class="quick-add-modal">
+    <h3>快速添加任务</h3>
+    <div class="quick-add-hint">
+      <code>!!</code> P1 <code>!</code> P2 <code>#标签</code> 日期关键词如 <code>明天</code> <code>周五</code>
+    </div>
+    <input type="text" class="quick-add-input" id="quickAddInput" placeholder="输入任务..." autocomplete="off">
+    <div class="quick-add-preview" id="quickAddPreview"></div>
+    <div class="quick-add-actions">
+      <button class="btn btn-ghost btn-sm" onclick="closeQuickAdd()">取消</button>
+      <button class="btn btn-primary btn-sm" onclick="submitQuickAdd()">创建</button>
+    </div>
+  </div>
+</div>
+
+<!-- Focus Overlay -->
+<div class="focus-overlay" id="focusOverlay">
+  <div class="focus-card">
+    <div class="focus-task-title" id="focusTaskTitle"></div>
+    <div class="focus-ring-wrap">
+      <svg width="220" height="220" viewBox="0 0 220 220">
+        <circle cx="110" cy="110" r="100" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/>
+        <circle cx="110" cy="110" r="100" fill="none" stroke="#fff" stroke-width="4"
+                stroke-dasharray="628.32" stroke-dashoffset="0"
+                stroke-linecap="round" id="focusRing"/>
+      </svg>
+      <div class="focus-time" id="focusTime">25:00</div>
+    </div>
+    <div class="focus-presets">
+      <button class="focus-preset-btn active" data-min="25">25分</button>
+      <button class="focus-preset-btn" data-min="15">15分</button>
+      <button class="focus-preset-btn" data-min="5">5分</button>
+    </div>
+    <div class="focus-controls">
+      <button class="focus-ctrl-btn" onclick="resetFocus()" title="重置">↺</button>
+      <button class="focus-ctrl-btn play-btn" id="focusPlayBtn" onclick="toggleFocus()" title="开始">▶</button>
+      <button class="focus-ctrl-btn" onclick="exitFocus()" title="退出">✕</button>
+    </div>
+  </div>
+</div>
 
 <script>
 // ============================================================
@@ -703,7 +1446,9 @@ function toDB(task) {
     due_date: task.dueDate,
     parent_id: task.parentId,
     sort_order: task.order,
-    created_at: task.createdAt
+    created_at: task.createdAt,
+    tags: (task.tags || []).join(','),
+    priority: task.priority || null
   };
 }
 
@@ -717,7 +1462,9 @@ function fromDB(row) {
     dueDate: row.due_date,
     parentId: row.parent_id,
     order: row.sort_order,
-    createdAt: row.created_at
+    createdAt: row.created_at,
+    tags: row.tags ? row.tags.split(',').filter(Boolean) : [],
+    priority: row.priority || null
   };
 }
 
@@ -727,31 +1474,44 @@ function loadLocal() {
 }
 
 function saveLocal() {
+  // Backup before overwriting
+  const prev = localStorage.getItem(STORAGE_KEY);
+  if (prev && prev !== '[]') {
+    localStorage.setItem(STORAGE_KEY + '_backup', prev);
+  }
   localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
 }
 
 async function loadTodos() {
-  // Try Supabase first
+  // Always load local first as fallback
+  const localData = loadLocal();
+
   if (supabaseClient) {
     try {
       const { data, error } = await supabaseClient.from('todos').select('*');
-      if (!error && data) {
+      if (!error && data && data.length > 0) {
         const mapped = data.map(fromDB);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(mapped));
-        return mapped;
+        // Merge: Supabase wins for existing ids, local keeps orphaned
+        const supabaseIds = new Set(mapped.map(t => t.id));
+        const merged = [...mapped, ...localData.filter(t => !supabaseIds.has(t.id))];
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+        return merged;
+      }
+      // Supabase empty — sync local data up to Supabase
+      if (localData.length > 0) {
+        todos = localData;
+        await saveTodos();
       }
     } catch(e) { console.warn('Supabase load failed, using local:', e); }
   }
-  return loadLocal();
+  return localData;
 }
 
 async function saveTodos() {
   saveLocal();
   if (supabaseClient) {
-    // Upsert all current todos to Supabase
     try {
       const rows = todos.map(toDB);
-      // Delete all then insert batch — simple for single user
       await supabaseClient.from('todos').delete().neq('id', -1);
       if (rows.length > 0) {
         const chunkSize = 50;
@@ -766,10 +1526,17 @@ async function saveTodos() {
 let todos = [];
 let nextId = 1;
 
-async function initData() {
-  todos = await loadTodos();
+function migrateTask(task) {
+  if (!('tags' in task)) task.tags = [];
+  if (!('priority' in task)) task.priority = null;
+  if (!('archivedAt' in task)) task.archivedAt = null;
+  return task;
+}
 
-  // migrate old data if present
+async function initData() {
+  todos = (await loadTodos()).map(migrateTask);
+
+  // Legacy migration
   if (todos.length > 0 && 'category' in todos[0]) {
     todos = todos.map(t => ({
       id: t.id || Date.now(),
@@ -780,10 +1547,16 @@ async function initData() {
       dueDate: t.dueDate || null,
       parentId: null,
       order: t.createdAt || Date.now(),
-      createdAt: t.createdAt || Date.now()
+      createdAt: t.createdAt || Date.now(),
+      tags: [],
+      priority: null,
+      archivedAt: null
     }));
     await saveTodos();
   }
+
+  const needsSave = todos.some(t => !('tags' in t));
+  if (needsSave) await saveTodos();
 
   nextId = todos.length > 0 ? Math.max(...todos.map(t => t.id)) + 1 : 1;
 }
@@ -796,10 +1569,7 @@ function hasChildren(id) { return todos.some(t => t.parentId === id); }
 function getDescendants(parentId) {
   const result = [];
   const children = getChildren(parentId);
-  for (const c of children) {
-    result.push(c);
-    result.push(...getDescendants(c.id));
-  }
+  for (const c of children) { result.push(c); result.push(...getDescendants(c.id)); }
   return result;
 }
 
@@ -811,10 +1581,6 @@ function getAncestors(id) {
     if (current) result.unshift(current);
   }
   return result;
-}
-
-function getSiblings(task) {
-  return todos.filter(t => t.parentId === task.parentId && t.id !== task.id);
 }
 
 function countSubtasks(id) {
@@ -831,10 +1597,24 @@ function countCompletedSubtasks(id) {
   return done;
 }
 
-function getTaskPath(id) {
-  const ancestors = getAncestors(id);
-  const task = getTask(id);
-  return [...ancestors, task].filter(Boolean);
+// ============================================================
+// TAGS HELPERS
+// ============================================================
+function getAllTags() {
+  const map = {};
+  for (const t of todos) {
+    if (!t.tags) continue;
+    for (const tag of t.tags) {
+      if (!map[tag]) map[tag] = 0;
+      map[tag]++;
+    }
+  }
+  return Object.entries(map).sort((a,b) => b[1]-a[1] || a[0].localeCompare(b[0]));
+}
+
+function updateTaskTags(id, tagString) {
+  const tags = tagString.split(/[,，]/).map(s => s.trim()).filter(Boolean);
+  updateTask(id, { tags });
 }
 
 // ============================================================
@@ -845,16 +1625,13 @@ async function recalcParentStatus(parentId) {
   if (!parent) return;
   const children = getChildren(parentId);
   if (children.length === 0) return;
-
   const allDone = children.every(c => c.status === 'completed');
   const anyInProgress = children.some(c => c.status === 'in-progress');
   const allNotStarted = children.every(c => c.status === 'not-started');
-
   let newStatus = parent.status;
   if (allDone) newStatus = 'completed';
   else if (anyInProgress) newStatus = 'in-progress';
   else if (allNotStarted) newStatus = 'not-started';
-
   if (newStatus !== parent.status) {
     parent.status = newStatus;
     await saveTodos();
@@ -863,9 +1640,7 @@ async function recalcParentStatus(parentId) {
 }
 
 async function recalcAllParentStatuses() {
-  // Recalculate all parents bottom-up
   const allParentIds = new Set(todos.filter(t => t.parentId).map(t => t.parentId));
-  // Sort by depth (deepest first, roughly)
   const sorted = [...allParentIds].sort((a, b) => {
     const depthA = getAncestors(a).length;
     const depthB = getAncestors(b).length;
@@ -888,12 +1663,13 @@ async function addTask(title, parentId = null, extra = {}) {
     parentId,
     order: Date.now(),
     createdAt: Date.now(),
+    tags: [],
+    priority: null,
+    archivedAt: null,
     ...extra
   };
   todos.push(task);
   await saveTodos();
-
-  // If adding a child to a not-started parent, promote parent to in-progress
   if (parentId) {
     const parent = getTask(parentId);
     if (parent && parent.status === 'not-started') {
@@ -902,7 +1678,7 @@ async function addTask(title, parentId = null, extra = {}) {
       await recalcParentStatus(parent.parentId);
     }
   }
-
+  window._newTaskId = task.id;
   renderAll();
   return task;
 }
@@ -912,37 +1688,578 @@ async function updateTask(id, changes) {
   if (!task) return;
   const oldStatus = task.status;
   Object.assign(task, changes);
+  // Auto-archive when completed
+  if (changes.status === 'completed' && !task.archivedAt) {
+    task.archivedAt = Date.now();
+  }
+  if (changes.status && changes.status !== 'completed' && task.archivedAt) {
+    task.archivedAt = null;
+  }
   await saveTodos();
-
   if (changes.status && changes.status !== oldStatus) {
     if (task.parentId) await recalcParentStatus(task.parentId);
   }
-
   renderAll();
 }
 
 async function deleteTask(id) {
-  // Delete all descendants too
   const descendants = getDescendants(id);
   const idsToDelete = new Set([id, ...descendants.map(d => d.id)]);
   const parentId = getTask(id)?.parentId;
   todos = todos.filter(t => !idsToDelete.has(t.id));
   await saveTodos();
-
   if (parentId) {
     const remaining = getChildren(parentId);
     if (remaining.length === 0) {
       const parent = getTask(parentId);
       if (parent && parent.status === 'in-progress') {
-        // check if it should go back to not-started
         parent.status = 'not-started';
         await saveTodos();
       }
     }
     await recalcParentStatus(parentId);
   }
-
   renderAll();
+}
+
+// ============================================================
+// NLP PARSER for Quick Add
+// ============================================================
+function parseQuickAdd(input) {
+  let text = input.trim();
+  let priority = null;
+  let tags = [];
+  let dueDate = null;
+
+  // Extract priority: !! P1, ! P2
+  if (text.startsWith('!!')) { priority = 1; text = text.slice(2).trim(); }
+  else if (text.startsWith('!')) { priority = 2; text = text.slice(1).trim(); }
+
+  // Extract tags: #tagname
+  text = text.replace(/#(\S+)/g, (match, tag) => { tags.push(tag); return ''; });
+
+  // Date patterns at the end
+  const todayDate = new Date(today.getTime());
+  const datePatterns = [
+    { re: /今天$/, fn: () => toDateStr(todayDate) },
+    { re: /明天$/, fn: () => { const d=new Date(todayDate); d.setDate(d.getDate()+1); return toDateStr(d); } },
+    { re: /后天$/, fn: () => { const d=new Date(todayDate); d.setDate(d.getDate()+2); return toDateStr(d); } },
+    { re: /大后天$/, fn: () => { const d=new Date(todayDate); d.setDate(d.getDate()+3); return toDateStr(d); } },
+    { re: /周(一|二|三|四|五|六|日)$/, fn: (m) => {
+      const targetDay = ['日','一','二','三','四','五','六'].indexOf(m[1]);
+      const d = new Date(todayDate);
+      const currentDay = d.getDay();
+      let diff = targetDay - currentDay;
+      if (diff <= 0) diff += 7;
+      d.setDate(d.getDate() + diff);
+      return toDateStr(d);
+    }},
+    { re: /下周(一|二|三|四|五|六|日)$/, fn: (m) => {
+      const targetDay = ['日','一','二','三','四','五','六'].indexOf(m[1]);
+      const d = new Date(todayDate);
+      const currentDay = d.getDay();
+      let diff = targetDay - currentDay;
+      if (diff <= 0) diff += 7;
+      d.setDate(d.getDate() + diff + 7);
+      return toDateStr(d);
+    }},
+    { re: /(\d+)月(\d+)[日号]$/, fn: (m) => {
+      const y = todayDate.getFullYear();
+      const mo = parseInt(m[1]);
+      const da = parseInt(m[2]);
+      const d = new Date(y, mo-1, da);
+      if (d < todayDate) d.setFullYear(y+1);
+      return toDateStr(d);
+    }}
+  ];
+
+  for (const {re, fn} of datePatterns) {
+    const match = text.match(re);
+    if (match) {
+      dueDate = fn(match);
+      text = text.replace(re, '').trim();
+      break;
+    }
+  }
+
+  text = text.replace(/\s+/g, ' ').trim();
+  return { title: text, priority, tags, dueDate };
+}
+
+// ============================================================
+// QUICK ADD
+// ============================================================
+function openQuickAdd() {
+  document.getElementById('quickAddOverlay').classList.add('show');
+  document.getElementById('quickAddInput').value = '';
+  document.getElementById('quickAddPreview').innerHTML = '';
+  setTimeout(() => document.getElementById('quickAddInput').focus(), 100);
+}
+
+function closeQuickAdd() {
+  document.getElementById('quickAddOverlay').classList.remove('show');
+}
+
+function submitQuickAdd() {
+  const input = document.getElementById('quickAddInput').value.trim();
+  if (!input) return;
+  const parsed = parseQuickAdd(input);
+  const title = parsed.title || '新任务';
+  addTask(title, null, {
+    priority: parsed.priority,
+    tags: parsed.tags,
+    dueDate: parsed.dueDate,
+    startDate: parsed.dueDate ? toDateStr(today) : null
+  });
+  closeQuickAdd();
+  if (currentView !== 'list') switchView('list');
+  getRootTasks().forEach(t => expandedIds.add(t.id));
+  renderAll();
+}
+
+// Live preview
+function updateQuickAddPreview() {
+  const input = document.getElementById('quickAddInput').value;
+  const parsed = parseQuickAdd(input);
+  const items = [];
+  if (parsed.priority) items.push(`<span class="preview-item">P${parsed.priority}</span>`);
+  if (parsed.tags.length > 0) items.push(...parsed.tags.map(t => `<span class="preview-item">#${t}</span>`));
+  if (parsed.dueDate) items.push(`<span class="preview-item">📅 ${parsed.dueDate}</span>`);
+  document.getElementById('quickAddPreview').innerHTML = items.join(' ');
+}
+
+// ============================================================
+// EXPORT
+// ============================================================
+function exportData(format) {
+  let content, filename, mime;
+  const dateStr = toDateStr(new Date());
+
+  if (format === 'json') {
+    content = JSON.stringify(todos, null, 2);
+    filename = `todos_${dateStr}.json`;
+    mime = 'application/json';
+  } else {
+    // Markdown export
+    const lines = [];
+    lines.push('# 工作待办');
+    lines.push(`> 导出日期: ${dateStr}`);
+    lines.push('');
+    function exportTree(parentId, depth) {
+      const children = (parentId === null) ? getRootTasks() : getChildren(parentId);
+      for (const t of children) {
+        const check = t.status === 'completed' ? 'x' : ' ';
+        const prio = t.priority ? ` [P${t.priority}]` : '';
+        const date = t.dueDate ? ` 📅 ${t.dueDate}` : '';
+        const tags = (t.tags||[]).length > 0 ? ' ' + t.tags.map(x=>'#'+x).join(' ') : '';
+        lines.push(`${'  '.repeat(depth)}- [${check}] ${t.title}${prio}${date}${tags}`);
+        exportTree(t.id, depth + 1);
+      }
+    }
+    exportTree(null, 0);
+    lines.push('');
+    lines.push('---');
+    lines.push('由 工作待办 App 导出');
+    content = lines.join('\n');
+    filename = `todos_${dateStr}.md`;
+    mime = 'text/markdown';
+  }
+
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ============================================================
+// PPT REPORT GENERATOR
+// ============================================================
+function generatePPT() {
+  if (typeof PptxGenJS === 'undefined') {
+    alert('PPT库加载中，请稍后再试');
+    return;
+  }
+
+  const pptx = new PptxGenJS();
+  pptx.defineLayout({ name:'CUSTOM', width:'13.333', height:'7.5' });
+  pptx.layout = 'CUSTOM';
+
+  // --- Data ---
+  const total = todos.length;
+  const completed = todos.filter(t => t.status === 'completed').length;
+  const inProgress = todos.filter(t => t.status === 'in-progress').length;
+  const notStarted = todos.filter(t => t.status === 'not-started').length;
+  const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+  const p1 = todos.filter(t => t.priority === 1).length;
+  const p2 = todos.filter(t => t.priority === 2).length;
+  const p3 = todos.filter(t => t.priority === 3).length;
+
+  const allTags = getAllTags();
+  const dateStr = `${new Date().getFullYear()}年${new Date().getMonth()+1}月${new Date().getDate()}日`;
+
+  const C = { black: '171717', green: '6b9e85', gray: 'a3a3a3', lightGray: 'e6e6e4',
+              white: 'FFFFFF', bg: 'fafaf8', midGray: '6b6b6b', paleGray: 'd0d0ce' };
+
+  // ========================================
+  // Slide 1: Cover
+  // ========================================
+  const s1 = pptx.addSlide();
+  s1.background = { color: C.black };
+  s1.addText('工作待办报告', { x:0.8, y:1.8, w:11, h:1.4, fontSize:40, fontFace:'Arial', color:C.white, bold:true });
+  s1.addText(dateStr, { x:0.8, y:3.3, w:11, h:0.6, fontSize:16, color:C.gray });
+  s1.addText([
+    { text:`${total}`, options:{ fontSize:36, bold:true, color:C.green } },
+    { text:'  总任务  ', options:{ fontSize:16, color:C.gray } },
+    { text:`${completed}`, options:{ fontSize:36, bold:true, color:C.white } },
+    { text:'  已完成  ', options:{ fontSize:16, color:C.gray } },
+    { text:`${pct}%`, options:{ fontSize:36, bold:true, color:C.green } },
+    { text:'  完成率', options:{ fontSize:16, color:C.gray } }
+  ], { x:0.8, y:4.5, w:11, h:1 });
+
+  // ========================================
+  // Slide 2: Task Table + Status Chart
+  // ========================================
+  const s2 = pptx.addSlide();
+  s2.background = { color: C.bg };
+  s2.addText('任务总览', { x:0.5, y:0.3, w:5, h:0.5, fontSize:22, color:C.black, bold:true });
+
+  // Table
+  const leafTasks = todos.filter(t => !hasChildren(t.id));
+  const tableRows = [['任务', '状态', '优先级', '截止日期', '标签']];
+  leafTasks.slice(0, 15).forEach(t => {
+    tableRows.push([
+      t.title.length > 20 ? t.title.slice(0,19)+'…' : t.title,
+      statusLabel(t.status),
+      t.priority ? 'P'+t.priority : '-',
+      t.dueDate || '-',
+      (t.tags||[]).join(', ') || '-'
+    ]);
+  });
+  if (tableRows.length === 1) tableRows.push(['(暂无任务)', '', '', '', '']);
+
+  s2.addTable(tableRows, {
+    x:0.4, y:1.0, w:7.0,
+    border: { type:'solid', pt:0.5, color:C.lightGray },
+    fontFace: 'Arial', fontSize: 10, color: C.black,
+    firstRow: { bold:true, color:C.white, fill:{ color:C.black }, fontSize:10 },
+    rowH: 0.32,
+    autoPage: false
+  });
+
+  // Status donut chart
+  if (total > 0) {
+    s2.addChart(pptx.charts.DOUGHNUT, [{
+      name: '状态', labels: ['已完成', '进行中', '未开始'], values: [completed, inProgress, notStarted]
+    }], {
+      x:7.8, y:1.0, w:5.0, h:3.5,
+      showLegend: true, legendPos: 'b',
+      colors: [C.green, C.black, C.paleGray],
+      dataLabelColor: C.black, dataLabelFontSize: 10,
+      holeSize: 55
+    });
+  }
+
+  // Summary stats
+  s2.addText([
+    { text:'总任务 ', options:{ fontSize:12, color:C.midGray } },
+    { text:`${total}  `, options:{ fontSize:12, bold:true, color:C.black } },
+    { text:'已完成 ', options:{ fontSize:12, color:C.midGray } },
+    { text:`${completed}  `, options:{ fontSize:12, bold:true, color:C.green } },
+    { text:'完成率 ', options:{ fontSize:12, color:C.midGray } },
+    { text:`${pct}%`, options:{ fontSize:12, bold:true, color:C.black } }
+  ], { x:7.8, y:4.8, w:5, h:0.5 });
+
+  // ========================================
+  // Slide 3: Priority + Tags Charts
+  // ========================================
+  const s3 = pptx.addSlide();
+  s3.background = { color: C.bg };
+  s3.addText('优先级与标签分析', { x:0.5, y:0.3, w:8, h:0.5, fontSize:22, color:C.black, bold:true });
+
+  // Priority chart
+  s3.addChart(pptx.charts.BAR, [{
+    name: '任务数', labels: ['P1', 'P2', 'P3'], values: [p1, p2, p3]
+  }], {
+    x:0.4, y:1.0, w:5.8, h:3.0,
+    showLegend: false,
+    colors: [C.black, C.midGray, C.paleGray],
+    catAxisLabelColor: C.black, catAxisLabelFontSize: 11,
+    valAxisLabelColor: C.midGray, valAxisLabelFontSize: 9,
+    dataLabelColor: C.black, dataLabelFontSize: 11,
+    barDir: 'bar'
+  });
+
+  // Tags chart
+  if (allTags.length > 0) {
+    const topTags = allTags.slice(0, 8);
+    s3.addChart(pptx.charts.BAR, [{
+      name: '任务数', labels: topTags.map(t=>'#'+t[0]), values: topTags.map(t=>t[1])
+    }], {
+      x:6.6, y:1.0, w:6.2, h:3.0,
+      showLegend: false,
+      colors: [C.midGray],
+      catAxisLabelColor: C.black, catAxisLabelFontSize: 10,
+      valAxisLabelColor: C.midGray, valAxisLabelFontSize: 9,
+      dataLabelColor: C.black, dataLabelFontSize: 10,
+      barDir: 'bar'
+    });
+  }
+
+  // Detail text
+  const priorityTasks = todos.filter(t => t.priority).sort((a,b) => (a.priority||0)-(b.priority||0));
+  let detailText = priorityTasks.slice(0, 12).map(t =>
+    `[P${t.priority}] ${t.title}  ${t.dueDate||''}`
+  ).join('\n');
+  if (!detailText) detailText = '(暂无优先级任务)';
+
+  s3.addText(detailText, {
+    x:0.4, y:4.4, w:12, h:2.8, fontSize:10, color:C.midGray,
+    fontFace: 'Arial', lineSpacing: 22, valign: 'top'
+  });
+
+  // ========================================
+  // Slide 4: Gantt Chart
+  // ========================================
+  const s4 = pptx.addSlide();
+  s4.background = { color: C.bg };
+  s4.addText('甘特图', { x:0.5, y:0.3, w:5, h:0.5, fontSize:22, color:C.black, bold:true });
+
+  const tasksWithDates = todos.filter(t => t.startDate || t.dueDate);
+  if (tasksWithDates.length > 0) {
+    // Draw gantt on canvas
+    function fillRoundRect(gCtx, x, y, w, h, r) {
+      r = Math.min(r, w/2, h/2);
+      gCtx.beginPath();
+      gCtx.moveTo(x+r, y); gCtx.lineTo(x+w-r, y);
+      gCtx.arcTo(x+w, y, x+w, y+r, r);
+      gCtx.lineTo(x+w, y+h-r); gCtx.arcTo(x+w, y+h, x+w-r, y+h, r);
+      gCtx.lineTo(x+r, y+h); gCtx.arcTo(x, y+h, x, y+h-r, r);
+      gCtx.lineTo(x, y+r); gCtx.arcTo(x, y, x+r, y, r);
+      gCtx.closePath();
+      gCtx.fill();
+    }
+    const gCanvas = document.createElement('canvas');
+    const GW = 1200, GH = Math.max(300, tasksWithDates.length * 40 + 80);
+    gCanvas.width = GW; gCanvas.height = GH;
+    const gCtx = gCanvas.getContext('2d');
+    gCtx.fillStyle = '#fafaf8'; gCtx.fillRect(0, 0, GW, GH);
+
+    let gMin = null, gMax = null;
+    for (const t of tasksWithDates) {
+      const s = t.startDate ? new Date(t.startDate) : new Date(t.dueDate);
+      const e = t.dueDate ? new Date(t.dueDate) : new Date(t.startDate);
+      if (!gMin || s < gMin) gMin = s;
+      if (!gMax || e > gMax) gMax = e;
+    }
+    gMin = new Date(gMin); gMin.setDate(gMin.getDate() - 2);
+    gMax = new Date(gMax); gMax.setDate(gMax.getDate() + 2);
+    const gDays = Math.ceil((gMax - gMin)/(1000*60*60*24)) + 1;
+    const labelW = 200, barArea = GW - labelW - 20, dayW = Math.max(8, barArea / gDays);
+
+    // Header
+    gCtx.fillStyle = '#171717';
+    gCtx.font = 'bold 11px Arial';
+    for (let i = 0; i < gDays; i++) {
+      const d = new Date(gMin); d.setDate(d.getDate() + i);
+      if (d.getDate() === 1 || i === 0) {
+        gCtx.fillText(`${d.getMonth()+1}/${d.getDate()}`, labelW + i*dayW, 30);
+      }
+    }
+    gCtx.strokeStyle = '#e6e6e4'; gCtx.lineWidth = 0.5;
+    gCtx.beginPath(); gCtx.moveTo(labelW, 38); gCtx.lineTo(GW-10, 38); gCtx.stroke();
+
+    // Rows
+    tasksWithDates.forEach((t, idx) => {
+      const y = 52 + idx * 36;
+      gCtx.fillStyle = '#171717';
+      gCtx.font = '12px Arial';
+      const label = t.title.length > 18 ? t.title.slice(0,17)+'…' : t.title;
+      gCtx.fillText(label, 10, y + 16);
+
+      const s = t.startDate ? new Date(t.startDate) : new Date(t.dueDate);
+      const e = t.dueDate ? new Date(t.dueDate) : new Date(t.startDate);
+      const sx = labelW + Math.max(0, Math.ceil((s - gMin)/(1000*60*60*24))) * dayW;
+      const dur = Math.max(1, Math.ceil((e - s)/(1000*60*60*24)) + 1) * dayW;
+      const barColor = t.status === 'completed' ? '#6b9e85' : t.status === 'in-progress' ? '#171717' : '#d0d0ce';
+      gCtx.fillStyle = barColor;
+      gCtx.beginPath();
+      fillRoundRect(gCtx, sx, y + 4, Math.max(dur, 4), 20, 3);
+
+      // Status dot
+      gCtx.fillStyle = barColor;
+      gCtx.beginPath(); gCtx.arc(labelW - 14, y + 14, 4, 0, Math.PI*2); gCtx.fill();
+    });
+
+    const ganttImg = gCanvas.toDataURL('image/png');
+    s4.addImage({ data: ganttImg, x:0.3, y:1.0, w:12.7, h:5.8 });
+  } else {
+    s4.addText('暂无带日期的任务，无法生成甘特图', { x:0.5, y:2.5, w:12, h:1, fontSize:16, color:C.gray, align:'center' });
+  }
+
+  // ========================================
+  // Slide 5: Task Details
+  // ========================================
+  const rootTasks = getRootTasks();
+  const detailSlides = Math.ceil(rootTasks.length / 6);
+
+  for (let si = 0; si < detailSlides; si++) {
+    const sd = pptx.addSlide();
+    sd.background = { color: C.bg };
+    sd.addText(si === 0 ? '任务详情' : `任务详情 (续${si+1})`, { x:0.5, y:0.3, w:8, h:0.5, fontSize:22, color:C.black, bold:true });
+
+    const pageTasks = rootTasks.slice(si * 6, (si + 1) * 6);
+    let ty = 1.1;
+
+    pageTasks.forEach(task => {
+      const statusIcon = task.status === 'completed' ? '✓' : task.status === 'in-progress' ? '●' : '○';
+      const prioStr = task.priority ? ` [P${task.priority}]` : '';
+      const dateStr2 = task.dueDate ? ` 截止: ${task.dueDate}` : '';
+
+      sd.addText(`${statusIcon} ${task.title}${prioStr}`, {
+        x:0.5, y:ty, w:12, h:0.35, fontSize:13, bold:true, color:C.black
+      });
+      ty += 0.35;
+
+      if (task.description) {
+        sd.addText(task.description, { x:0.8, y:ty, w:11.5, h:0.3, fontSize:10, color:C.midGray });
+        ty += 0.32;
+      }
+
+      const meta = [];
+      meta.push(statusLabel(task.status));
+      if (dateStr2) meta.push(dateStr2.trim());
+      if ((task.tags||[]).length > 0) meta.push('标签: ' + task.tags.join(', '));
+      const children = getChildren(task.id);
+      if (children.length > 0) {
+        const subsDone = children.filter(c => c.status === 'completed').length;
+        meta.push(`子任务: ${subsDone}/${children.length} 完成`);
+        children.slice(0, 5).forEach(c => {
+          const cs = c.status === 'completed' ? '✓' : c.status === 'in-progress' ? '●' : '○';
+          sd.addText(`  ${cs} ${c.title}`, { x:1.2, y:ty, w:11, h:0.28, fontSize:10, color:C.midGray });
+          ty += 0.28;
+        });
+        if (children.length > 5) {
+          sd.addText(`  ... 还有 ${children.length - 5} 个子任务`, { x:1.2, y:ty, w:11, h:0.28, fontSize:9, color:C.gray });
+          ty += 0.28;
+        }
+      }
+
+      sd.addText(meta.join('  |  '), { x:0.8, y:ty, w:11.5, h:0.28, fontSize:10, color:C.gray });
+      ty += 0.45;
+    });
+
+    if (pageTasks.length === 0) {
+      sd.addText('(暂无任务)', { x:0.5, y:2.5, w:12, h:1, fontSize:16, color:C.gray, align:'center' });
+    }
+  }
+
+  // --- Download ---
+  pptx.writeFile({ fileName: `工作报告_${toDateStr(new Date())}.pptx` })
+    .catch(() => alert('PPT生成失败，请重试'));
+}
+
+// ============================================================
+// FOCUS TIMER
+// ============================================================
+let focusState = { taskId: null, total: 25*60, remaining: 25*60, running: false, timer: null };
+
+function startFocus(taskId) {
+  const task = getTask(taskId);
+  if (!task) return;
+  focusState.taskId = taskId;
+  focusState.total = 25 * 60;
+  focusState.remaining = 25 * 60;
+  focusState.running = false;
+  document.getElementById('focusTaskTitle').textContent = task.title;
+  document.getElementById('focusOverlay').classList.add('show');
+  document.getElementById('focusPlayBtn').textContent = '▶';
+  updateFocusPresets(25);
+  updateFocusDisplay();
+  closeDetail();
+}
+
+function updateFocusDisplay() {
+  const r = focusState.remaining;
+  const mins = Math.floor(r / 60);
+  const secs = r % 60;
+  document.getElementById('focusTime').textContent =
+    String(mins).padStart(2,'0') + ':' + String(secs).padStart(2,'0');
+
+  const circumference = 2 * Math.PI * 100; // ~628.32
+  const pct = focusState.remaining / focusState.total;
+  const offset = circumference * (1 - pct);
+  const ring = document.getElementById('focusRing');
+  ring.setAttribute('stroke-dashoffset', offset);
+
+  if (focusState.remaining <= 0) {
+    ring.setAttribute('stroke', '#6b9e85');
+    document.getElementById('focusTime').textContent = '✓';
+    document.getElementById('focusPlayBtn').textContent = '▶';
+    focusState.running = false;
+    clearInterval(focusState.timer);
+  } else if (focusState.running) {
+    ring.setAttribute('stroke', '#fff');
+  } else {
+    ring.setAttribute('stroke', 'rgba(255,255,255,0.4)');
+  }
+}
+
+function toggleFocus() {
+  if (focusState.remaining <= 0) return;
+  focusState.running = !focusState.running;
+  document.getElementById('focusPlayBtn').textContent = focusState.running ? '⏸' : '▶';
+  updateFocusDisplay();
+
+  if (focusState.running) {
+    focusState.timer = setInterval(() => {
+      if (focusState.remaining > 0) {
+        focusState.remaining--;
+        updateFocusDisplay();
+      }
+      if (focusState.remaining <= 0) {
+        clearInterval(focusState.timer);
+        focusState.running = false;
+        updateFocusDisplay();
+      }
+    }, 1000);
+  } else {
+    clearInterval(focusState.timer);
+  }
+}
+
+function resetFocus() {
+  clearInterval(focusState.timer);
+  focusState.running = false;
+  focusState.remaining = focusState.total;
+  document.getElementById('focusPlayBtn').textContent = '▶';
+  updateFocusDisplay();
+}
+
+function exitFocus() {
+  clearInterval(focusState.timer);
+  focusState.running = false;
+  focusState.taskId = null;
+  document.getElementById('focusOverlay').classList.remove('show');
+}
+
+function setFocusMinutes(min) {
+  clearInterval(focusState.timer);
+  focusState.total = min * 60;
+  focusState.remaining = focusState.total;
+  focusState.running = false;
+  document.getElementById('focusPlayBtn').textContent = '▶';
+  updateFocusPresets(min);
+  updateFocusDisplay();
+}
+
+function updateFocusPresets(min) {
+  document.querySelectorAll('.focus-preset-btn').forEach(b => {
+    b.classList.toggle('active', Number(b.dataset.min) === min);
+  });
 }
 
 // ============================================================
@@ -953,6 +2270,8 @@ let detailTaskId = null;
 let expandedIds = new Set();
 let calendarYear, calendarMonth;
 let listFilterStatus = 'all';
+let listFilterPriority = 'all';
+let listFilterTag = null;
 let listSearch = '';
 let calendarPopoverDay = null;
 
@@ -972,14 +2291,36 @@ function renderList() {
   const container = document.getElementById('listContent');
   let tasks = getRootTasks();
 
-  // Filter
-  if (listFilterStatus !== 'all') {
+  // Auto-archive: "全部" excludes completed
+  if (listFilterStatus === 'all') {
+    tasks = tasks.filter(t => t.status !== 'completed');
+    // Also filter descendants
+    tasks = tasks.filter(t => {
+      if (t.status !== 'completed') return true;
+      return getDescendants(t.id).some(d => d.status !== 'completed');
+    });
+  } else {
     tasks = tasks.filter(t => {
       if (t.status === listFilterStatus) return true;
-      // Also include parents that have children matching the status
       return getDescendants(t.id).some(d => d.status === listFilterStatus);
     });
   }
+
+  // Priority filter
+  if (listFilterPriority !== 'all') {
+    const p = parseInt(listFilterPriority);
+    tasks = tasks.filter(t => t.priority === p || getDescendants(t.id).some(d => d.priority === p));
+  }
+
+  // Tag filter
+  if (listFilterTag) {
+    tasks = tasks.filter(t =>
+      (t.tags||[]).includes(listFilterTag) ||
+      getDescendants(t.id).some(d => (d.tags||[]).includes(listFilterTag))
+    );
+  }
+
+  // Search
   if (listSearch) {
     const q = listSearch.toLowerCase();
     tasks = tasks.filter(t => {
@@ -990,14 +2331,21 @@ function renderList() {
 
   document.getElementById('navCountTotal').textContent = getRootTasks().length;
 
+  // Active tag chip
+  const chip = document.getElementById('activeTagChip');
+  if (listFilterTag) {
+    chip.innerHTML = `<span class="active-tag-chip" onclick="clearTagFilter()">#${escHtml(listFilterTag)} <span class="tag-chip-x">×</span></span>`;
+  } else {
+    chip.innerHTML = '';
+  }
+
   if (tasks.length === 0) {
-    container.innerHTML = `<div class="empty-state"><div class="empty-icon">📂</div><p>暂无任务，点击"+ 新建任务"开始</p></div>`;
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">&#x2611;</div><p>暂无任务</p></div>`;
     return;
   }
 
   container.innerHTML = `<div class="task-tree">${tasks.map(t => renderTreeNode(t, 0)).join('')}</div>`;
 
-  // Attach expand listeners
   container.querySelectorAll('.expand-btn').forEach(btn => {
     btn.addEventListener('click', function(e) {
       e.stopPropagation();
@@ -1008,44 +2356,61 @@ function renderList() {
     });
   });
 
-  // Attach row click listeners (open detail)
   container.querySelectorAll('.task-row').forEach(row => {
     row.addEventListener('click', function() {
       openDetail(Number(this.dataset.id));
     });
   });
+
+  if (window._newTaskId) {
+    const newRow = container.querySelector(`.task-row[data-id="${window._newTaskId}"]`);
+    if (newRow) {
+      newRow.classList.add('card-enter');
+      newRow.addEventListener('animationend', () => newRow.classList.remove('card-enter'), { once: true });
+    }
+    window._newTaskId = null;
+  }
 }
 
 function renderTreeNode(task, depth) {
   const children = getChildren(task.id);
   const isExpanded = expandedIds.has(task.id);
   const hasKids = children.length > 0;
-  const canExpand = hasKids;
-
-  const indent = depth * 24;
+  const indent = depth * 20;
   const totalSubs = countSubtasks(task.id);
   const doneSubs = countCompletedSubtasks(task.id);
   const progressText = totalSubs > 0 ? `<span class="progress-tag">${doneSubs}/${totalSubs}</span>` : '';
-
   const dateText = task.startDate || task.dueDate
-    ? `<span class="date-range">${formatDateShort(task.startDate)} → ${formatDateShort(task.dueDate)}</span>`
-    : '';
+    ? `<span class="date-range">${formatDateShort(task.startDate)} → ${formatDateShort(task.dueDate)}</span>` : '';
+  const expandBtn = hasKids
+    ? `<button class="expand-btn ${isExpanded ? 'expanded' : ''}" data-id="${task.id}">&#x25B8;</button>`
+    : `<button class="expand-btn placeholder">&#x25B8;</button>`;
 
-  const expandBtn = canExpand
-    ? `<button class="expand-btn ${isExpanded ? 'expanded' : ''}" data-id="${task.id}">▶</button>`
-    : `<button class="expand-btn placeholder">▶</button>`;
+  let rowClass = '';
+  if (task.status === 'completed') rowClass = 'completed';
+  else if (task.status === 'in-progress') rowClass = 'status-in-progress';
+  if (task.priority === 1) rowClass += ' priority-p1';
+  if (task.priority === 2) rowClass += ' priority-p2';
+  if (task.priority === 3) rowClass += ' priority-p3';
+
+  const priorityBadge = task.priority
+    ? `<span class="priority-badge p${task.priority}">P${task.priority}</span>` : '';
+  const tagChips = (task.tags||[]).length > 0
+    ? `<div class="tag-chips">${task.tags.map(t => `<span class="tag-chip">${escHtml(t)}</span>`).join('')}</div>` : '';
 
   const html = `
-    <div class="task-row ${task.status === 'completed' ? 'completed' : ''}" data-id="${task.id}" style="padding-left:${12 + indent}px;">
+    <div class="task-row ${rowClass.trim()}" data-id="${task.id}" style="margin-left:${indent}px;">
       ${expandBtn}
       <span class="status-dot ${task.status}"></span>
       <div class="task-row-body">
         <div class="task-row-title">${escHtml(task.title)}</div>
         <div class="task-row-meta">
           <span class="status-badge status-${task.status}">${statusLabel(task.status)}</span>
+          ${priorityBadge}
           ${dateText}
           ${progressText}
         </div>
+        ${tagChips}
       </div>
     </div>`;
 
@@ -1053,78 +2418,103 @@ function renderTreeNode(task, depth) {
   if (isExpanded && children.length > 0) {
     childrenHtml = children.map(c => renderTreeNode(c, depth + 1)).join('');
   }
-
   return html + childrenHtml;
+}
+
+// ============================================================
+// RENDER: Sidebar Tags
+// ============================================================
+function renderSidebarTags() {
+  const container = document.getElementById('sidebarTagList');
+  const tags = getAllTags();
+  if (tags.length === 0) {
+    container.innerHTML = '<div style="padding:4px 14px;font-size:12px;color:var(--text-muted);">暂无标签</div>';
+    return;
+  }
+  container.innerHTML = tags.map(([tag, count]) =>
+    `<div class="sidebar-tag-item${listFilterTag === tag ? ' active' : ''}" data-tag="${escHtml(tag)}">
+      #${escHtml(tag)} <span class="sidebar-tag-count">${count}</span>
+    </div>`
+  ).join('');
+
+  container.querySelectorAll('.sidebar-tag-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const tag = item.dataset.tag;
+      if (listFilterTag === tag) {
+        clearTagFilter();
+      } else {
+        listFilterTag = tag;
+        if (currentView !== 'list') switchView('list');
+        renderAll();
+      }
+    });
+  });
+}
+
+function clearTagFilter() {
+  listFilterTag = null;
+  renderAll();
 }
 
 // ============================================================
 // RENDER: Daily Work
 // ============================================================
 function renderDaily() {
-  const container = document.getElementById('dailyContent');
+  const container = document.getElementById('dailyTasksContainer');
   document.getElementById('dailyDate').textContent =
     `${today.getFullYear()}年${today.getMonth()+1}月${today.getDate()}日`;
-
   const todayStr = toDateStr(today);
 
-  // Tasks in progress that span today
   const activeTasks = todos.filter(t => {
     if (t.status !== 'in-progress') return false;
+    if (hasChildren(t.id)) return false;
     if (t.startDate && t.startDate > todayStr) return false;
     if (t.dueDate && t.dueDate < todayStr) return false;
     return true;
   });
-
-  // Tasks due today (not completed)
   const dueToday = todos.filter(t => {
     if (t.status === 'completed') return false;
+    if (hasChildren(t.id)) return false;
     if (!t.dueDate || t.dueDate !== todayStr) return false;
     return !activeTasks.includes(t);
   });
-
-  // Tasks starting today (not started)
   const startToday = todos.filter(t => {
     if (t.status !== 'not-started') return false;
+    if (hasChildren(t.id)) return false;
     if (!t.startDate || t.startDate !== todayStr) return false;
     return !activeTasks.includes(t);
   });
 
   document.getElementById('navCountDaily').textContent = activeTasks.length;
-
   let html = '';
-
   if (activeTasks.length > 0) {
-    html += `<div class="daily-section"><h3>🔥 进行中 (${activeTasks.length})</h3><div class="daily-list">`;
+    html += `<div class="daily-section"><h3>进行中 (${activeTasks.length})</h3><div class="daily-list">`;
     html += activeTasks.map(t => renderDailyItem(t)).join('');
     html += `</div></div>`;
   }
-
   if (startToday.length > 0) {
-    html += `<div class="daily-section"><h3>▶ 今日开始 (${startToday.length})</h3><div class="daily-list">`;
+    html += `<div class="daily-section"><h3>今日开始 (${startToday.length})</h3><div class="daily-list">`;
     html += startToday.map(t => renderDailyItem(t)).join('');
     html += `</div></div>`;
   }
-
   if (dueToday.length > 0) {
-    html += `<div class="daily-section"><h3>⏰ 今日截止 (${dueToday.length})</h3><div class="daily-list">`;
+    html += `<div class="daily-section"><h3>今日截止 (${dueToday.length})</h3><div class="daily-list">`;
     html += dueToday.map(t => renderDailyItem(t)).join('');
     html += `</div></div>`;
   }
-
   if (!html) {
-    html = `<div class="empty-state"><div class="empty-icon">🎉</div><p>今日没有待处理的任务</p></div>`;
+    html = `<div class="empty-state"><div class="empty-icon">&#x2611;</div><p>今日没有待处理的任务</p></div>`;
   }
-
   container.innerHTML = html;
-
   container.querySelectorAll('.daily-item').forEach(item => {
     item.addEventListener('click', () => openDetail(Number(item.dataset.id)));
   });
+  loadDailyNote();
 }
 
 function renderDailyItem(task) {
   const parent = task.parentId ? getTask(task.parentId) : null;
-  const parentText = parent ? `<span class="daily-item-parent">← ${escHtml(parent.title)}</span>` : '';
+  const parentText = parent ? `<span class="daily-item-parent">${escHtml(parent.title)}</span>` : '';
   return `
     <div class="daily-item" data-id="${task.id}">
       <span class="status-dot ${task.status}"></span>
@@ -1137,22 +2527,37 @@ function renderDailyItem(task) {
 }
 
 // ============================================================
+// DAILY NOTE
+// ============================================================
+function dailyNoteKey() { return 'todo_daily_note_' + toDateStr(today); }
+function loadDailyNote() {
+  const textarea = document.getElementById('dailyNoteInput');
+  const saved = document.getElementById('dailyNoteSaved');
+  if (!textarea) return;
+  textarea.value = localStorage.getItem(dailyNoteKey()) || '';
+  saved.classList.remove('visible');
+}
+function saveDailyNote() {
+  const textarea = document.getElementById('dailyNoteInput');
+  const saved = document.getElementById('dailyNoteSaved');
+  if (!textarea) return;
+  localStorage.setItem(dailyNoteKey(), textarea.value);
+  saved.classList.add('visible');
+  setTimeout(() => saved.classList.remove('visible'), 1500);
+}
+
+// ============================================================
 // RENDER: Calendar
 // ============================================================
 function renderCalendar() {
   const container = document.getElementById('calendarContent');
-  const year = calendarYear;
-  const month = calendarMonth;
-
+  const year = calendarYear, month = calendarMonth;
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
-  const startPad = firstDay.getDay(); // 0=Sun
+  const startPad = firstDay.getDay();
   const totalDays = lastDay.getDate();
-
   const todayStr = toDateStr(today);
-  const dayHeaders = ['日', '一', '二', '三', '四', '五', '六'];
 
-  // Build a map: dayStr -> tasks active on that day
   const dayTaskMap = {};
   for (const t of todos) {
     if (!t.startDate && !t.dueDate) continue;
@@ -1167,57 +2572,33 @@ function renderCalendar() {
     }
   }
 
-  let html = `
-    <div class="calendar-nav">
-      <button class="btn btn-ghost btn-sm" onclick="changeCalendarMonth(-1)">◀</button>
-      <h3>${year}年 ${month+1}月</h3>
-      <button class="btn btn-ghost btn-sm" onclick="changeCalendarMonth(1)">▶</button>
-      <button class="btn btn-ghost btn-sm" onclick="goToToday()">今天</button>
-    </div>
-    <div class="calendar-grid">`;
+  let html = `<div class="calendar-nav">
+    <button class="btn btn-ghost btn-sm" onclick="changeCalendarMonth(-1)">&#x25C0;</button>
+    <h3>${year}年 ${month+1}月</h3>
+    <button class="btn btn-ghost btn-sm" onclick="changeCalendarMonth(1)">&#x25B6;</button>
+    <button class="btn btn-ghost btn-sm" onclick="goToToday()">今天</button>
+  </div><div class="calendar-grid">`;
 
-  // Day headers
-  html += dayHeaders.map(d => `<div class="calendar-day-header">${d}</div>`).join('');
+  html += ['日','一','二','三','四','五','六'].map(d => `<div class="calendar-day-header">${d}</div>`).join('');
+  for (let i = 0; i < startPad; i++) html += `<div class="calendar-day other-month"><div class="day-num"></div></div>`;
 
-  // Blank cells before first day
-  for (let i = 0; i < startPad; i++) {
-    html += `<div class="calendar-day other-month"><div class="day-num"></div></div>`;
-  }
-
-  // Day cells
   for (let d = 1; d <= totalDays; d++) {
     const date = new Date(year, month, d);
     const dateStr = toDateStr(date);
     const isToday = dateStr === todayStr;
     const tasksOnDay = dayTaskMap[dateStr] || [];
-
-    // Unique tasks with their statuses
-    const unique = [];
-    const seen = new Set();
-    for (const t of tasksOnDay) {
-      if (!seen.has(t.id)) { seen.add(t.id); unique.push(t); }
-    }
-    // Limit dots to 10
+    const unique = []; const seen = new Set();
+    for (const t of tasksOnDay) { if (!seen.has(t.id)) { seen.add(t.id); unique.push(t); } }
     const dots = unique.slice(0, 10);
-
-    html += `
-      <div class="calendar-day ${isToday ? 'today' : ''}" data-date="${dateStr}">
-        <div class="day-num">${d}</div>
-        <div class="calendar-dots">
-          ${dots.map(t => `<span class="calendar-dot ${t.status}" title="${escHtml(t.title)}"></span>`).join('')}
-        </div>
-      </div>`;
+    html += `<div class="calendar-day ${isToday ? 'today' : ''}" data-date="${dateStr}">
+      <div class="day-num">${d}</div>
+      <div class="calendar-dots">${dots.map(t => `<span class="calendar-dot ${t.status}" title="${escHtml(t.title)}"></span>`).join('')}</div>
+    </div>`;
   }
-
   html += `</div>`;
   container.innerHTML = html;
-
-  // Click on day
   container.querySelectorAll('.calendar-day[data-date]').forEach(cell => {
-    cell.addEventListener('click', function(e) {
-      const dateStr = this.dataset.date;
-      showCalendarPopover(dateStr, e);
-    });
+    cell.addEventListener('click', function(e) { showCalendarPopover(this.dataset.date, e); });
   });
 }
 
@@ -1229,41 +2610,29 @@ function showCalendarPopover(dateStr, event) {
     const end = t.dueDate || '2099-12-31';
     return dateStr >= start && dateStr <= end;
   });
-
   const d = new Date(dateStr);
-  const label = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
-
-  let html = `<h4>${label}</h4>`;
+  let html = `<h4>${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日</h4>`;
   if (tasksOnDay.length === 0) {
     html += `<div style="font-size:13px; color:var(--text-muted); padding:8px;">暂无任务</div>`;
   } else {
-    html += tasksOnDay.map(t => `
-      <div class="popover-task" data-id="${t.id}">
+    html += tasksOnDay.map(t =>
+      `<div class="popover-task" data-id="${t.id}">
         <span class="status-dot ${t.status}"></span>
         <span>${escHtml(t.title)}</span>
         <span class="status-badge status-${t.status}" style="margin-left:auto;">${statusLabel(t.status)}</span>
       </div>`).join('');
   }
-
   popover.innerHTML = html;
   popover.classList.add('show');
-
-  // Position
   const rect = event.target.getBoundingClientRect();
-  let left = rect.left;
-  let top = rect.bottom + 4;
+  let left = rect.left, top = rect.bottom + 4;
   if (left + 300 > window.innerWidth) left = window.innerWidth - 310;
   if (top + 200 > window.innerHeight) top = rect.top - 210;
   popover.style.left = left + 'px';
   popover.style.top = top + 'px';
-
   calendarPopoverDay = dateStr;
-
   popover.querySelectorAll('.popover-task').forEach(el => {
-    el.addEventListener('click', () => {
-      hideCalendarPopover();
-      openDetail(Number(el.dataset.id));
-    });
+    el.addEventListener('click', () => { hideCalendarPopover(); openDetail(Number(el.dataset.id)); });
   });
 }
 
@@ -1291,15 +2660,11 @@ function goToToday() {
 function renderGantt() {
   const container = document.getElementById('ganttContent');
   container.innerHTML = '';
-
-  // Collect tasks with dates
   const tasksWithDates = todos.filter(t => t.startDate || t.dueDate);
   if (tasksWithDates.length === 0) {
-    container.innerHTML = `<div class="empty-state"><div class="empty-icon">📊</div><p>暂无带日期的任务，无法生成甘特图</p></div>`;
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">&#x29D6;</div><p>暂无带日期的任务，无法生成甘特图</p></div>`;
     return;
   }
-
-  // Find global date range
   let minDate = null, maxDate = null;
   for (const t of tasksWithDates) {
     const s = t.startDate ? new Date(t.startDate) : new Date(t.dueDate);
@@ -1307,45 +2672,27 @@ function renderGantt() {
     if (!minDate || s < minDate) minDate = s;
     if (!maxDate || e > maxDate) maxDate = e;
   }
-
-  // Add padding
-  minDate = new Date(minDate);
-  minDate.setDate(minDate.getDate() - 3);
-  maxDate = new Date(maxDate);
-  maxDate.setDate(maxDate.getDate() + 3);
-
+  minDate = new Date(minDate); minDate.setDate(minDate.getDate() - 3);
+  maxDate = new Date(maxDate); maxDate.setDate(maxDate.getDate() + 3);
   const totalDays = Math.ceil((maxDate - minDate) / (1000 * 60 * 60 * 24)) + 1;
   const dayWidth = 30;
-
-  // Month markers
   const months = [];
   const current = new Date(minDate);
   while (current <= maxDate) {
     months.push({ year: current.getFullYear(), month: current.getMonth() });
     current.setMonth(current.getMonth() + 1);
   }
-
-  // Flatten task tree for display
-  const datedTasks = [];
-  const undatedTasks = [];
-
+  const datedTasks = [], undatedTasks = [];
   function collectTree(parentId, depth) {
     const children = (parentId === null) ? getRootTasks() : getChildren(parentId);
     for (const t of children) {
-      if (t.startDate || t.dueDate) {
-        datedTasks.push({ ...t, depth });
-        collectTree(t.id, depth + 1);
-      } else {
-        undatedTasks.push({ ...t, depth });
-        collectTree(t.id, depth + 1);
-      }
+      if (t.startDate || t.dueDate) { datedTasks.push({ ...t, depth }); collectTree(t.id, depth + 1); }
+      else { undatedTasks.push({ ...t, depth }); collectTree(t.id, depth + 1); }
     }
   }
   collectTree(null, 0);
 
   let html = `<div class="gantt-chart" style="min-width:${220 + totalDays * dayWidth}px;">`;
-
-  // Month header
   html += `<div class="gantt-month-row"><div class="gantt-label-col">月份</div>`;
   for (const m of months) {
     const daysInMonth = new Date(m.year, m.month + 1, 0).getDate();
@@ -1357,33 +2704,22 @@ function renderGantt() {
     }
   }
   html += `</div>`;
-
-  // Day header
   html += `<div class="gantt-header"><div class="gantt-label-col">任务</div><div class="gantt-timeline-col">`;
   for (let i = 0; i < totalDays; i++) {
-    const d = new Date(minDate);
-    d.setDate(d.getDate() + i);
-    const isWeekend = d.getDay() === 0 || d.getDay() === 6;
-    html += `<div class="gantt-day-cell" style="min-width:${dayWidth}px; ${isWeekend ? 'color:#d1d5db;' : ''}">${d.getDate()}</div>`;
+    const d = new Date(minDate); d.setDate(d.getDate() + i);
+    html += `<div class="gantt-day-cell" style="min-width:${dayWidth}px; ${d.getDay()===0||d.getDay()===6?'color:#d1d5db;':''}">${d.getDate()}</div>`;
   }
   html += `</div></div>`;
-
-  // Task rows for dated tasks
   if (datedTasks.length > 0) {
     html += `<div class="gantt-section-title">有日期任务</div>`;
     html += datedTasks.map(t => renderGanttRow(t, minDate, totalDays, dayWidth)).join('');
   }
-
-  // Undated tasks
   if (undatedTasks.length > 0) {
     html += `<div class="gantt-section-title" style="margin-top:12px;">待定日期</div>`;
     html += undatedTasks.map(t => renderGanttRow(t, minDate, totalDays, dayWidth)).join('');
   }
-
   html += `</div>`;
   container.innerHTML = html;
-
-  // Attach click handlers
   container.querySelectorAll('.gantt-row-label, .gantt-bar').forEach(el => {
     el.addEventListener('click', () => openDetail(Number(el.dataset.id)));
   });
@@ -1393,24 +2729,20 @@ function renderGanttRow(task, minDate, totalDays, dayWidth) {
   const indent = task.depth * 16;
   const start = task.startDate ? new Date(task.startDate) : new Date(task.dueDate);
   const end = task.dueDate ? new Date(task.dueDate) : new Date(task.startDate);
-
   const startOffset = Math.ceil((start - minDate) / (1000 * 60 * 60 * 24));
   const duration = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1);
-
-  return `
-    <div class="gantt-row">
-      <div class="gantt-row-label" data-id="${task.id}" style="padding-left:${12 + indent}px;">
-        <span class="status-dot ${task.status}"></span>
-        <span style="overflow:hidden; text-overflow:ellipsis;">${escHtml(task.title)}</span>
-      </div>
-      <div class="gantt-row-bars">
-        ${Array.from({length: totalDays}, (_, i) => `<div class="gantt-bar-cell" style="min-width:${dayWidth}px;"></div>`).join('')}
-        <div class="gantt-bar ${task.status}" data-id="${task.id}"
-             style="left:${startOffset * dayWidth}px; width:${duration * dayWidth - 4}px;"
-             title="${escHtml(task.title)}: ${task.startDate || '?'} → ${task.dueDate || '?'}">
-        </div>
-      </div>
-    </div>`;
+  return `<div class="gantt-row">
+    <div class="gantt-row-label" data-id="${task.id}" style="padding-left:${12 + indent}px;">
+      <span class="status-dot ${task.status}"></span>
+      <span style="overflow:hidden; text-overflow:ellipsis;">${escHtml(task.title)}</span>
+    </div>
+    <div class="gantt-row-bars">
+      ${Array.from({length: totalDays}, (_, i) => `<div class="gantt-bar-cell" style="min-width:${dayWidth}px;"></div>`).join('')}
+      <div class="gantt-bar ${task.status}" data-id="${task.id}"
+           style="left:${startOffset * dayWidth}px; width:${duration * dayWidth - 4}px;"
+           title="${escHtml(task.title)}: ${task.startDate || '?'} → ${task.dueDate || '?'}"></div>
+    </div>
+  </div>`;
 }
 
 // ============================================================
@@ -1434,7 +2766,6 @@ function closeDetail() {
 function renderDetail() {
   const task = getTask(detailTaskId);
   if (!task) return;
-
   const body = document.getElementById('detailBody');
   const children = getChildren(task.id);
   const ancestors = getAncestors(task.id);
@@ -1445,16 +2776,31 @@ function renderDetail() {
     statusButtons += `<button class="${active}" data-status="${s}" onclick="updateTaskStatus(${task.id}, '${s}')">${statusLabel(s)}</button>`;
   });
 
+  let priorityButtons = '';
+  [null, 1, 2, 3].forEach(p => {
+    const label = p === null ? '无' : 'P' + p;
+    const cls = (p === 1 ? 'p1' : p === 2 ? 'p2' : p === 3 ? 'p3' : '') + (task.priority === p ? ' active' : '');
+    priorityButtons += `<button class="${cls}" data-priority="${p === null ? '' : p}" onclick="updateTask(${task.id}, {priority: ${p === null ? 'null' : p}}); renderDetail();">${label}</button>`;
+  });
+
   let ancestorsHtml = '';
   if (ancestors.length > 0) {
-    ancestorsHtml = `
-      <div class="detail-field">
-        <label>父任务</label>
-        <div style="display:flex; gap:4px; flex-wrap:wrap;">
-          ${ancestors.map(a => `<span class="badge badge-work" style="cursor:pointer;" onclick="openDetail(${a.id})">${escHtml(a.title)}</span>`).join('')}
-        </div>
-      </div>`;
+    ancestorsHtml = `<div class="detail-field"><label>父任务</label>
+      <div style="display:flex; gap:4px; flex-wrap:wrap;">
+        ${ancestors.map(a => `<span class="badge" style="cursor:pointer;" onclick="openDetail(${a.id})">${escHtml(a.title)}</span>`).join('')}
+      </div></div>`;
   }
+
+  const tagStr = (task.tags||[]).join(', ');
+  const tagEditHtml = `
+    <div class="detail-field">
+      <label>标签</label>
+      <div class="tag-edit-wrap" id="tagEditWrap">
+        ${(task.tags||[]).map(t => `<span class="tag-edit-chip">${escHtml(t)}<span class="tag-remove" onclick="event.stopPropagation(); removeTagFromTask(${task.id},'${escHtml(t)}')">×</span></span>`).join('')}
+      </div>
+      <input type="text" value="${escHtml(tagStr)}" placeholder="逗号分隔，如 设计, 前端"
+             onchange="updateTaskTags(${task.id}, this.value); renderDetail();" style="margin-top:4px;">
+    </div>`;
 
   let subtaskHtml = `
     <div class="detail-subtasks">
@@ -1465,8 +2811,7 @@ function renderDetail() {
             <span class="status-dot ${c.status}"></span>
             <span class="subtask-title">${escHtml(c.title)}</span>
             <span style="margin-left:auto; font-size:11px; color:var(--text-muted);">${formatDateShort(c.dueDate) || ''}</span>
-          </div>
-        `).join('')}
+          </div>`).join('')}
       </div>
       <form class="add-subtask-form" onsubmit="addSubtask(event, ${task.id})">
         <input type="text" placeholder="添加子任务..." required>
@@ -1479,12 +2824,14 @@ function renderDetail() {
       <label>任务标题</label>
       <input type="text" value="${escHtml(task.title)}" onchange="updateTask(${task.id}, {title: this.value})">
     </div>
-
     <div class="detail-field">
       <label>状态</label>
       <div class="status-select">${statusButtons}</div>
     </div>
-
+    <div class="detail-field">
+      <label>优先级</label>
+      <div class="priority-select">${priorityButtons}</div>
+    </div>
     <div style="display:flex; gap:12px;">
       <div class="detail-field" style="flex:1;">
         <label>起始日期</label>
@@ -1496,19 +2843,25 @@ function renderDetail() {
       </div>
     </div>
     <button class="btn btn-ghost btn-sm" style="align-self:flex-start;" onclick="updateTask(${task.id}, {startDate: null, dueDate: null}); renderDetail();">设为待定</button>
-
     <div class="detail-field">
       <label>描述</label>
       <textarea placeholder="添加描述..." onchange="updateTask(${task.id}, {description: this.value})">${escHtml(task.description || '')}</textarea>
     </div>
-
     ${ancestorsHtml}
+    ${tagEditHtml}
     ${subtaskHtml}
-
-    <div style="margin-top:12px; padding-top:12px; border-top:1px solid var(--border);">
+    <div style="display:flex; gap:8px; margin-top:12px; padding-top:12px; border-top:1px solid var(--border);">
+      <button class="btn-focus" onclick="startFocus(${task.id})">⏱ 专注模式</button>
       <button class="btn btn-danger btn-sm" onclick="deleteTaskConfirm(${task.id})">删除此任务</button>
     </div>
   `;
+}
+
+function removeTagFromTask(id, tag) {
+  const task = getTask(id);
+  if (!task) return;
+  const tags = (task.tags||[]).filter(t => t !== tag);
+  updateTask(id, { tags });
 }
 
 async function addSubtask(event, parentId) {
@@ -1517,16 +2870,10 @@ async function addSubtask(event, parentId) {
   const title = input.value.trim();
   if (!title) return;
   const task = await addTask(title, parentId);
-
-  // auto-set dates from parent
   const parent = getTask(parentId);
   if (parent) {
-    await updateTask(task.id, {
-      startDate: parent.startDate,
-      dueDate: parent.dueDate
-    });
+    await updateTask(task.id, { startDate: parent.startDate, dueDate: parent.dueDate });
   }
-
   input.value = '';
   renderDetail();
   renderAll();
@@ -1535,14 +2882,8 @@ async function addSubtask(event, parentId) {
 async function updateTaskStatus(id, status) {
   const task = getTask(id);
   if (!task) return;
-
-  if (status === 'in-progress' && !task.startDate) {
-    task.startDate = toDateStr(new Date());
-  }
-  if (status === 'completed' && !task.dueDate) {
-    task.dueDate = toDateStr(new Date());
-  }
-
+  if (status === 'in-progress' && !task.startDate) task.startDate = toDateStr(new Date());
+  if (status === 'completed' && !task.dueDate) task.dueDate = toDateStr(new Date());
   await updateTask(id, { status });
   renderDetail();
 }
@@ -1550,12 +2891,40 @@ async function updateTaskStatus(id, status) {
 async function deleteTaskConfirm(id) {
   const task = getTask(id);
   const count = 1 + getDescendants(id).length;
-  const msg = count > 1
-    ? `确定删除"${task.title}"及其 ${count - 1} 个子任务？`
-    : `确定删除"${task.title}"？`;
-  if (confirm(msg)) {
-    closeDetail();
-    await deleteTask(id);
+  const msg = count > 1 ? `确定删除"${task.title}"及其 ${count - 1} 个子任务？` : `确定删除"${task.title}"？`;
+  if (confirm(msg)) { closeDetail(); await deleteTask(id); }
+}
+
+// ============================================================
+// SIDEBAR HELPERS
+// ============================================================
+function updateSidebarDate() {
+  const now = new Date();
+  const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+  document.getElementById('sidebarDate').textContent =
+    `${now.getMonth()+1}月${now.getDate()}日 ${weekDays[now.getDay()]}`;
+}
+
+function updateSidebarProgress() {
+  const todayStr = toDateStr(today);
+  const relevant = todos.filter(t => {
+    if (!t.startDate && !t.dueDate) return false;
+    if (t.startDate && t.startDate > todayStr) return false;
+    if (t.dueDate && t.dueDate < todayStr) return false;
+    return true;
+  });
+  const total = relevant.length;
+  const done = relevant.filter(t => t.status === 'completed').length;
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  const ring = document.getElementById('progressRing');
+  const text = document.getElementById('progressText');
+  const circumference = 2 * Math.PI * 22;
+  if (total === 0) {
+    ring.setAttribute('stroke-dashoffset', circumference);
+    text.textContent = '--';
+  } else {
+    ring.setAttribute('stroke-dashoffset', circumference - (pct / 100) * circumference);
+    text.textContent = pct + '%';
   }
 }
 
@@ -1566,11 +2935,9 @@ function switchView(view) {
   currentView = view;
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.querySelector(`[data-view="${view}"]`)?.classList.add('active');
-
   document.querySelectorAll('.view-panel').forEach(p => p.style.display = 'none');
   const panel = document.getElementById(`view-${view}`);
   if (panel) panel.style.display = 'flex';
-
   hideCalendarPopover();
   renderView(view);
 }
@@ -1587,7 +2954,9 @@ function renderView(view) {
 function renderAll() {
   renderView(currentView);
   if (detailTaskId) renderDetail();
+  renderSidebarTags();
   updateNavBadges();
+  updateSidebarProgress();
 }
 
 function updateNavBadges() {
@@ -1611,18 +2980,15 @@ function toDateStr(date) {
   const d = String(date.getDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
 }
-
 function formatDateShort(dateStr) {
   if (!dateStr) return '';
   const parts = dateStr.split('-');
   return `${parseInt(parts[1])}月${parseInt(parts[2])}日`;
 }
-
 function statusLabel(status) {
   const map = { 'not-started': '未开始', 'in-progress': '进行中', 'completed': '已完成' };
   return map[status] || status;
 }
-
 function escHtml(str) {
   const div = document.createElement('div');
   div.textContent = str;
@@ -1632,18 +2998,15 @@ function escHtml(str) {
 // ============================================================
 // EVENT BINDINGS
 // ============================================================
-// Nav clicks
 document.querySelectorAll('.nav-item').forEach(item => {
   item.addEventListener('click', () => switchView(item.dataset.view));
 });
 
-// Detail panel
 document.getElementById('btnDetailClose').addEventListener('click', closeDetail);
 document.getElementById('overlay').addEventListener('click', function(e) {
   if (e.target === this) closeDetail();
 });
 
-// Calendar popover close
 document.addEventListener('click', function(e) {
   const popover = document.getElementById('calendarPopover');
   if (popover.classList.contains('show')) {
@@ -1662,33 +3025,343 @@ document.getElementById('listStatusFilter').addEventListener('click', function(e
   renderList();
 });
 
+document.getElementById('listPriorityFilter').addEventListener('click', function(e) {
+  if (!e.target.classList.contains('filter-btn')) return;
+  listFilterPriority = e.target.dataset.priority;
+  this.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  e.target.classList.add('active');
+  renderList();
+});
+
 document.getElementById('listSearch').addEventListener('input', function(e) {
   listSearch = e.target.value.trim();
   renderList();
 });
 
-// Add root task button
+// Daily note auto-save
+let _dailyNoteTimer = null;
+document.getElementById('dailyNoteInput').addEventListener('input', function() {
+  clearTimeout(_dailyNoteTimer);
+  _dailyNoteTimer = setTimeout(saveDailyNote, 600);
+});
+
+// Quick Add
+document.getElementById('fabBtn').addEventListener('click', openQuickAdd);
+document.getElementById('quickAddInput').addEventListener('input', updateQuickAddPreview);
+document.getElementById('quickAddInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') { e.preventDefault(); submitQuickAdd(); }
+  if (e.key === 'Escape') closeQuickAdd();
+});
+document.getElementById('quickAddOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeQuickAdd();
+});
+
+// Focus presets
+document.querySelectorAll('.focus-preset-btn').forEach(btn => {
+  btn.addEventListener('click', () => setFocusMinutes(Number(btn.dataset.min)));
+});
+
 document.getElementById('btnAddRoot').addEventListener('click', async function() {
   await addTask('新任务', null);
-  // Expand all root tasks
   getRootTasks().forEach(t => expandedIds.add(t.id));
   renderAll();
 });
 
-// Keyboard shortcuts
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') {
-    if (detailTaskId) closeDetail();
-    hideCalendarPopover();
+
+// ============================================================
+// PLATFORM DETECTION & TOAST
+// ============================================================
+const IS_MAC = /Mac|iPhone|iPad/.test(navigator.platform);
+const MOD_KEY = IS_MAC ? 'metaKey' : 'ctrlKey';
+const MOD_LABEL = IS_MAC ? '⌘' : 'Ctrl';
+const DEL_LABEL = IS_MAC ? '⌘⌫' : 'Ctrl+Del';
+
+function showToast(msg, duration = 3000) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toast._tid);
+  toast._tid = setTimeout(() => toast.classList.remove('show'), duration);
+}
+
+// ============================================================
+// COMMAND PALETTE
+// ============================================================
+const cmdK = {
+  _idx: -1,
+  _items: [],
+  open() {
+    const overlay = document.getElementById('cmdkOverlay');
+    const input = document.getElementById('cmdkInput');
+    overlay.classList.add('show');
+    input.value = '';
+    this._idx = -1;
+    this._populate('');
+    setTimeout(() => input.focus(), 50);
+  },
+  close() {
+    document.getElementById('cmdkOverlay').classList.remove('show');
+    this._items = [];
+    this._idx = -1;
+  },
+  _populate(query) {
+    const list = document.getElementById('cmdkList');
+    const q = query.toLowerCase().trim();
+    const items = [];
+    let html = '<div class="cmdk-group-label">跳转视图</div>';
+    for (const v of [
+      { name: '今日', view: 'daily', icon: '☀' },
+      { name: '总任务列表', view: 'list', icon: '☰' },
+      { name: '日历表', view: 'calendar', icon: '◷' },
+      { name: '甘特图', view: 'gantt', icon: '▦' },
+    ]) {
+      if (!q || v.name.includes(q)) {
+        items.push({ label: v.name, hint: '跳转', action: () => { switchView(v.view); this.close(); }, icon: v.icon });
+      }
+    }
+    html += '<div class="cmdk-group-label">操作</div>';
+    const actions = [
+      { label: '新建任务', hint: MOD_LABEL + '+N', action: () => { this.close(); openQuickAdd(); }, icon: '+' },
+      { label: '清空已完成任务', hint: '', action: () => { this.close(); cleanCompleted(); }, icon: '🧹' },
+      { label: '导出 PPT 报告', hint: '', action: () => { this.close(); generatePPT(); }, icon: '📊' },
+    ];
+    for (const a of actions) {
+      if (!q || a.label.includes(q)) items.push({ ...a, icon: a.icon });
+    }
+    if (q) {
+      html += '<div class="cmdk-group-label">搜索任务</div>';
+      const matches = todos.filter(t => t.title.toLowerCase().includes(q));
+      if (matches.length === 0) {
+        html += '<div class="cmdk-item"><span style="color:var(--text-muted);">无匹配任务</span></div>';
+      }
+      for (const t of matches.slice(0, 8)) {
+        items.push({ label: t.title, hint: statusLabel(t.status), action: () => { this.close(); openDetail(t.id); }, icon: '●' });
+      }
+    }
+    this._items = items;
+    for (let i = 0; i < items.length; i++) {
+      html += `<div class="cmdk-item" data-cmdk-idx="${i}" onmousedown="event.preventDefault();cmdK._pick(${i})">
+        <span class="cmdk-icon">${items[i].icon}</span>
+        <span class="cmdk-label">${escHtml(items[i].label)}</span>
+        <span class="cmdk-hint">${items[i].hint || ''}</span>
+      </div>`;
+    }
+    list.innerHTML = html;
+    this._updateActive();
+  },
+  _pick(i) {
+    if (i >= 0 && i < this._items.length) {
+      this._items[i].action();
+    }
+  },
+  _updateActive() {
+    const list = document.getElementById('cmdkList');
+    list.querySelectorAll('.cmdk-item').forEach(el => el.classList.remove('active'));
+    if (this._idx >= 0) {
+      const el = list.querySelector(`[data-cmdk-idx="${this._idx}"]`);
+      if (el) { el.classList.add('active'); el.scrollIntoView({ block: 'nearest' }); }
+    }
+  },
+  _move(delta) {
+    if (this._items.length === 0) return;
+    this._idx = Math.max(0, Math.min(this._items.length - 1, this._idx + delta));
+    if (this._idx < 0) this._idx = this._items.length - 1;
+    this._updateActive();
   }
-  if (e.key === 'Escape' && document.activeElement?.tagName === 'INPUT') {
-    document.activeElement.blur();
+};
+window.cmdK = cmdK;
+
+// CmdK input handler
+document.getElementById('cmdkInput').addEventListener('input', function(e) {
+  cmdK._idx = -1;
+  cmdK._populate(this.value);
+});
+document.getElementById('cmdkInput').addEventListener('keydown', function(e) {
+  if (e.key === 'ArrowDown') { e.preventDefault(); cmdK._move(1); }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); cmdK._move(-1); }
+  else if (e.key === 'Enter') { e.preventDefault(); cmdK._pick(cmdK._idx >= 0 ? cmdK._idx : 0); }
+  else if (e.key === 'Escape') { e.preventDefault(); cmdK.close(); }
+});
+document.getElementById('cmdkOverlay').addEventListener('click', function(e) {
+  if (e.target === this) cmdK.close();
+});
+
+// ============================================================
+// KEYBOARD HANDLER
+// ============================================================
+let focusedTaskId = null;
+
+function focusTaskRow(id) {
+  const prev = document.querySelector('.task-row.key-focused');
+  if (prev) prev.classList.remove('key-focused');
+  const row = document.querySelector(`.task-row[data-id="${id}"]`);
+  if (row) { row.classList.add('key-focused'); row.scrollIntoView({ block: 'nearest' }); }
+  focusedTaskId = id;
+}
+
+function clearFocusRow() {
+  const prev = document.querySelector('.task-row.key-focused');
+  if (prev) prev.classList.remove('key-focused');
+  focusedTaskId = null;
+}
+
+function getVisibleTaskIds() {
+  const rows = document.querySelectorAll('#listContent .task-row, #dailyTasksContainer .task-row');
+  return Array.from(rows).map(r => Number(r.dataset.id));
+}
+
+document.addEventListener('keydown', function(e) {
+  // Ignore if focus is inside input, textarea, or select
+  const tag = document.activeElement?.tagName?.toLowerCase();
+  if (tag === 'input' || tag === 'textarea' || tag === 'select') {
+    if (e.key === 'Escape') document.activeElement.blur();
+    return;
+  }
+
+  // Mod+K → Command Palette
+  if (e[MOD_KEY] && e.key === 'k') {
+    e.preventDefault();
+    if (document.getElementById('focusOverlay').classList.contains('show')) return;
+    if (document.getElementById('cmdkOverlay').classList.contains('show')) { cmdK.close(); return; }
+    if (document.getElementById('quickAddOverlay').classList.contains('show')) { closeQuickAdd(); return; }
+    cmdK.open();
+    return;
+  }
+
+  // Mod+N → Quick Add
+  if (e[MOD_KEY] && e.key === 'n') {
+    e.preventDefault();
+    openQuickAdd();
+    return;
+  }
+
+  // Mod+/ → Show shortcuts
+  if (e[MOD_KEY] && e.key === '/') {
+    e.preventDefault();
+    showToast(`${MOD_LABEL}+K 命令面板 · ${MOD_LABEL}+N 新建 · J/K 导航 · Space 完成 · Tab 缩进 · 1/2/3 优先级`);
+    return;
+  }
+
+  // Escape
+  if (e.key === 'Escape') {
+    if (document.getElementById('cmdkOverlay').classList.contains('show')) { cmdK.close(); return; }
+    if (document.getElementById('quickAddOverlay').classList.contains('show')) { closeQuickAdd(); return; }
+    if (document.getElementById('focusOverlay').classList.contains('show')) { exitFocus(); return; }
+    if (detailTaskId) { closeDetail(); return; }
+    clearFocusRow();
+    hideCalendarPopover();
+    return;
+  }
+
+  // G chord for view switching
+  if (e.key === 'g' && !e[MOD_KEY]) {
+    if (document.getElementById('quickAddOverlay').classList.contains('show')) return;
+    if (document.getElementById('cmdkOverlay').classList.contains('show')) return;
+    // Store that we're in G-chord state
+    const onGChord = function(ev) {
+      document.removeEventListener('keydown', onGChord);
+      if (ev.key === 't') switchView('daily');
+      else if (ev.key === 'o') switchView('list');
+      else if (ev.key === 'c') switchView('calendar');
+      else if (ev.key === 'g') switchView('gantt');
+    };
+    document.addEventListener('keydown', onGChord, { once: false });
+    setTimeout(() => document.removeEventListener('keydown', onGChord), 800);
+    return;
+  }
+
+  // Task list navigation
+  const visibleIds = getVisibleTaskIds();
+  if (visibleIds.length === 0) return;
+
+  if (e.key === 'j' || e.key === 'ArrowDown') {
+    e.preventDefault();
+    const idx = focusedTaskId ? visibleIds.indexOf(focusedTaskId) : -1;
+    const next = idx < visibleIds.length - 1 ? visibleIds[idx + 1] : visibleIds[0];
+    focusTaskRow(next);
+    return;
+  }
+  if (e.key === 'k' || e.key === 'ArrowUp') {
+    e.preventDefault();
+    const idx = focusedTaskId ? visibleIds.indexOf(focusedTaskId) : -1;
+    const prev = idx > 0 ? visibleIds[idx - 1] : visibleIds[visibleIds.length - 1];
+    focusTaskRow(prev);
+    return;
+  }
+
+  // Space → toggle completed
+  if (e.key === ' ' && focusedTaskId) {
+    e.preventDefault();
+    const t = getTask(focusedTaskId);
+    if (t) {
+      const newStatus = t.status === 'completed' ? 'not-started' : 'completed';
+      updateTask(focusedTaskId, { status: newStatus });
+      showToast(newStatus === 'completed' ? '已完成' : '标记为未完成', 1500);
+    }
+    return;
+  }
+
+  // Enter → open detail
+  if (e.key === 'Enter' && focusedTaskId) {
+    e.preventDefault();
+    openDetail(focusedTaskId);
+    return;
+  }
+
+  // 1/2/3 → set priority
+  if (['1','2','3'].includes(e.key) && focusedTaskId) {
+    e.preventDefault();
+    const p = parseInt(e.key);
+    const t = getTask(focusedTaskId);
+    if (t && t.priority !== p) {
+      updateTask(focusedTaskId, { priority: p });
+      showToast(`优先级设为 P${p}`, 1500);
+    }
+    return;
+  }
+
+  // Tab/Shift+Tab → indent/outdent (move as subtask)
+  if (e.key === 'Tab' && focusedTaskId) {
+    e.preventDefault();
+    const t = getTask(focusedTaskId);
+    if (!t) return;
+    const visible = getVisibleTaskIds();
+    const myIdx = visible.indexOf(t.id);
+    if (e.shiftKey) {
+      // Outdent: remove parent
+      if (t.parentId) {
+        updateTask(t.id, { parentId: null });
+        showToast('已提升层级', 1500);
+      }
+    } else {
+      // Indent: parent = previous visible task
+      if (myIdx > 0) {
+        const prevId = visible[myIdx - 1];
+        if (prevId !== t.parentId) {
+          updateTask(t.id, { parentId: prevId });
+          showToast('已变为子任务', 1500);
+        }
+      }
+    }
+    return;
   }
 });
 
 // ============================================================
 // INIT
 // ============================================================
+async function cleanCompleted() {
+  const toDelete = todos.filter(t => t.status === 'completed').map(t => t.id);
+  if (toDelete.length === 0) { showToast('没有已完成的任务'); return; }
+  if (!confirm(`删除 ${toDelete.length} 个已完成任务？此操作不可撤销。`)) return;
+  for (const id of toDelete) {
+    todos = todos.filter(t => t.id !== id && t.parentId !== id);
+  }
+  await saveTodos();
+  renderAll();
+  showToast(`已删除 ${toDelete.length} 个已完成任务`);
+}
+
 async function fixParentStatuses() {
   for (const t of todos) {
     if (hasChildren(t.id)) {
@@ -1702,19 +3375,35 @@ async function fixParentStatuses() {
 }
 
 async function initApp() {
+  // Update FAB tooltip for platform
+  document.getElementById('fabBtn').title = `快速添加 (${MOD_LABEL}+K)`;
   await initData();
   await recalcAllParentStatuses();
   await fixParentStatuses();
-
-  // Auto-expand root tasks
   getRootTasks().forEach(t => expandedIds.add(t.id));
-
-  // Initial render
+  updateSidebarDate();
   switchView('list');
+  renderSidebarTags();
   updateNavBadges();
+  updateSidebarProgress();
 }
 
 initApp();
 </script>
+
+<!-- Command Palette -->
+<div class="cmdk-overlay" id="cmdkOverlay">
+  <div class="cmdk-modal">
+    <input type="text" class="cmdk-input" id="cmdkInput" placeholder="搜索任务或命令..." autocomplete="off">
+    <div class="cmdk-list" id="cmdkList"></div>
+    <div class="cmdk-footer">
+      <span>↑↓ 导航</span><span>↵ 确认</span><span>esc 关闭</span>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
 </body>
 </html>
