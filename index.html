@@ -1950,25 +1950,36 @@ function saveMiscLocal(key, arr) {
 }
 
 async function loadMiscData() {
+  miscLoadDiag = '[1] 函数已进入';
+  if (currentView === 'misc') renderMisc();
   // Load local first (fallback / cache)
   const localTypes = loadMiscLocal(MISC_TYPES_KEY);
   const localRecords = loadMiscLocal(MISC_RECORDS_KEY);
   miscTypes = localTypes;
   miscRecords = localRecords;
+  miscLoadDiag = `[2] 本地读取完成 ${localTypes.length}类/${localRecords.length}条`;
+  if (currentView === 'misc') renderMisc();
 
   if (!supabaseClient) {
-    miscLoadDiag = `本地 ${localTypes.length}类/${localRecords.length}条; Supabase 客户端未初始化`;
+    miscLoadDiag = `[3] Supabase 客户端未初始化（typeof supabase=${typeof supabase}）`;
+    if (currentView === 'misc') renderMisc();
     return;
   }
+  miscLoadDiag = '[3] Supabase 客户端已就绪，准备查询';
+  if (currentView === 'misc') renderMisc();
   try {
     const sinceDate = new Date();
     sinceDate.setDate(sinceDate.getDate() - 90);
     const sinceStr = toDateStr(sinceDate);
 
+    miscLoadDiag = '[4] 发起 Supabase 查询...';
+    if (currentView === 'misc') renderMisc();
     const [typesRes, recordsRes] = await Promise.all([
       supabaseClient.from('misc_task_types').select('*').order('sort_order', { ascending: true }),
       supabaseClient.from('misc_task_records').select('*').gte('occurred_at', sinceStr).order('occurred_at', { ascending: false })
     ]);
+    miscLoadDiag = `[5] Supabase 查询完成. typesErr=${typesRes.error?'有':'无'} recordsErr=${recordsRes.error?'有':'无'}`;
+    if (currentView === 'misc') renderMisc();
 
     let typesMsg, recordsMsg;
     if (typesRes.error) {
