@@ -1911,6 +1911,7 @@ const MISC_COLOR_PALETTE = [
 
 let miscTypes = [];
 let miscRecords = [];
+let miscLoadDiag = '';
 
 function miscTypeFromDB(r) {
   return {
@@ -1955,7 +1956,10 @@ async function loadMiscData() {
   miscTypes = localTypes;
   miscRecords = localRecords;
 
-  if (!supabaseClient) return;
+  if (!supabaseClient) {
+    miscLoadDiag = `本地 ${localTypes.length}类/${localRecords.length}条; Supabase 客户端未初始化`;
+    return;
+  }
   try {
     const sinceDate = new Date();
     sinceDate.setDate(sinceDate.getDate() - 90);
@@ -1966,18 +1970,23 @@ async function loadMiscData() {
       supabaseClient.from('misc_task_records').select('*').gte('occurred_at', sinceStr).order('occurred_at', { ascending: false })
     ]);
 
-    // Types: if remote has data, use it; if remote empty BUT local has data, don't wipe local
-    if (!typesRes.error && typesRes.data) {
+    let typesMsg, recordsMsg;
+    if (typesRes.error) {
+      typesMsg = `types 错误: ${typesRes.error.message || typesRes.error.code || JSON.stringify(typesRes.error)}`;
+    } else if (typesRes.data) {
+      typesMsg = `types 远端 ${typesRes.data.length} 条`;
       if (typesRes.data.length > 0) {
         miscTypes = typesRes.data.map(miscTypeFromDB);
         saveMiscLocal(MISC_TYPES_KEY, miscTypes);
       } else if (localTypes.length === 0) {
         miscTypes = [];
       }
-      // else: keep local as is (protection: don't overwrite local with empty remote)
     }
 
-    if (!recordsRes.error && recordsRes.data) {
+    if (recordsRes.error) {
+      recordsMsg = `records 错误: ${recordsRes.error.message || recordsRes.error.code || JSON.stringify(recordsRes.error)}`;
+    } else if (recordsRes.data) {
+      recordsMsg = `records 远端 ${recordsRes.data.length} 条`;
       if (recordsRes.data.length > 0) {
         miscRecords = recordsRes.data.map(miscRecordFromDB);
         saveMiscLocal(MISC_RECORDS_KEY, miscRecords);
@@ -1985,8 +1994,10 @@ async function loadMiscData() {
         miscRecords = [];
       }
     }
+    miscLoadDiag = `本地 ${localTypes.length}类/${localRecords.length}条 → ${typesMsg} · ${recordsMsg} → 当前 ${miscTypes.length}类/${miscRecords.length}条`;
   } catch (e) {
     console.warn('Misc load failed, using local:', e);
+    miscLoadDiag = `加载异常: ${e.message}`;
   }
 }
 
@@ -3548,7 +3559,11 @@ function renderMisc() {
   const c = document.getElementById('miscContent');
   const types = activeMiscTypes();
 
-  let html = '<div class="misc-section-label">今日累计</div>';
+  let html = '';
+  if (miscLoadDiag) {
+    html += `<div style="background:#fff8e0;border:1px solid #e8c97a;padding:8px 12px;border-radius:6px;font-size:11px;color:#6b5a3f;margin-bottom:12px;font-family:monospace;word-break:break-all;">🔍 诊断: ${escHtml(miscLoadDiag)}</div>`;
+  }
+  html += '<div class="misc-section-label">今日累计</div>';
 
   // Card grid
   html += '<div class="misc-card-grid">';
