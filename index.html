@@ -1708,6 +1708,9 @@ textarea { resize: vertical; min-height: 60px; }
   </div>
 </div>
 
+<!-- Global Diagnostic Banner (always visible) -->
+<div id="globalDiagBanner" style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#fff8e0;border-bottom:2px solid #e8c97a;padding:6px 12px;font-family:ui-monospace,monospace;font-size:12px;color:#6b5a3f;white-space:nowrap;overflow-x:auto;">🔍 INIT 等待中</div>
+
 <!-- Misc Type Modal -->
 <div class="misc-modal-overlay" id="miscTypeModal">
   <div class="misc-modal">
@@ -1912,6 +1915,15 @@ const MISC_COLOR_PALETTE = [
 let miscTypes = [];
 let miscRecords = [];
 let miscLoadDiag = '⚠ loadMiscData 未执行（init 可能提前报错）';
+function updateGlobalDiag(msg) {
+  miscLoadDiag = msg;
+  const el = document.getElementById('globalDiagBanner');
+  if (el) el.textContent = '🔍 ' + msg;
+  document.title = '[D] ' + msg.slice(0, 60);
+  if (typeof currentView !== 'undefined' && currentView === 'misc' && typeof renderMisc === 'function') {
+    try { renderMisc(); } catch (e) {}
+  }
+}
 
 function miscTypeFromDB(r) {
   return {
@@ -1950,36 +1962,30 @@ function saveMiscLocal(key, arr) {
 }
 
 async function loadMiscData() {
-  miscLoadDiag = '[1] 函数已进入';
-  if (currentView === 'misc') renderMisc();
+  updateGlobalDiag('[1] 函数已进入');
   // Load local first (fallback / cache)
   const localTypes = loadMiscLocal(MISC_TYPES_KEY);
   const localRecords = loadMiscLocal(MISC_RECORDS_KEY);
   miscTypes = localTypes;
   miscRecords = localRecords;
-  miscLoadDiag = `[2] 本地读取完成 ${localTypes.length}类/${localRecords.length}条`;
-  if (currentView === 'misc') renderMisc();
+  updateGlobalDiag(`[2] 本地读取完成 ${localTypes.length}类/${localRecords.length}条`);
 
   if (!supabaseClient) {
-    miscLoadDiag = `[3] Supabase 客户端未初始化（typeof supabase=${typeof supabase}）`;
-    if (currentView === 'misc') renderMisc();
+    updateGlobalDiag(`[3] Supabase 客户端未初始化（typeof supabase=${typeof supabase}）`);
     return;
   }
-  miscLoadDiag = '[3] Supabase 客户端已就绪，准备查询';
-  if (currentView === 'misc') renderMisc();
+  updateGlobalDiag('[3] Supabase 客户端已就绪，准备查询');
   try {
     const sinceDate = new Date();
     sinceDate.setDate(sinceDate.getDate() - 90);
     const sinceStr = toDateStr(sinceDate);
 
-    miscLoadDiag = '[4] 发起 Supabase 查询...';
-    if (currentView === 'misc') renderMisc();
+    updateGlobalDiag('[4] 发起 Supabase 查询...');
     const [typesRes, recordsRes] = await Promise.all([
       supabaseClient.from('misc_task_types').select('*').order('sort_order', { ascending: true }),
       supabaseClient.from('misc_task_records').select('*').gte('occurred_at', sinceStr).order('occurred_at', { ascending: false })
     ]);
-    miscLoadDiag = `[5] Supabase 查询完成. typesErr=${typesRes.error?'有':'无'} recordsErr=${recordsRes.error?'有':'无'}`;
-    if (currentView === 'misc') renderMisc();
+    updateGlobalDiag(`[5] 查询完成. types err=${typesRes.error?.message||'无'} | records err=${recordsRes.error?.message||'无'} | typesN=${typesRes.data?.length} recordsN=${recordsRes.data?.length}`);
 
     let typesMsg, recordsMsg;
     if (typesRes.error) {
@@ -4729,7 +4735,11 @@ async function initApp() {
   await miscLoadPromise;
 }
 
-initApp();
+updateGlobalDiag('[0a] 脚本到达 initApp 调用前');
+initApp().catch(e => {
+  updateGlobalDiag('!!! initApp 抛出: ' + (e.message || e));
+});
+updateGlobalDiag('[0b] initApp 已发起（不阻塞）');
 </script>
 
 <!-- Command Palette -->
