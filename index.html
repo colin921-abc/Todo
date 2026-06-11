@@ -1911,7 +1911,7 @@ const MISC_COLOR_PALETTE = [
 
 let miscTypes = [];
 let miscRecords = [];
-let miscLoadDiag = '';
+let miscLoadDiag = '⚠ loadMiscData 未执行（init 可能提前报错）';
 
 function miscTypeFromDB(r) {
   return {
@@ -4685,18 +4685,29 @@ async function fixParentStatuses() {
 }
 
 async function initApp() {
-  // Update FAB tooltip for platform
-  document.getElementById('fabBtn').title = `快速添加 (${MOD_LABEL}+K)`;
-  await initData();
-  await loadMiscData();
-  await recalcAllParentStatuses();
-  await fixParentStatuses();
-  getRootTasks().forEach(t => expandedIds.add(t.id));
-  updateSidebarDate();
-  switchView('list');
-  renderSidebarTags();
-  updateNavBadges();
-  updateSidebarProgress();
+  try {
+    document.getElementById('fabBtn').title = `快速添加 (${MOD_LABEL}+K)`;
+    await initData();
+  } catch (e) {
+    miscLoadDiag = 'initData 异常: ' + (e.message || e);
+  }
+  try {
+    await loadMiscData();
+  } catch (e) {
+    miscLoadDiag = 'loadMiscData 异常: ' + (e.message || e);
+  }
+  try {
+    await recalcAllParentStatuses();
+    await fixParentStatuses();
+    getRootTasks().forEach(t => expandedIds.add(t.id));
+    updateSidebarDate();
+    switchView('list');
+    renderSidebarTags();
+    updateNavBadges();
+    updateSidebarProgress();
+  } catch (e) {
+    miscLoadDiag += ' | 后续 init 异常: ' + (e.message || e);
+  }
 }
 
 initApp();
