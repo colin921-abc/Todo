@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <title>工作待办</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
 <style>
 /* ============================================================
    DESIGN SYSTEM — 暖奶油 · 高密度
@@ -1244,6 +1245,292 @@ textarea { resize: vertical; min-height: 60px; }
   .focus-ring-wrap { width: 180px; height: 180px; }
   .focus-time { font-size: 42px; }
 }
+
+/* ============================================================
+   MISC TASKS MODULE
+   ============================================================ */
+.misc-section-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 16px 4px 10px;
+}
+.misc-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.misc-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: all var(--transition);
+  position: relative;
+}
+.misc-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.misc-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.misc-card-icon { font-size: 18px; line-height: 1; }
+.misc-card-name { font-size: 14px; font-weight: 600; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.misc-card-menu {
+  background: none; border: none; cursor: pointer;
+  color: var(--text-muted); font-size: 16px; padding: 2px 6px;
+  border-radius: var(--radius-xs); line-height: 1;
+}
+.misc-card-menu:hover { background: var(--accent-subtle); color: var(--text); }
+.misc-card-count {
+  font-size: 24px; font-weight: 700; line-height: 1.1;
+  display: flex; align-items: baseline; gap: 6px;
+}
+.misc-card-count .unit { font-size: 12px; font-weight: 500; color: var(--text-muted); }
+.misc-card-meta { font-size: 11px; color: var(--text-muted); }
+.misc-card-actions { display: flex; gap: 6px; margin-top: 4px; }
+.misc-card-actions .btn { flex: 1; }
+.misc-card-add {
+  background: transparent;
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-md);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; color: var(--text-muted); cursor: pointer;
+  min-height: 130px;
+  transition: all var(--transition);
+}
+.misc-card-add:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-subtle); }
+
+.misc-summary-line {
+  font-size: 13px; color: var(--text-secondary);
+  background: var(--surface-2);
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  margin-bottom: 16px;
+  line-height: 1.6;
+}
+.misc-summary-line .summary-item { white-space: nowrap; }
+.misc-summary-line .summary-sep { color: var(--text-muted); margin: 0 8px; }
+
+.misc-history-toolbar {
+  display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+  margin-bottom: 12px;
+}
+.misc-history-toolbar select, .misc-history-toolbar input {
+  padding: 6px 10px; border: 1px solid var(--border);
+  border-radius: var(--radius-sm); font-size: 12px;
+  background: var(--card-bg); color: var(--text);
+}
+.misc-history-list {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.misc-history-row {
+  display: grid;
+  grid-template-columns: 90px 130px 70px 1fr 80px;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-light);
+  font-size: 13px;
+}
+.misc-history-row:last-child { border-bottom: none; }
+.misc-history-row:hover { background: var(--surface-2); }
+.misc-history-date { font-size: 12px; color: var(--text-secondary); }
+.misc-history-type {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 9px; border-radius: 11px;
+  font-size: 11px; font-weight: 600;
+  background: var(--accent-subtle); color: var(--text-secondary);
+}
+.misc-history-count { font-weight: 600; }
+.misc-history-note { color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.misc-history-actions { display: flex; gap: 4px; justify-content: flex-end; }
+.misc-history-actions button {
+  background: none; border: none; cursor: pointer; padding: 2px 6px;
+  color: var(--text-muted); font-size: 13px; border-radius: var(--radius-xs);
+}
+.misc-history-actions button:hover { background: var(--accent-subtle); color: var(--text); }
+.misc-history-empty { padding: 30px; text-align: center; color: var(--text-muted); font-size: 13px; }
+
+/* Misc Modal (shared by type & record edit) */
+.misc-modal-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.3);
+  z-index: 90;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  align-items: center;
+  justify-content: center;
+}
+.misc-modal-overlay.show { display: flex; animation: fadeIn 0.2s ease; }
+.misc-modal {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  width: 460px;
+  max-width: 92vw;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  max-height: 86vh;
+  overflow-y: auto;
+}
+.misc-modal h3 { font-size: 17px; font-weight: 700; margin-bottom: 14px; }
+.misc-modal .field { margin-bottom: 12px; }
+.misc-modal .field label {
+  display: block;
+  font-size: 11px; font-weight: 600; color: var(--text-secondary);
+  margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.04em;
+}
+.misc-modal input[type=text],
+.misc-modal input[type=number],
+.misc-modal input[type=date],
+.misc-modal textarea,
+.misc-modal select {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-family: inherit;
+  background: var(--card-bg);
+  color: var(--text);
+  outline: none;
+}
+.misc-modal input:focus, .misc-modal textarea:focus, .misc-modal select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(184,150,90,0.15);
+}
+.misc-modal textarea { resize: vertical; min-height: 56px; }
+.misc-modal .color-picker {
+  display: flex; flex-wrap: wrap; gap: 8px;
+}
+.misc-modal .color-swatch {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all var(--transition);
+}
+.misc-modal .color-swatch:hover { transform: scale(1.1); }
+.misc-modal .color-swatch.active { border-color: var(--text); transform: scale(1.15); }
+.misc-modal .modal-actions {
+  display: flex; gap: 8px; justify-content: flex-end;
+  margin-top: 18px;
+}
+.misc-modal .modal-actions .btn-danger { margin-right: auto; }
+
+/* Report view */
+.report-toolbar {
+  display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+.report-toolbar .range-group { display: flex; gap: 4px; }
+.report-toolbar .range-btn {
+  padding: 6px 12px;
+  font-size: 12px;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.report-toolbar .range-btn:hover { background: var(--accent-subtle); }
+.report-toolbar .range-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.report-toolbar input[type=date] {
+  padding: 6px 10px; border: 1px solid var(--border);
+  border-radius: var(--radius-sm); font-size: 12px;
+}
+.report-type-filter {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  align-items: center;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.report-type-filter label {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 9px;
+  border-radius: 11px;
+  background: var(--surface-2);
+  cursor: pointer;
+}
+.report-type-filter input { margin: 0; }
+.report-chart-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  margin-bottom: 14px;
+}
+.report-chart-card h3 {
+  font-size: 14px; font-weight: 600;
+  margin-bottom: 12px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.report-chart-card h3 select {
+  font-size: 12px; padding: 4px 8px;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--card-bg); color: var(--text);
+}
+.report-chart-canvas-wrap {
+  position: relative; height: 280px;
+}
+.report-export-bar {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  padding: 14px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  margin-top: 8px;
+}
+.report-summary-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.report-summary-table th, .report-summary-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-light);
+  text-align: left;
+}
+.report-summary-table th {
+  font-size: 11px; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.04em;
+  font-weight: 600;
+}
+.report-summary-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.report-empty {
+  padding: 40px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+@media (max-width: 720px) {
+  .misc-history-row {
+    grid-template-columns: 80px 1fr 50px;
+    grid-template-areas: "date type count" "note note note" "actions actions actions";
+    gap: 4px;
+  }
+  .misc-history-date { grid-area: date; }
+  .misc-history-type { grid-area: type; }
+  .misc-history-count { grid-area: count; text-align: right; }
+  .misc-history-note { grid-area: note; }
+  .misc-history-actions { grid-area: actions; justify-content: flex-start; }
+}
 </style>
 </head>
 <body>
@@ -1272,6 +1559,13 @@ textarea { resize: vertical; min-height: 60px; }
         </li>
         <li class="nav-item" data-view="gantt">
           <span class="nav-icon">▦</span> 甘特图
+        </li>
+        <li class="nav-item" data-view="misc">
+          <span class="nav-icon">☑</span> 杂项任务集
+          <span class="nav-badge" id="navCountMisc">0</span>
+        </li>
+        <li class="nav-item" data-view="report">
+          <span class="nav-icon">📊</span> 工作汇报
         </li>
       </ul>
       <div class="sidebar-tags" id="sidebarTags">
@@ -1358,6 +1652,25 @@ textarea { resize: vertical; min-height: 60px; }
       <div class="view-header"><h2>甘特图</h2></div>
       <div class="gantt-container view-content" id="ganttContent" style="padding:8px;"></div>
     </div>
+
+    <!-- View: Misc Task Sets -->
+    <div class="view-panel" id="view-misc" style="display:none;">
+      <div class="view-header">
+        <h2>杂项任务集</h2>
+        <div class="view-actions">
+          <button class="btn btn-primary btn-sm" onclick="openMiscTypeModal(null)">+ 新建类型</button>
+        </div>
+      </div>
+      <div class="view-content" id="miscContent"></div>
+    </div>
+
+    <!-- View: Work Report -->
+    <div class="view-panel" id="view-report" style="display:none;">
+      <div class="view-header">
+        <h2>工作汇报</h2>
+      </div>
+      <div class="view-content" id="reportContent"></div>
+    </div>
   </main>
 </div>
 
@@ -1391,6 +1704,69 @@ textarea { resize: vertical; min-height: 60px; }
     <div class="quick-add-actions">
       <button class="btn btn-ghost btn-sm" onclick="closeQuickAdd()">取消</button>
       <button class="btn btn-primary btn-sm" onclick="submitQuickAdd()">创建</button>
+    </div>
+  </div>
+</div>
+
+<!-- Misc Type Modal -->
+<div class="misc-modal-overlay" id="miscTypeModal">
+  <div class="misc-modal">
+    <h3 id="miscTypeModalTitle">新建任务集类型</h3>
+    <div class="field">
+      <label>名称</label>
+      <input type="text" id="miscTypeName" maxlength="40" placeholder="如：处理不合格品">
+    </div>
+    <div class="field">
+      <label>图标（emoji）</label>
+      <input type="text" id="miscTypeIcon" maxlength="4" placeholder="📌">
+    </div>
+    <div class="field">
+      <label>颜色</label>
+      <div class="color-picker" id="miscTypeColorPicker"></div>
+    </div>
+    <div class="field">
+      <label>单位</label>
+      <input type="text" id="miscTypeUnit" maxlength="10" placeholder="件 / 次 / 分钟">
+    </div>
+    <div class="field">
+      <label>排序值（数字，越小越前）</label>
+      <input type="number" id="miscTypeSort" value="0">
+    </div>
+    <div class="field" id="miscTypeArchiveField" style="display:none;">
+      <label><input type="checkbox" id="miscTypeArchived" style="width:auto;margin-right:6px;vertical-align:middle;"> 归档（不在录入页显示，历史数据保留）</label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-danger btn-sm" id="miscTypeDeleteBtn" style="display:none;" onclick="deleteMiscTypeConfirm()">删除</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeMiscTypeModal()">取消</button>
+      <button class="btn btn-primary btn-sm" onclick="saveMiscType()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Misc Record Modal (+N / edit) -->
+<div class="misc-modal-overlay" id="miscRecordModal">
+  <div class="misc-modal">
+    <h3 id="miscRecordModalTitle">记录一笔</h3>
+    <div class="field" id="miscRecordTypeField">
+      <label>类型</label>
+      <select id="miscRecordType"></select>
+    </div>
+    <div class="field">
+      <label>数量</label>
+      <input type="number" id="miscRecordCount" value="1" min="1" step="1">
+    </div>
+    <div class="field">
+      <label>日期</label>
+      <input type="date" id="miscRecordDate">
+    </div>
+    <div class="field">
+      <label>备注（可选）</label>
+      <textarea id="miscRecordNote" placeholder="备注..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-danger btn-sm" id="miscRecordDeleteBtn" style="display:none;" onclick="deleteMiscRecordConfirm()">删除</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeMiscRecordModal()">取消</button>
+      <button class="btn btn-primary btn-sm" onclick="saveMiscRecord()">保存</button>
     </div>
   </div>
 </div>
@@ -1520,6 +1896,197 @@ async function saveTodos() {
         }
       }
     } catch(e) { console.warn('Supabase save failed:', e); }
+  }
+}
+
+// ============================================================
+// MISC TASKS DATA LAYER
+// ============================================================
+const MISC_TYPES_KEY = 'todo_misc_types';
+const MISC_RECORDS_KEY = 'todo_misc_records';
+const MISC_COLOR_PALETTE = [
+  '#b8965a', '#6b9e85', '#c4554d', '#5b87b8', '#9b6bb8',
+  '#d9a64a', '#4a8a8a', '#a86c4a', '#6b8e5b', '#8a6b5b'
+];
+
+let miscTypes = [];
+let miscRecords = [];
+
+function miscTypeFromDB(r) {
+  return {
+    id: r.id, name: r.name, icon: r.icon || '📌',
+    color: r.color || MISC_COLOR_PALETTE[0],
+    unit: r.unit || '次', sortOrder: r.sort_order || 0,
+    archived: !!r.archived, createdAt: r.created_at
+  };
+}
+function miscTypeToDB(t) {
+  return {
+    name: t.name, icon: t.icon, color: t.color, unit: t.unit,
+    sort_order: t.sortOrder, archived: t.archived
+  };
+}
+function miscRecordFromDB(r) {
+  return {
+    id: r.id, typeId: r.type_id, count: r.count, note: r.note || '',
+    occurredAt: r.occurred_at, createdAt: r.created_at
+  };
+}
+function miscRecordToDB(r) {
+  return {
+    type_id: r.typeId, count: r.count,
+    note: r.note || null, occurred_at: r.occurredAt
+  };
+}
+
+function loadMiscLocal(key) {
+  try { return JSON.parse(localStorage.getItem(key)) || []; } catch { return []; }
+}
+function saveMiscLocal(key, arr) {
+  const prev = localStorage.getItem(key);
+  if (prev && prev !== '[]') localStorage.setItem(key + '_backup', prev);
+  localStorage.setItem(key, JSON.stringify(arr));
+}
+
+async function loadMiscData() {
+  // Load local first (fallback / cache)
+  const localTypes = loadMiscLocal(MISC_TYPES_KEY);
+  const localRecords = loadMiscLocal(MISC_RECORDS_KEY);
+  miscTypes = localTypes;
+  miscRecords = localRecords;
+
+  if (!supabaseClient) return;
+  try {
+    const sinceDate = new Date();
+    sinceDate.setDate(sinceDate.getDate() - 90);
+    const sinceStr = toDateStr(sinceDate);
+
+    const [typesRes, recordsRes] = await Promise.all([
+      supabaseClient.from('misc_task_types').select('*').order('sort_order', { ascending: true }),
+      supabaseClient.from('misc_task_records').select('*').gte('occurred_at', sinceStr).order('occurred_at', { ascending: false })
+    ]);
+
+    // Types: if remote has data, use it; if remote empty BUT local has data, don't wipe local
+    if (!typesRes.error && typesRes.data) {
+      if (typesRes.data.length > 0) {
+        miscTypes = typesRes.data.map(miscTypeFromDB);
+        saveMiscLocal(MISC_TYPES_KEY, miscTypes);
+      } else if (localTypes.length === 0) {
+        miscTypes = [];
+      }
+      // else: keep local as is (protection: don't overwrite local with empty remote)
+    }
+
+    if (!recordsRes.error && recordsRes.data) {
+      if (recordsRes.data.length > 0) {
+        miscRecords = recordsRes.data.map(miscRecordFromDB);
+        saveMiscLocal(MISC_RECORDS_KEY, miscRecords);
+      } else if (localRecords.length === 0) {
+        miscRecords = [];
+      }
+    }
+  } catch (e) {
+    console.warn('Misc load failed, using local:', e);
+  }
+}
+
+async function addMiscType(data) {
+  const row = miscTypeToDB(data);
+  if (supabaseClient) {
+    try {
+      const { data: inserted, error } = await supabaseClient
+        .from('misc_task_types').insert(row).select().single();
+      if (error) throw error;
+      const t = miscTypeFromDB(inserted);
+      miscTypes.push(t);
+      saveMiscLocal(MISC_TYPES_KEY, miscTypes);
+      return t;
+    } catch (e) {
+      console.warn('addMiscType remote failed:', e);
+      showToast('保存失败：' + e.message);
+      return null;
+    }
+  }
+  return null;
+}
+
+async function updateMiscType(id, changes) {
+  const t = miscTypes.find(x => x.id === id);
+  if (!t) return;
+  Object.assign(t, changes);
+  saveMiscLocal(MISC_TYPES_KEY, miscTypes);
+  if (supabaseClient) {
+    try {
+      await supabaseClient.from('misc_task_types')
+        .update(miscTypeToDB(t)).eq('id', id);
+    } catch (e) {
+      console.warn('updateMiscType remote failed:', e);
+      showToast('同步失败：' + e.message);
+    }
+  }
+}
+
+async function deleteMiscType(id) {
+  miscTypes = miscTypes.filter(t => t.id !== id);
+  miscRecords = miscRecords.filter(r => r.typeId !== id);
+  saveMiscLocal(MISC_TYPES_KEY, miscTypes);
+  saveMiscLocal(MISC_RECORDS_KEY, miscRecords);
+  if (supabaseClient) {
+    try {
+      await supabaseClient.from('misc_task_types').delete().eq('id', id);
+    } catch (e) {
+      console.warn('deleteMiscType remote failed:', e);
+      showToast('删除失败：' + e.message);
+    }
+  }
+}
+
+async function addMiscRecord(data) {
+  const row = miscRecordToDB(data);
+  if (supabaseClient) {
+    try {
+      const { data: inserted, error } = await supabaseClient
+        .from('misc_task_records').insert(row).select().single();
+      if (error) throw error;
+      const r = miscRecordFromDB(inserted);
+      miscRecords.unshift(r);
+      saveMiscLocal(MISC_RECORDS_KEY, miscRecords);
+      return r;
+    } catch (e) {
+      console.warn('addMiscRecord remote failed:', e);
+      showToast('保存失败：' + e.message);
+      return null;
+    }
+  }
+  return null;
+}
+
+async function updateMiscRecord(id, changes) {
+  const r = miscRecords.find(x => x.id === id);
+  if (!r) return;
+  Object.assign(r, changes);
+  saveMiscLocal(MISC_RECORDS_KEY, miscRecords);
+  if (supabaseClient) {
+    try {
+      await supabaseClient.from('misc_task_records')
+        .update(miscRecordToDB(r)).eq('id', id);
+    } catch (e) {
+      console.warn('updateMiscRecord remote failed:', e);
+      showToast('同步失败：' + e.message);
+    }
+  }
+}
+
+async function deleteMiscRecord(id) {
+  miscRecords = miscRecords.filter(r => r.id !== id);
+  saveMiscLocal(MISC_RECORDS_KEY, miscRecords);
+  if (supabaseClient) {
+    try {
+      await supabaseClient.from('misc_task_records').delete().eq('id', id);
+    } catch (e) {
+      console.warn('deleteMiscRecord remote failed:', e);
+      showToast('删除失败：' + e.message);
+    }
   }
 }
 
@@ -2931,6 +3498,713 @@ function updateSidebarProgress() {
 // ============================================================
 // NAVIGATION
 // ============================================================
+// ============================================================
+// MISC TASKS — UI STATE & RENDER
+// ============================================================
+let miscHistoryRange = 'week'; // today | week | month | all
+let miscHistoryTypeFilter = 'all';
+let editingMiscTypeId = null;
+let editingMiscRecordId = null;
+let miscTypeColorPick = MISC_COLOR_PALETTE[0];
+
+function activeMiscTypes() {
+  return miscTypes.filter(t => !t.archived).sort((a,b) => (a.sortOrder||0) - (b.sortOrder||0));
+}
+
+function sumRecordsForType(typeId, sinceStr, untilStr) {
+  return miscRecords
+    .filter(r => r.typeId === typeId && r.occurredAt >= sinceStr && r.occurredAt <= untilStr)
+    .reduce((sum, r) => sum + (r.count || 0), 0);
+}
+
+function todayCountForType(typeId) {
+  const t = toDateStr(new Date());
+  return sumRecordsForType(typeId, t, t);
+}
+
+function rangeDates(range) {
+  const now = new Date();
+  const todayStr = toDateStr(now);
+  if (range === 'today') return { from: todayStr, to: todayStr };
+  if (range === 'week') {
+    const d = new Date(now);
+    const dow = (d.getDay() + 6) % 7; // Monday = 0
+    d.setDate(d.getDate() - dow);
+    return { from: toDateStr(d), to: todayStr };
+  }
+  if (range === 'month') {
+    const d = new Date(now.getFullYear(), now.getMonth(), 1);
+    return { from: toDateStr(d), to: todayStr };
+  }
+  if (range === '30d') {
+    const d = new Date(now);
+    d.setDate(d.getDate() - 29);
+    return { from: toDateStr(d), to: todayStr };
+  }
+  return { from: '0000-01-01', to: '9999-12-31' };
+}
+
+function renderMisc() {
+  const c = document.getElementById('miscContent');
+  const types = activeMiscTypes();
+
+  let html = '<div class="misc-section-label">今日累计</div>';
+
+  // Card grid
+  html += '<div class="misc-card-grid">';
+  if (types.length === 0) {
+    html += `<div class="misc-card-add" onclick="openMiscTypeModal(null)">+ 新建第一个类型</div>`;
+  } else {
+    for (const t of types) {
+      const today = todayCountForType(t.id);
+      html += `
+        <div class="misc-card" style="border-left-color:${escHtml(t.color)};">
+          <div class="misc-card-header">
+            <span class="misc-card-icon">${escHtml(t.icon)}</span>
+            <span class="misc-card-name">${escHtml(t.name)}</span>
+            <button class="misc-card-menu" onclick="openMiscTypeModal('${t.id}')" title="编辑类型">⋯</button>
+          </div>
+          <div class="misc-card-count">${today} <span class="unit">${escHtml(t.unit)}</span></div>
+          <div class="misc-card-meta">今日已记录</div>
+          <div class="misc-card-actions">
+            <button class="btn btn-primary btn-sm" onclick="quickAddMiscRecord('${t.id}')">+1</button>
+            <button class="btn btn-ghost btn-sm" onclick="openMiscRecordModal(null, '${t.id}')">+N</button>
+          </div>
+        </div>`;
+    }
+    html += `<div class="misc-card-add" onclick="openMiscTypeModal(null)">+ 新建类型</div>`;
+  }
+  html += '</div>';
+
+  // Today summary line
+  if (types.length > 0) {
+    const items = types.map(t => {
+      const c = todayCountForType(t.id);
+      return c > 0 ? `<span class="summary-item">${escHtml(t.icon)} ${escHtml(t.name)} ${c} ${escHtml(t.unit)}</span>` : null;
+    }).filter(Boolean);
+    if (items.length > 0) {
+      html += `<div class="misc-summary-line">${items.join('<span class="summary-sep">·</span>')}</div>`;
+    } else {
+      html += `<div class="misc-summary-line">今日尚无记录</div>`;
+    }
+  }
+
+  // History
+  html += '<div class="misc-section-label">历史记录</div>';
+  html += `
+    <div class="misc-history-toolbar">
+      <select id="miscHistRange" onchange="miscHistoryRange=this.value; renderMisc();">
+        <option value="today"${miscHistoryRange==='today'?' selected':''}>今日</option>
+        <option value="week"${miscHistoryRange==='week'?' selected':''}>本周</option>
+        <option value="month"${miscHistoryRange==='month'?' selected':''}>本月</option>
+        <option value="30d"${miscHistoryRange==='30d'?' selected':''}>最近 30 天</option>
+        <option value="all"${miscHistoryRange==='all'?' selected':''}>全部</option>
+      </select>
+      <select id="miscHistType" onchange="miscHistoryTypeFilter=this.value; renderMisc();">
+        <option value="all">全部类型</option>
+        ${miscTypes.map(t => `<option value="${t.id}"${miscHistoryTypeFilter===t.id?' selected':''}>${escHtml(t.icon)} ${escHtml(t.name)}</option>`).join('')}
+      </select>
+    </div>`;
+
+  const { from, to } = rangeDates(miscHistoryRange);
+  let rows = miscRecords.filter(r => r.occurredAt >= from && r.occurredAt <= to);
+  if (miscHistoryTypeFilter !== 'all') rows = rows.filter(r => r.typeId === miscHistoryTypeFilter);
+  rows.sort((a,b) => {
+    if (a.occurredAt !== b.occurredAt) return b.occurredAt.localeCompare(a.occurredAt);
+    return (b.createdAt || '').localeCompare(a.createdAt || '');
+  });
+  rows = rows.slice(0, 100);
+
+  html += '<div class="misc-history-list">';
+  if (rows.length === 0) {
+    html += '<div class="misc-history-empty">暂无记录</div>';
+  } else {
+    for (const r of rows) {
+      const t = miscTypes.find(x => x.id === r.typeId);
+      const tagBg = t ? hexWithAlpha(t.color, 0.18) : 'var(--accent-subtle)';
+      const tagColor = t ? t.color : 'var(--text-secondary)';
+      html += `
+        <div class="misc-history-row">
+          <span class="misc-history-date">${formatDateShort(r.occurredAt)}</span>
+          <span class="misc-history-type" style="background:${tagBg};color:${tagColor};">
+            ${t ? escHtml(t.icon) + ' ' + escHtml(t.name) : '(已删除)'}
+          </span>
+          <span class="misc-history-count">${r.count} ${t ? escHtml(t.unit) : ''}</span>
+          <span class="misc-history-note" title="${escHtml(r.note || '')}">${escHtml(r.note || '')}</span>
+          <span class="misc-history-actions">
+            <button onclick="openMiscRecordModal('${r.id}', null)" title="编辑">✎</button>
+            <button onclick="deleteMiscRecordQuick('${r.id}')" title="删除">✕</button>
+          </span>
+        </div>`;
+    }
+  }
+  html += '</div>';
+
+  c.innerHTML = html;
+}
+
+function hexWithAlpha(hex, alpha) {
+  if (!hex || !hex.startsWith('#')) return `rgba(184,150,90,${alpha})`;
+  const h = hex.slice(1);
+  const r = parseInt(h.slice(0,2), 16);
+  const g = parseInt(h.slice(2,4), 16);
+  const b = parseInt(h.slice(4,6), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+// ---- Type Modal ----
+function openMiscTypeModal(id) {
+  editingMiscTypeId = id;
+  const modal = document.getElementById('miscTypeModal');
+  const title = document.getElementById('miscTypeModalTitle');
+  const delBtn = document.getElementById('miscTypeDeleteBtn');
+  const archField = document.getElementById('miscTypeArchiveField');
+
+  const palette = document.getElementById('miscTypeColorPicker');
+  palette.innerHTML = MISC_COLOR_PALETTE.map(c =>
+    `<div class="color-swatch" style="background:${c};" data-color="${c}" onclick="pickMiscColor('${c}')"></div>`
+  ).join('');
+
+  if (id) {
+    const t = miscTypes.find(x => x.id === id);
+    if (!t) return;
+    title.textContent = '编辑任务集类型';
+    document.getElementById('miscTypeName').value = t.name;
+    document.getElementById('miscTypeIcon').value = t.icon;
+    document.getElementById('miscTypeUnit').value = t.unit;
+    document.getElementById('miscTypeSort').value = t.sortOrder;
+    document.getElementById('miscTypeArchived').checked = t.archived;
+    miscTypeColorPick = t.color;
+    delBtn.style.display = '';
+    archField.style.display = '';
+  } else {
+    title.textContent = '新建任务集类型';
+    document.getElementById('miscTypeName').value = '';
+    document.getElementById('miscTypeIcon').value = '📌';
+    document.getElementById('miscTypeUnit').value = '次';
+    document.getElementById('miscTypeSort').value = miscTypes.length;
+    document.getElementById('miscTypeArchived').checked = false;
+    miscTypeColorPick = MISC_COLOR_PALETTE[miscTypes.length % MISC_COLOR_PALETTE.length];
+    delBtn.style.display = 'none';
+    archField.style.display = 'none';
+  }
+  pickMiscColor(miscTypeColorPick);
+  modal.classList.add('show');
+  setTimeout(() => document.getElementById('miscTypeName').focus(), 50);
+}
+
+function pickMiscColor(c) {
+  miscTypeColorPick = c;
+  document.querySelectorAll('#miscTypeColorPicker .color-swatch').forEach(el => {
+    el.classList.toggle('active', el.dataset.color === c);
+  });
+}
+
+function closeMiscTypeModal() {
+  document.getElementById('miscTypeModal').classList.remove('show');
+  editingMiscTypeId = null;
+}
+
+async function saveMiscType() {
+  const name = document.getElementById('miscTypeName').value.trim();
+  if (!name) { showToast('请输入名称'); return; }
+  const data = {
+    name,
+    icon: document.getElementById('miscTypeIcon').value.trim() || '📌',
+    color: miscTypeColorPick,
+    unit: document.getElementById('miscTypeUnit').value.trim() || '次',
+    sortOrder: parseInt(document.getElementById('miscTypeSort').value) || 0,
+    archived: document.getElementById('miscTypeArchived').checked
+  };
+  if (editingMiscTypeId) {
+    await updateMiscType(editingMiscTypeId, data);
+  } else {
+    const t = await addMiscType(data);
+    if (!t) return;
+  }
+  closeMiscTypeModal();
+  renderMisc();
+  updateNavBadges();
+}
+
+async function deleteMiscTypeConfirm() {
+  if (!editingMiscTypeId) return;
+  const t = miscTypes.find(x => x.id === editingMiscTypeId);
+  const recordCount = miscRecords.filter(r => r.typeId === editingMiscTypeId).length;
+  const msg = recordCount > 0
+    ? `确认删除"${t.name}"？将同时删除 ${recordCount} 条历史记录，不可恢复。`
+    : `确认删除"${t.name}"？`;
+  if (!confirm(msg)) return;
+  await deleteMiscType(editingMiscTypeId);
+  closeMiscTypeModal();
+  renderMisc();
+  updateNavBadges();
+}
+
+// ---- Record Modal ----
+function openMiscRecordModal(recordId, presetTypeId) {
+  editingMiscRecordId = recordId;
+  const modal = document.getElementById('miscRecordModal');
+  const title = document.getElementById('miscRecordModalTitle');
+  const delBtn = document.getElementById('miscRecordDeleteBtn');
+  const sel = document.getElementById('miscRecordType');
+
+  sel.innerHTML = activeMiscTypes().map(t =>
+    `<option value="${t.id}">${escHtml(t.icon)} ${escHtml(t.name)}</option>`
+  ).join('');
+
+  if (recordId) {
+    const r = miscRecords.find(x => x.id === recordId);
+    if (!r) return;
+    title.textContent = '编辑记录';
+    sel.value = r.typeId;
+    document.getElementById('miscRecordCount').value = r.count;
+    document.getElementById('miscRecordDate').value = r.occurredAt;
+    document.getElementById('miscRecordNote').value = r.note || '';
+    delBtn.style.display = '';
+  } else {
+    title.textContent = '记录一笔';
+    if (presetTypeId) sel.value = presetTypeId;
+    document.getElementById('miscRecordCount').value = 1;
+    document.getElementById('miscRecordDate').value = toDateStr(new Date());
+    document.getElementById('miscRecordNote').value = '';
+    delBtn.style.display = 'none';
+  }
+  modal.classList.add('show');
+  setTimeout(() => document.getElementById('miscRecordCount').focus(), 50);
+}
+
+function closeMiscRecordModal() {
+  document.getElementById('miscRecordModal').classList.remove('show');
+  editingMiscRecordId = null;
+}
+
+async function saveMiscRecord() {
+  const typeId = document.getElementById('miscRecordType').value;
+  const count = parseInt(document.getElementById('miscRecordCount').value);
+  const occurredAt = document.getElementById('miscRecordDate').value;
+  const note = document.getElementById('miscRecordNote').value.trim();
+  if (!typeId) { showToast('请选择类型'); return; }
+  if (!count || count < 1) { showToast('数量必须 ≥ 1'); return; }
+  if (!occurredAt) { showToast('请选择日期'); return; }
+
+  if (editingMiscRecordId) {
+    await updateMiscRecord(editingMiscRecordId, { typeId, count, occurredAt, note });
+  } else {
+    const r = await addMiscRecord({ typeId, count, occurredAt, note });
+    if (!r) return;
+  }
+  closeMiscRecordModal();
+  renderMisc();
+  updateNavBadges();
+}
+
+async function deleteMiscRecordConfirm() {
+  if (!editingMiscRecordId) return;
+  if (!confirm('确认删除这条记录？')) return;
+  await deleteMiscRecord(editingMiscRecordId);
+  closeMiscRecordModal();
+  renderMisc();
+  updateNavBadges();
+}
+
+async function deleteMiscRecordQuick(id) {
+  if (!confirm('确认删除这条记录？')) return;
+  await deleteMiscRecord(id);
+  renderMisc();
+  updateNavBadges();
+}
+
+async function quickAddMiscRecord(typeId) {
+  const r = await addMiscRecord({ typeId, count: 1, occurredAt: toDateStr(new Date()), note: '' });
+  if (r) {
+    showToast('+1 已记录');
+    renderMisc();
+    updateNavBadges();
+  }
+}
+
+// ============================================================
+// REPORT VIEW
+// ============================================================
+let reportRange = 'week';
+let reportFromDate = null;
+let reportToDate = null;
+let reportSelectedTypes = new Set();
+let reportTrendTypeId = null;
+let reportCharts = { bar: null, pie: null, line: null };
+
+async function ensureChartJs() {
+  if (typeof Chart !== 'undefined') return true;
+  // Defer attribute may still be loading; wait briefly
+  for (let i = 0; i < 30; i++) {
+    if (typeof Chart !== 'undefined') return true;
+    await new Promise(r => setTimeout(r, 100));
+  }
+  if (typeof Chart === 'undefined') {
+    showToast('图表库加载失败，请检查网络');
+    return false;
+  }
+  return true;
+}
+
+function reportEffectiveRange() {
+  if (reportRange === 'custom' && reportFromDate && reportToDate) {
+    return { from: reportFromDate, to: reportToDate };
+  }
+  if (reportRange === 'all') return { from: '0000-01-01', to: '9999-12-31' };
+  return rangeDates(reportRange);
+}
+
+function reportFilteredRecords() {
+  const { from, to } = reportEffectiveRange();
+  const visibleTypeIds = new Set(reportSelectedTypes);
+  return miscRecords.filter(r =>
+    r.occurredAt >= from && r.occurredAt <= to && visibleTypeIds.has(r.typeId)
+  );
+}
+
+async function renderReport() {
+  const c = document.getElementById('reportContent');
+  // Init defaults
+  if (reportSelectedTypes.size === 0) {
+    reportSelectedTypes = new Set(activeMiscTypes().map(t => t.id));
+  }
+  if (!reportTrendTypeId && activeMiscTypes().length > 0) {
+    reportTrendTypeId = activeMiscTypes()[0].id;
+  }
+
+  const types = miscTypes.filter(t => !t.archived);
+  if (types.length === 0) {
+    c.innerHTML = `<div class="report-empty">还没有任务集类型。<br>先去"杂项任务集"创建一些类型并录入记录。</div>`;
+    return;
+  }
+
+  c.innerHTML = `
+    <div class="report-toolbar">
+      <div class="range-group">
+        <button class="range-btn ${reportRange==='today'?'active':''}" onclick="setReportRange('today')">今日</button>
+        <button class="range-btn ${reportRange==='week'?'active':''}" onclick="setReportRange('week')">本周</button>
+        <button class="range-btn ${reportRange==='month'?'active':''}" onclick="setReportRange('month')">本月</button>
+        <button class="range-btn ${reportRange==='30d'?'active':''}" onclick="setReportRange('30d')">近30天</button>
+        <button class="range-btn ${reportRange==='all'?'active':''}" onclick="setReportRange('all')">全部</button>
+        <button class="range-btn ${reportRange==='custom'?'active':''}" onclick="setReportRange('custom')">自定义</button>
+      </div>
+      <div id="reportCustomRange" style="display:${reportRange==='custom'?'flex':'none'};gap:6px;align-items:center;">
+        <input type="date" id="reportFromInput" value="${reportFromDate||''}" onchange="reportFromDate=this.value; renderReport();">
+        <span style="font-size:12px;color:var(--text-muted);">~</span>
+        <input type="date" id="reportToInput" value="${reportToDate||''}" onchange="reportToDate=this.value; renderReport();">
+      </div>
+      <div class="report-type-filter" style="margin-left:auto;">
+        ${types.map(t => `
+          <label style="background:${hexWithAlpha(t.color,0.15)};">
+            <input type="checkbox" ${reportSelectedTypes.has(t.id)?'checked':''} onchange="toggleReportType('${t.id}')">
+            ${escHtml(t.icon)} ${escHtml(t.name)}
+          </label>
+        `).join('')}
+      </div>
+    </div>
+
+    <div class="report-chart-card">
+      <h3>各类型完成数量</h3>
+      <div class="report-chart-canvas-wrap"><canvas id="reportBarChart"></canvas></div>
+    </div>
+
+    <div class="report-chart-card">
+      <h3>各类型占比</h3>
+      <div class="report-chart-canvas-wrap"><canvas id="reportPieChart"></canvas></div>
+    </div>
+
+    <div class="report-chart-card">
+      <h3>
+        <span>每日趋势</span>
+        <select id="reportTrendType" onchange="reportTrendTypeId=this.value; renderReportCharts();">
+          ${types.map(t => `<option value="${t.id}"${reportTrendTypeId===t.id?' selected':''}>${escHtml(t.icon)} ${escHtml(t.name)}</option>`).join('')}
+        </select>
+      </h3>
+      <div class="report-chart-canvas-wrap"><canvas id="reportLineChart"></canvas></div>
+    </div>
+
+    <div class="report-chart-card">
+      <h3>汇总表</h3>
+      <div id="reportSummaryTable"></div>
+    </div>
+
+    <div class="report-export-bar">
+      <button class="btn btn-ghost btn-sm" onclick="exportReportPNG()">导出 PNG</button>
+      <button class="btn btn-ghost btn-sm" onclick="exportReportCSV()">导出 CSV</button>
+      <button class="btn btn-primary btn-sm" onclick="exportReportPPT()">导出 PPT 报告</button>
+    </div>
+  `;
+
+  const ok = await ensureChartJs();
+  if (!ok) return;
+  renderReportCharts();
+  renderReportSummaryTable();
+}
+
+function setReportRange(r) {
+  reportRange = r;
+  if (r === 'custom' && !reportFromDate) {
+    const d = new Date();
+    reportToDate = toDateStr(d);
+    d.setDate(d.getDate() - 7);
+    reportFromDate = toDateStr(d);
+  }
+  renderReport();
+}
+
+function toggleReportType(id) {
+  if (reportSelectedTypes.has(id)) reportSelectedTypes.delete(id);
+  else reportSelectedTypes.add(id);
+  renderReportCharts();
+  renderReportSummaryTable();
+}
+
+function destroyReportCharts() {
+  for (const k in reportCharts) {
+    if (reportCharts[k]) { reportCharts[k].destroy(); reportCharts[k] = null; }
+  }
+}
+
+function renderReportCharts() {
+  if (typeof Chart === 'undefined') return;
+  destroyReportCharts();
+
+  const types = miscTypes.filter(t => !t.archived && reportSelectedTypes.has(t.id));
+  const records = reportFilteredRecords();
+  const { from, to } = reportEffectiveRange();
+
+  // Bar chart
+  const barLabels = types.map(t => `${t.icon} ${t.name}`);
+  const barData = types.map(t => records.filter(r => r.typeId === t.id).reduce((s, r) => s + r.count, 0));
+  const barColors = types.map(t => t.color);
+
+  const barCanvas = document.getElementById('reportBarChart');
+  if (barCanvas) {
+    reportCharts.bar = new Chart(barCanvas, {
+      type: 'bar',
+      data: {
+        labels: barLabels,
+        datasets: [{ label: '完成数量', data: barData, backgroundColor: barColors, borderRadius: 4 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+      }
+    });
+  }
+
+  // Pie chart
+  const pieFiltered = types.map((t, i) => ({ t, v: barData[i] })).filter(x => x.v > 0);
+  const pieCanvas = document.getElementById('reportPieChart');
+  if (pieCanvas) {
+    reportCharts.pie = new Chart(pieCanvas, {
+      type: 'pie',
+      data: {
+        labels: pieFiltered.map(x => `${x.t.icon} ${x.t.name}`),
+        datasets: [{ data: pieFiltered.map(x => x.v), backgroundColor: pieFiltered.map(x => x.t.color) }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'right', labels: { font: { size: 12 } } },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => {
+                const total = ctx.dataset.data.reduce((a,b) => a+b, 0);
+                const v = ctx.parsed;
+                const pct = total > 0 ? ((v / total) * 100).toFixed(1) : 0;
+                return `${ctx.label}: ${v} (${pct}%)`;
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // Line chart (trend for selected type)
+  const trendType = miscTypes.find(t => t.id === reportTrendTypeId);
+  const lineCanvas = document.getElementById('reportLineChart');
+  if (lineCanvas && trendType) {
+    const days = enumerateDays(from, to);
+    const dailyMap = {};
+    for (const r of miscRecords) {
+      if (r.typeId !== trendType.id) continue;
+      if (r.occurredAt < from || r.occurredAt > to) continue;
+      dailyMap[r.occurredAt] = (dailyMap[r.occurredAt] || 0) + r.count;
+    }
+    reportCharts.line = new Chart(lineCanvas, {
+      type: 'line',
+      data: {
+        labels: days.map(d => formatDateShort(d)),
+        datasets: [{
+          label: `${trendType.icon} ${trendType.name}`,
+          data: days.map(d => dailyMap[d] || 0),
+          borderColor: trendType.color,
+          backgroundColor: hexWithAlpha(trendType.color, 0.15),
+          fill: true, tension: 0.3, pointRadius: 3
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+      }
+    });
+  }
+}
+
+function enumerateDays(fromStr, toStr) {
+  const out = [];
+  if (!fromStr || !toStr || fromStr === '0000-01-01') {
+    // For 'all' range, derive from records
+    if (miscRecords.length === 0) return [toDateStr(new Date())];
+    const sorted = [...miscRecords].sort((a,b) => a.occurredAt.localeCompare(b.occurredAt));
+    fromStr = sorted[0].occurredAt;
+    toStr = toDateStr(new Date());
+  }
+  const cur = new Date(fromStr);
+  const end = new Date(toStr);
+  // Cap at 90 days to avoid huge x axis
+  let count = 0;
+  while (cur <= end && count < 90) {
+    out.push(toDateStr(cur));
+    cur.setDate(cur.getDate() + 1);
+    count++;
+  }
+  return out;
+}
+
+function renderReportSummaryTable() {
+  const wrap = document.getElementById('reportSummaryTable');
+  if (!wrap) return;
+  const types = miscTypes.filter(t => !t.archived && reportSelectedTypes.has(t.id));
+  const records = reportFilteredRecords();
+  const totals = types.map(t => ({
+    t,
+    total: records.filter(r => r.typeId === t.id).reduce((s, r) => s + r.count, 0),
+    count: records.filter(r => r.typeId === t.id).length
+  }));
+  const grand = totals.reduce((s, x) => s + x.total, 0);
+
+  let html = '<table class="report-summary-table"><thead><tr><th>类型</th><th class="num">总数量</th><th class="num">记录条数</th><th class="num">占比</th></tr></thead><tbody>';
+  for (const x of totals) {
+    const pct = grand > 0 ? ((x.total / grand) * 100).toFixed(1) : 0;
+    html += `<tr>
+      <td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${x.t.color};margin-right:6px;"></span>${escHtml(x.t.icon)} ${escHtml(x.t.name)}</td>
+      <td class="num">${x.total} ${escHtml(x.t.unit)}</td>
+      <td class="num">${x.count}</td>
+      <td class="num">${pct}%</td>
+    </tr>`;
+  }
+  html += `<tr style="font-weight:600;"><td>合计</td><td class="num">${grand}</td><td class="num">${records.length}</td><td class="num">100%</td></tr>`;
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+
+// ============================================================
+// REPORT EXPORTS
+// ============================================================
+function exportReportPNG() {
+  const charts = [
+    { name: '柱状图', chart: reportCharts.bar },
+    { name: '饼图', chart: reportCharts.pie },
+    { name: '趋势图', chart: reportCharts.line }
+  ];
+  for (const { name, chart } of charts) {
+    if (!chart) continue;
+    const url = chart.toBase64Image('image/png', 1);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `工作汇报-${name}-${toDateStr(new Date())}.png`;
+    a.click();
+  }
+  showToast('PNG 已导出');
+}
+
+function exportReportCSV() {
+  const { from, to } = reportEffectiveRange();
+  const records = reportFilteredRecords();
+  const lines = [];
+  lines.push(`# 工作汇报明细 (${from} ~ ${to})`);
+  lines.push('日期,类型,数量,单位,备注');
+  for (const r of records) {
+    const t = miscTypes.find(x => x.id === r.typeId);
+    if (!t) continue;
+    const note = (r.note || '').replace(/"/g, '""').replace(/\n/g, ' ');
+    lines.push(`${r.occurredAt},${t.name},${r.count},${t.unit},"${note}"`);
+  }
+  lines.push('');
+  lines.push('# 汇总');
+  lines.push('类型,总数量,单位,记录条数');
+  const types = miscTypes.filter(t => !t.archived && reportSelectedTypes.has(t.id));
+  for (const t of types) {
+    const total = records.filter(r => r.typeId === t.id).reduce((s, r) => s + r.count, 0);
+    const cnt = records.filter(r => r.typeId === t.id).length;
+    lines.push(`${t.name},${total},${t.unit},${cnt}`);
+  }
+  const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `工作汇报-${toDateStr(new Date())}.csv`;
+  a.click();
+  showToast('CSV 已导出');
+}
+
+async function exportReportPPT() {
+  if (typeof PptxGenJS === 'undefined') { showToast('PPT 库未加载'); return; }
+  const { from, to } = reportEffectiveRange();
+  const types = miscTypes.filter(t => !t.archived && reportSelectedTypes.has(t.id));
+  const records = reportFilteredRecords();
+
+  const pptx = new PptxGenJS();
+  pptx.layout = 'LAYOUT_WIDE';
+
+  // Cover
+  let slide = pptx.addSlide();
+  slide.background = { color: 'FDF9F1' };
+  slide.addText('工作汇报', { x: 0.5, y: 2.5, w: 12, h: 1, fontSize: 44, bold: true, color: '2D2417', align: 'center' });
+  slide.addText(`${from}  ~  ${to}`, { x: 0.5, y: 3.7, w: 12, h: 0.6, fontSize: 18, color: '6B5A3F', align: 'center' });
+  slide.addText(`总记录 ${records.length} 条 · ${types.length} 个任务集类型`, { x: 0.5, y: 4.4, w: 12, h: 0.5, fontSize: 14, color: '6B5A3F', align: 'center' });
+
+  // Chart slides
+  const chartSlides = [
+    { title: '各类型完成数量', chart: reportCharts.bar },
+    { title: '各类型占比', chart: reportCharts.pie },
+    { title: '每日趋势', chart: reportCharts.line }
+  ];
+  for (const cs of chartSlides) {
+    if (!cs.chart) continue;
+    slide = pptx.addSlide();
+    slide.background = { color: 'FDF9F1' };
+    slide.addText(cs.title, { x: 0.5, y: 0.3, w: 12, h: 0.6, fontSize: 24, bold: true, color: '2D2417' });
+    slide.addImage({ data: cs.chart.toBase64Image('image/png', 1), x: 1, y: 1.2, w: 11, h: 5.5 });
+  }
+
+  // Summary table slide
+  slide = pptx.addSlide();
+  slide.background = { color: 'FDF9F1' };
+  slide.addText('汇总表', { x: 0.5, y: 0.3, w: 12, h: 0.6, fontSize: 24, bold: true, color: '2D2417' });
+  const rows = [[
+    { text: '类型', options: { bold: true, fill: 'F4E4C3' } },
+    { text: '总数量', options: { bold: true, fill: 'F4E4C3' } },
+    { text: '单位', options: { bold: true, fill: 'F4E4C3' } },
+    { text: '记录条数', options: { bold: true, fill: 'F4E4C3' } }
+  ]];
+  for (const t of types) {
+    const total = records.filter(r => r.typeId === t.id).reduce((s, r) => s + r.count, 0);
+    const cnt = records.filter(r => r.typeId === t.id).length;
+    rows.push([`${t.icon} ${t.name}`, String(total), t.unit, String(cnt)]);
+  }
+  slide.addTable(rows, { x: 1, y: 1.2, w: 11, fontSize: 13, color: '2D2417', border: { type: 'solid', pt: 0.5, color: 'EDE4CF' } });
+
+  await pptx.writeFile({ fileName: `工作汇报-${toDateStr(new Date())}.pptx` });
+  showToast('PPT 已导出');
+}
+
 function switchView(view) {
   currentView = view;
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -2948,6 +4222,8 @@ function renderView(view) {
     case 'daily': renderDaily(); break;
     case 'calendar': renderCalendar(); break;
     case 'gantt': renderGantt(); break;
+    case 'misc': renderMisc(); break;
+    case 'report': renderReport(); break;
   }
 }
 
@@ -2969,6 +4245,11 @@ function updateNavBadges() {
     return true;
   }).length;
   document.getElementById('navCountDaily').textContent = activeToday;
+  const miscBadge = document.getElementById('navCountMisc');
+  if (miscBadge) {
+    const todayMisc = miscRecords.filter(r => r.occurredAt === todayStr).reduce((s, r) => s + r.count, 0);
+    miscBadge.textContent = todayMisc;
+  }
 }
 
 // ============================================================
@@ -3056,6 +4337,14 @@ document.getElementById('quickAddOverlay').addEventListener('click', function(e)
   if (e.target === this) closeQuickAdd();
 });
 
+// Misc modals — click outside closes
+document.getElementById('miscTypeModal').addEventListener('click', function(e) {
+  if (e.target === this) closeMiscTypeModal();
+});
+document.getElementById('miscRecordModal').addEventListener('click', function(e) {
+  if (e.target === this) closeMiscRecordModal();
+});
+
 // Focus presets
 document.querySelectorAll('.focus-preset-btn').forEach(btn => {
   btn.addEventListener('click', () => setFocusMinutes(Number(btn.dataset.min)));
@@ -3114,6 +4403,8 @@ const cmdK = {
       { name: '总任务列表', view: 'list', icon: '☰' },
       { name: '日历表', view: 'calendar', icon: '◷' },
       { name: '甘特图', view: 'gantt', icon: '▦' },
+      { name: '杂项任务集', view: 'misc', icon: '☑' },
+      { name: '工作汇报', view: 'report', icon: '📊' },
     ]) {
       if (!q || v.name.includes(q)) {
         items.push({ label: v.name, hint: '跳转', action: () => { switchView(v.view); this.close(); }, icon: v.icon });
@@ -3246,6 +4537,8 @@ document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') {
     if (document.getElementById('cmdkOverlay').classList.contains('show')) { cmdK.close(); return; }
     if (document.getElementById('quickAddOverlay').classList.contains('show')) { closeQuickAdd(); return; }
+    if (document.getElementById('miscTypeModal').classList.contains('show')) { closeMiscTypeModal(); return; }
+    if (document.getElementById('miscRecordModal').classList.contains('show')) { closeMiscRecordModal(); return; }
     if (document.getElementById('focusOverlay').classList.contains('show')) { exitFocus(); return; }
     if (detailTaskId) { closeDetail(); return; }
     clearFocusRow();
@@ -3264,6 +4557,8 @@ document.addEventListener('keydown', function(e) {
       else if (ev.key === 'o') switchView('list');
       else if (ev.key === 'c') switchView('calendar');
       else if (ev.key === 'g') switchView('gantt');
+      else if (ev.key === 'm') switchView('misc');
+      else if (ev.key === 'r') switchView('report');
     };
     document.addEventListener('keydown', onGChord, { once: false });
     setTimeout(() => document.removeEventListener('keydown', onGChord), 800);
@@ -3378,6 +4673,7 @@ async function initApp() {
   // Update FAB tooltip for platform
   document.getElementById('fabBtn').title = `快速添加 (${MOD_LABEL}+K)`;
   await initData();
+  await loadMiscData();
   await recalcAllParentStatuses();
   await fixParentStatuses();
   getRootTasks().forEach(t => expandedIds.add(t.id));
