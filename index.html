@@ -4685,29 +4685,37 @@ async function fixParentStatuses() {
 }
 
 async function initApp() {
-  try {
-    document.getElementById('fabBtn').title = `快速添加 (${MOD_LABEL}+K)`;
-    await initData();
-  } catch (e) {
-    miscLoadDiag = 'initData 异常: ' + (e.message || e);
-  }
-  try {
-    await loadMiscData();
-  } catch (e) {
+  document.getElementById('fabBtn').title = `快速添加 (${MOD_LABEL}+K)`;
+
+  // Kick off misc load in parallel — don't block on it
+  const miscLoadPromise = loadMiscData().then(() => {
+    // Re-render whichever view the user is currently on, in case they
+    // navigated to misc/report before the data finished loading
+    if (currentView === 'misc' || currentView === 'report') {
+      renderView(currentView);
+    }
+    updateNavBadges();
+  }).catch(e => {
     miscLoadDiag = 'loadMiscData 异常: ' + (e.message || e);
-  }
+    if (currentView === 'misc') renderMisc();
+  });
+
   try {
+    await initData();
     await recalcAllParentStatuses();
     await fixParentStatuses();
     getRootTasks().forEach(t => expandedIds.add(t.id));
     updateSidebarDate();
-    switchView('list');
+    if (currentView === 'list') switchView('list');
     renderSidebarTags();
     updateNavBadges();
     updateSidebarProgress();
   } catch (e) {
-    miscLoadDiag += ' | 后续 init 异常: ' + (e.message || e);
+    showToast('初始化异常: ' + (e.message || e));
   }
+
+  // Wait so any error surfaces
+  await miscLoadPromise;
 }
 
 initApp();
