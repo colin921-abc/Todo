@@ -1708,9 +1708,6 @@ textarea { resize: vertical; min-height: 60px; }
   </div>
 </div>
 
-<!-- Global Diagnostic Banner (always visible) -->
-<div id="globalDiagBanner" style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#fff8e0;border-bottom:2px solid #e8c97a;padding:6px 12px;font-family:ui-monospace,monospace;font-size:12px;color:#6b5a3f;white-space:nowrap;overflow-x:auto;">🔍 INIT 等待中</div>
-
 <!-- Misc Type Modal -->
 <div class="misc-modal-overlay" id="miscTypeModal">
   <div class="misc-modal">
@@ -1799,6 +1796,20 @@ textarea { resize: vertical; min-height: 60px; }
     </div>
   </div>
 </div>
+
+<!-- Command Palette -->
+<div class="cmdk-overlay" id="cmdkOverlay">
+  <div class="cmdk-modal">
+    <input type="text" class="cmdk-input" id="cmdkInput" placeholder="搜索任务或命令..." autocomplete="off">
+    <div class="cmdk-list" id="cmdkList"></div>
+    <div class="cmdk-footer">
+      <span>↑↓ 导航</span><span>↵ 确认</span><span>esc 关闭</span>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
 
 <script>
 // ============================================================
@@ -1914,16 +1925,6 @@ const MISC_COLOR_PALETTE = [
 
 let miscTypes = [];
 let miscRecords = [];
-let miscLoadDiag = '⚠ loadMiscData 未执行（init 可能提前报错）';
-function updateGlobalDiag(msg) {
-  miscLoadDiag = msg;
-  const el = document.getElementById('globalDiagBanner');
-  if (el) el.textContent = '🔍 ' + msg;
-  document.title = '[D] ' + msg.slice(0, 60);
-  if (typeof currentView !== 'undefined' && currentView === 'misc' && typeof renderMisc === 'function') {
-    try { renderMisc(); } catch (e) {}
-  }
-}
 
 function miscTypeFromDB(r) {
   return {
@@ -1962,59 +1963,36 @@ function saveMiscLocal(key, arr) {
 }
 
 async function loadMiscData() {
-  updateGlobalDiag('[1] 函数已进入');
   // Load local first (fallback / cache)
   const localTypes = loadMiscLocal(MISC_TYPES_KEY);
   const localRecords = loadMiscLocal(MISC_RECORDS_KEY);
   miscTypes = localTypes;
   miscRecords = localRecords;
-  updateGlobalDiag(`[2] 本地读取完成 ${localTypes.length}类/${localRecords.length}条`);
 
-  if (!supabaseClient) {
-    updateGlobalDiag(`[3] Supabase 客户端未初始化（typeof supabase=${typeof supabase}）`);
-    return;
-  }
-  updateGlobalDiag('[3] Supabase 客户端已就绪，准备查询');
+  if (!supabaseClient) return;
   try {
     const sinceDate = new Date();
     sinceDate.setDate(sinceDate.getDate() - 90);
     const sinceStr = toDateStr(sinceDate);
 
-    updateGlobalDiag('[4] 发起 Supabase 查询...');
     const [typesRes, recordsRes] = await Promise.all([
       supabaseClient.from('misc_task_types').select('*').order('sort_order', { ascending: true }),
       supabaseClient.from('misc_task_records').select('*').gte('occurred_at', sinceStr).order('occurred_at', { ascending: false })
     ]);
-    updateGlobalDiag(`[5] 查询完成. types err=${typesRes.error?.message||'无'} | records err=${recordsRes.error?.message||'无'} | typesN=${typesRes.data?.length} recordsN=${recordsRes.data?.length}`);
 
-    let typesMsg, recordsMsg;
-    if (typesRes.error) {
-      typesMsg = `types 错误: ${typesRes.error.message || typesRes.error.code || JSON.stringify(typesRes.error)}`;
-    } else if (typesRes.data) {
-      typesMsg = `types 远端 ${typesRes.data.length} 条`;
-      if (typesRes.data.length > 0) {
-        miscTypes = typesRes.data.map(miscTypeFromDB);
-        saveMiscLocal(MISC_TYPES_KEY, miscTypes);
-      } else if (localTypes.length === 0) {
-        miscTypes = [];
-      }
+    // 保护原则：远端空数据不覆盖本地非空数据
+    if (!typesRes.error && typesRes.data && typesRes.data.length > 0) {
+      miscTypes = typesRes.data.map(miscTypeFromDB);
+      saveMiscLocal(MISC_TYPES_KEY, miscTypes);
     }
-
-    if (recordsRes.error) {
-      recordsMsg = `records 错误: ${recordsRes.error.message || recordsRes.error.code || JSON.stringify(recordsRes.error)}`;
-    } else if (recordsRes.data) {
-      recordsMsg = `records 远端 ${recordsRes.data.length} 条`;
-      if (recordsRes.data.length > 0) {
-        miscRecords = recordsRes.data.map(miscRecordFromDB);
-        saveMiscLocal(MISC_RECORDS_KEY, miscRecords);
-      } else if (localRecords.length === 0) {
-        miscRecords = [];
-      }
+    if (!recordsRes.error && recordsRes.data && recordsRes.data.length > 0) {
+      miscRecords = recordsRes.data.map(miscRecordFromDB);
+      saveMiscLocal(MISC_RECORDS_KEY, miscRecords);
     }
-    miscLoadDiag = `本地 ${localTypes.length}类/${localRecords.length}条 → ${typesMsg} · ${recordsMsg} → 当前 ${miscTypes.length}类/${miscRecords.length}条`;
+    if (typesRes.error) console.warn('misc types load error:', typesRes.error);
+    if (recordsRes.error) console.warn('misc records load error:', recordsRes.error);
   } catch (e) {
     console.warn('Misc load failed, using local:', e);
-    miscLoadDiag = `加载异常: ${e.message}`;
   }
 }
 
@@ -3576,11 +3554,7 @@ function renderMisc() {
   const c = document.getElementById('miscContent');
   const types = activeMiscTypes();
 
-  let html = '';
-  if (miscLoadDiag) {
-    html += `<div style="background:#fff8e0;border:1px solid #e8c97a;padding:8px 12px;border-radius:6px;font-size:11px;color:#6b5a3f;margin-bottom:12px;font-family:monospace;word-break:break-all;">🔍 诊断: ${escHtml(miscLoadDiag)}</div>`;
-  }
-  html += '<div class="misc-section-label">今日累计</div>';
+  let html = '<div class="misc-section-label">今日累计</div>';
 
   // Card grid
   html += '<div class="misc-card-grid">';
@@ -4713,8 +4687,7 @@ async function initApp() {
     }
     updateNavBadges();
   }).catch(e => {
-    miscLoadDiag = 'loadMiscData 异常: ' + (e.message || e);
-    if (currentView === 'misc') renderMisc();
+    console.warn('loadMiscData failed:', e);
   });
 
   try {
@@ -4735,26 +4708,11 @@ async function initApp() {
   await miscLoadPromise;
 }
 
-updateGlobalDiag('[0a] 脚本到达 initApp 调用前');
 initApp().catch(e => {
-  updateGlobalDiag('!!! initApp 抛出: ' + (e.message || e));
+  console.error('initApp failed:', e);
+  showToast('初始化失败: ' + (e.message || e));
 });
-updateGlobalDiag('[0b] initApp 已发起（不阻塞）');
 </script>
-
-<!-- Command Palette -->
-<div class="cmdk-overlay" id="cmdkOverlay">
-  <div class="cmdk-modal">
-    <input type="text" class="cmdk-input" id="cmdkInput" placeholder="搜索任务或命令..." autocomplete="off">
-    <div class="cmdk-list" id="cmdkList"></div>
-    <div class="cmdk-footer">
-      <span>↑↓ 导航</span><span>↵ 确认</span><span>esc 关闭</span>
-    </div>
-  </div>
-</div>
-
-<!-- Toast -->
-<div class="toast" id="toast"></div>
 
 </body>
 </html>
