@@ -4429,6 +4429,17 @@ async function docGenDocx(spec){
   saveAs(blob, (spec.filename||'document')+'.docx');
 }
 
+// ---- Excel 分析：解析与查询（纯函数，可在 console 测） ----
+function parseDelimited(text){
+  text = String(text||'').replace(/\r\n/g,'\n').replace(/\r/g,'\n').trim();
+  if(!text) return { headers:[], rows:[] };
+  const lines = text.split('\n').filter(l=>l.length);
+  if(!lines.length) return { headers:[], rows:[] };
+  const delim = lines[0].includes('\t') ? '\t' : ',';
+  const split = l => l.split(delim).map(c=>c.trim());
+  return { headers: split(lines[0]), rows: lines.slice(1).map(split) };
+}
+
 const AI_TOOLS = [
   { type:'function', function:{ name:'list_tasks', description:'查询任务列表，可按状态/标签/关键词过滤。修改、完成或删除任务前先用它拿到任务 id。', parameters:{ type:'object', properties:{ status:{type:'string', enum:['all','not-started','in-progress','completed']}, tag:{type:'string'}, search:{type:'string'} } } } },
   { type:'function', function:{ name:'create_task', description:'新建一个任务', parameters:{ type:'object', properties:{ title:{type:'string'}, priority:{type:'integer', enum:[1,2,3]}, startDate:{type:'string', description:'YYYY-MM-DD'}, dueDate:{type:'string', description:'YYYY-MM-DD'}, tags:{type:'array', items:{type:'string'}}, parentTitle:{type:'string', description:'若作为某任务的子任务，填父任务标题'} }, required:['title'] } } },
