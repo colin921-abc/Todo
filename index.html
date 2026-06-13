@@ -4555,6 +4555,21 @@ function evalRowExpr(expr, row){
   return fn(...vals);
 }
 
+async function docGenChart(spec){
+  const canvas = document.createElement('canvas');
+  canvas.width = 900; canvas.height = 500;
+  document.body.appendChild(canvas);
+  const chart = new Chart(canvas.getContext('2d'), {
+    type: spec.type || 'bar',
+    data: { labels: spec.labels||[], datasets:[{ label: spec.title||'', data: spec.data||[], backgroundColor:'rgba(79,70,229,0.7)' }] },
+    options: { responsive:false, animation:false, plugins:{ title:{ display:!!spec.title, text:spec.title } } }
+  });
+  await new Promise(r=>setTimeout(r,50));
+  const url = canvas.toDataURL('image/png');
+  const a = document.createElement('a'); a.href=url; a.download=(spec.filename||'chart')+'.png'; a.click();
+  chart.destroy(); canvas.remove();
+}
+
 const AI_TOOLS = [
   { type:'function', function:{ name:'list_tasks', description:'查询任务列表，可按状态/标签/关键词过滤。修改、完成或删除任务前先用它拿到任务 id。', parameters:{ type:'object', properties:{ status:{type:'string', enum:['all','not-started','in-progress','completed']}, tag:{type:'string'}, search:{type:'string'} } } } },
   { type:'function', function:{ name:'create_task', description:'新建一个任务', parameters:{ type:'object', properties:{ title:{type:'string'}, priority:{type:'integer', enum:[1,2,3]}, startDate:{type:'string', description:'YYYY-MM-DD'}, dueDate:{type:'string', description:'YYYY-MM-DD'}, tags:{type:'array', items:{type:'string'}}, parentTitle:{type:'string', description:'若作为某任务的子任务，填父任务标题'} }, required:['title'] } } },
@@ -4571,6 +4586,7 @@ const AI_TOOLS = [
   ,{ type:'function', function:{ name:'query_excel', description:'在已加载表上做查询：筛选+分组聚合+排序+取前N。filters:[{col,op,value}] op取 =,!=,>,>=,<,<=,contains；groupBy 为列名；aggregations:[{fn,col}] fn取 sum,avg,count,max,min；sortBy 列名+desc布尔(降序)；limit 数字。返回结果行。', parameters:{ type:'object', properties:{ sheetIndex:{type:'integer', description:'第几个表，默认0'}, filters:{type:'array', items:{type:'object'}}, groupBy:{type:'string'}, aggregations:{type:'array', items:{type:'object'}}, sortBy:{type:'string'}, desc:{type:'boolean'}, limit:{type:'integer'} } } } }
   ,{ type:'function', function:{ name:'export_processed_xlsx', description:'把一次 query_excel 的查询结果导出成精致 Excel 下载。传与 query_excel 相同的查询参数，外加 filename。', parameters:{ type:'object', properties:{ filename:{type:'string'}, sheetIndex:{type:'integer'}, filters:{type:'array', items:{type:'object'}}, groupBy:{type:'string'}, aggregations:{type:'array', items:{type:'object'}}, sortBy:{type:'string'}, desc:{type:'boolean'}, limit:{type:'integer'} } } } }
   ,{ type:'function', function:{ name:'add_computed_column', description:'给已加载表新增一个计算列。expr 用现有列名做算术（+ - * / 括号），如 "销售额 * 0.1"。newColumn 为新列名。', parameters:{ type:'object', properties:{ sheetIndex:{type:'integer'}, newColumn:{type:'string'}, expr:{type:'string'} }, required:['newColumn','expr'] } } }
+  ,{ type:'function', function:{ name:'generate_chart', description:'用 labels 和 data 生成一张图表 PNG 下载。type 取 bar/line/pie。可配合 query_excel 的结果。', parameters:{ type:'object', properties:{ type:{type:'string', enum:['bar','line','pie']}, labels:{type:'array', items:{type:'string'}}, data:{type:'array', items:{type:'number'}}, title:{type:'string'}, filename:{type:'string'} }, required:['labels','data'] } } }
 ];
 
 function isWriteTool(name) {
@@ -4578,7 +4594,7 @@ function isWriteTool(name) {
 }
 
 function isDocTool(name){
-  return ['generate_pptx','generate_xlsx','generate_docx','export_processed_xlsx'].includes(name);
+  return ['generate_pptx','generate_xlsx','generate_docx','export_processed_xlsx','generate_chart'].includes(name);
 }
 
 function buildAISystem() {
@@ -4618,6 +4634,7 @@ function aiToolActivity(name) {
   if (name === 'generate_docx') return '📄 正在生成 Word…';
   if (name === 'inspect_excel') return '🔍 正在查看表结构…';
   if (name === 'query_excel') return '🔍 正在分析表格…';
+  if (name === 'generate_chart') return '📈 正在生成图表…';
   return '🔧 ' + name;
 }
 
@@ -4731,6 +4748,11 @@ async function executeAITool(name, args) {
           return { ok:true, message:'已新增列「'+args.newColumn+'」', columns:sheet.headers };
         } catch(e){ return { ok:false, message:'计算失败：'+(e.message||e) }; }
       }
+      case 'generate_chart': {
+        if(typeof Chart==='undefined') return { ok:false, message:'图表库未加载' };
+        await docGenChart(args);
+        return { ok:true, message:'已生成图表 PNG' };
+      }
     }
     return { ok:false, message:'未知工具 '+name };
   } catch (e) {
@@ -4777,6 +4799,8 @@ function aiConfirmText(name, args) {
       return '将生成 Word：《'+(args.filename||args.title||'document')+'》';
     case 'export_processed_xlsx':
       return '将导出处理结果 Excel：《'+(args.filename||'处理结果')+'》';
+    case 'generate_chart':
+      return '将生成图表：《'+(args.title||args.filename||'chart')+'》（'+(args.type||'bar')+'）';
   }
   return name;
 }
