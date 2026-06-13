@@ -4356,6 +4356,32 @@ function validateDocSpec(type, spec){
   return { ok: errs.length === 0, errors: errs };
 }
 
+async function docGenPptx(spec){
+  const pptx = new PptxGenJS();
+  pptx.defineLayout({ name:'W16', width:13.333, height:7.5 });
+  pptx.layout = 'W16';
+  const ACCENT='4F46E5', DARK='1F2937', MUTED='6B7280', BG='F8F8FC';
+  (spec.slides||[]).forEach(s=>{
+    const slide = pptx.addSlide();
+    if(s.layout === 'title'){
+      slide.background = { color:BG };
+      slide.addShape(pptx.ShapeType.rect, { x:0.8, y:2.45, w:2, h:0.08, fill:{color:ACCENT} });
+      slide.addText(s.title||'', { x:0.8, y:2.6, w:11.7, h:1.5, fontSize:40, bold:true, color:DARK });
+      if(s.note) slide.addText(s.note, { x:0.8, y:4.1, w:11.7, h:0.8, fontSize:18, color:MUTED });
+    } else if(s.layout === 'section'){
+      slide.background = { color:ACCENT };
+      slide.addText(s.title||'', { x:0.8, y:3, w:11.7, h:1.5, fontSize:34, bold:true, color:'FFFFFF' });
+    } else {
+      slide.addText(s.title||'', { x:0.6, y:0.4, w:12.1, h:0.9, fontSize:26, bold:true, color:DARK });
+      slide.addShape(pptx.ShapeType.line, { x:0.6, y:1.3, w:12.1, h:0, line:{color:ACCENT, width:2} });
+      const bullets = (s.bullets||[]).map(t=>({ text:String(t), options:{ bullet:true, fontSize:18, color:DARK, paraSpaceAfter:10 } }));
+      if(bullets.length) slide.addText(bullets, { x:0.8, y:1.6, w:11.7, h:5.2, valign:'top' });
+      if(s.note) slide.addNotes(String(s.note));
+    }
+  });
+  await pptx.writeFile({ fileName:(spec.filename||'presentation')+'.pptx' });
+}
+
 const AI_TOOLS = [
   { type:'function', function:{ name:'list_tasks', description:'查询任务列表，可按状态/标签/关键词过滤。修改、完成或删除任务前先用它拿到任务 id。', parameters:{ type:'object', properties:{ status:{type:'string', enum:['all','not-started','in-progress','completed']}, tag:{type:'string'}, search:{type:'string'} } } } },
   { type:'function', function:{ name:'create_task', description:'新建一个任务', parameters:{ type:'object', properties:{ title:{type:'string'}, priority:{type:'integer', enum:[1,2,3]}, startDate:{type:'string', description:'YYYY-MM-DD'}, dueDate:{type:'string', description:'YYYY-MM-DD'}, tags:{type:'array', items:{type:'string'}}, parentTitle:{type:'string', description:'若作为某任务的子任务，填父任务标题'} }, required:['title'] } } },
