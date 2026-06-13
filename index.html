@@ -4438,10 +4438,17 @@ const AI_TOOLS = [
   { type:'function', function:{ name:'get_misc_types', description:'获取所有杂项任务集类型（名称、单位）', parameters:{ type:'object', properties:{} } } },
   { type:'function', function:{ name:'query_misc_records', description:'统计杂项记录数量。可指定类型名和日期范围(YYYY-MM-DD)，默认最近30天。', parameters:{ type:'object', properties:{ typeName:{type:'string'}, from:{type:'string'}, to:{type:'string'} } } } },
   { type:'function', function:{ name:'add_misc_record', description:'给某个杂项类型记录一笔数量', parameters:{ type:'object', properties:{ typeName:{type:'string'}, count:{type:'integer'}, date:{type:'string', description:'YYYY-MM-DD，默认今天'}, note:{type:'string'} }, required:['typeName'] } } }
+  ,{ type:'function', function:{ name:'generate_pptx', description:'生成并下载一份 PPT。把内容组织成幻灯片结构。layout 用 title(标题页)/section(章节分隔页)/content(要点页)。导出 Todo 数据时先用 list_tasks/query_misc_records 查到数据再组织。', parameters:{ type:'object', properties:{ filename:{type:'string'}, slides:{ type:'array', items:{ type:'object', properties:{ layout:{type:'string', enum:['title','section','content']}, title:{type:'string'}, bullets:{type:'array', items:{type:'string'}}, note:{type:'string'} }, required:['layout'] } } }, required:['slides'] } } }
+  ,{ type:'function', function:{ name:'generate_xlsx', description:'生成并下载一份 Excel。每个 sheet 给 headers(表头数组) 和 rows(二维数组)。', parameters:{ type:'object', properties:{ filename:{type:'string'}, sheets:{ type:'array', items:{ type:'object', properties:{ name:{type:'string'}, headers:{type:'array', items:{type:'string'}}, rows:{type:'array', items:{type:'array'}} }, required:['headers','rows'] } } }, required:['sheets'] } } }
+  ,{ type:'function', function:{ name:'generate_docx', description:'生成并下载一份 Word。blocks 支持 type=heading(带 level 1/2)/paragraph(带 text)/list(带 items 数组)/table(带 rows 二维数组)。', parameters:{ type:'object', properties:{ filename:{type:'string'}, title:{type:'string'}, blocks:{ type:'array', items:{ type:'object', properties:{ type:{type:'string', enum:['heading','paragraph','list','table']}, level:{type:'integer'}, text:{type:'string'}, items:{type:'array', items:{type:'string'}}, rows:{type:'array', items:{type:'array'}} }, required:['type'] } } }, required:['title'] } } }
 ];
 
 function isWriteTool(name) {
   return ['create_task','update_task','complete_task','delete_task','add_misc_record'].includes(name);
+}
+
+function isDocTool(name){
+  return ['generate_pptx','generate_xlsx','generate_docx','export_processed_xlsx'].includes(name);
 }
 
 function buildAISystem() {
@@ -4455,6 +4462,7 @@ function buildAISystem() {
 - 要修改、完成或删除某个任务前，必须先用 list_tasks 拿到它真实的 id。
 - 记录杂项用 add_misc_record，typeName 要对上现有类型名。
 - 写操作（增/改/删/记录）会由界面再次向用户确认，你照常调用即可，不用自己问"要不要执行"。
+- 可生成文档：generate_pptx / generate_xlsx / generate_docx。把内容组织成结构化参数。要"导出我的任务/杂项"时，先用查询工具拿真实数据，再组织成文档结构调用生成工具。生成会弹确认卡，照常调用即可。
 - 回复用中文，简洁明了。`;
 }
 
@@ -4474,6 +4482,9 @@ function aiToolActivity(name) {
   if (name === 'list_tasks') return '🔍 正在查询任务…';
   if (name === 'get_misc_types') return '🔍 正在读取杂项类型…';
   if (name === 'query_misc_records') return '🔍 正在统计杂项记录…';
+  if (name === 'generate_pptx') return '📊 正在生成 PPT…';
+  if (name === 'generate_xlsx') return '📗 正在生成 Excel…';
+  if (name === 'generate_docx') return '📄 正在生成 Word…';
   return '🔧 ' + name;
 }
 
@@ -4534,6 +4545,24 @@ async function executeAITool(name, args) {
         if (!r) return { ok:false, message:'保存失败' };
         return { ok:true, type:ty.name, count:r.count, date:r.occurredAt };
       }
+      case 'generate_pptx': {
+        const v = validateDocSpec('pptx', args); if(!v.ok) return { ok:false, message:v.errors.join('；') };
+        if(typeof PptxGenJS==='undefined') return { ok:false, message:'PPT 库未加载' };
+        await docGenPptx(args);
+        return { ok:true, message:'已生成并下载 PPT（'+(args.slides?args.slides.length:0)+' 页）' };
+      }
+      case 'generate_xlsx': {
+        const v = validateDocSpec('xlsx', args); if(!v.ok) return { ok:false, message:v.errors.join('；') };
+        if(typeof ExcelJS==='undefined') return { ok:false, message:'Excel 库未加载' };
+        await docGenXlsx(args);
+        return { ok:true, message:'已生成并下载 Excel（'+(args.sheets?args.sheets.length:0)+' 个表）' };
+      }
+      case 'generate_docx': {
+        const v = validateDocSpec('docx', args); if(!v.ok) return { ok:false, message:v.errors.join('；') };
+        if(typeof docx==='undefined' || typeof saveAs==='undefined') return { ok:false, message:'Word 库未加载' };
+        await docGenDocx(args);
+        return { ok:true, message:'已生成并下载 Word' };
+      }
     }
     return { ok:false, message:'未知工具 '+name };
   } catch (e) {
@@ -4572,6 +4601,12 @@ function aiConfirmText(name, args) {
     case 'add_misc_record': {
       return '记录杂项：' + (args.typeName||'') + ' ' + (args.count||1) + '（' + (args.date||toDateStr(new Date())) + '）' + (args.note?'  备注:'+args.note:'');
     }
+    case 'generate_pptx':
+      return '将生成 PPT：《'+(args.filename||'presentation')+'》，共 '+((args.slides||[]).length)+' 页';
+    case 'generate_xlsx':
+      return '将生成 Excel：《'+(args.filename||'export')+'》，共 '+((args.sheets||[]).length)+' 个表';
+    case 'generate_docx':
+      return '将生成 Word：《'+(args.filename||args.title||'document')+'》';
   }
   return name;
 }
@@ -4608,7 +4643,7 @@ async function aiRunTurn() {
     const call = calls[i];
     let args = {};
     try { args = JSON.parse(call.function.arguments || '{}'); } catch (e) {}
-    if (isWriteTool(call.function.name)) {
+    if (isWriteTool(call.function.name) || isDocTool(call.function.name)) {
       pendingWrites.push(i);
       aiDisplay.push({ role:'confirm', confirmId: call.id, name: call.function.name, args, status:'pending' });
     } else {
