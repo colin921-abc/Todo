@@ -4440,6 +4440,58 @@ function parseDelimited(text){
   return { headers: split(lines[0]), rows: lines.slice(1).map(split) };
 }
 
+function runExcelQuery(sheet, q){
+  q = q || {};
+  let rows = (sheet.rows||[]).map(r=>{ const o={}; (sheet.headers||[]).forEach((h,i)=>o[h]=r[i]); return o; });
+  (q.filters||[]).forEach(f=>{
+    rows = rows.filter(row=>{
+      const v = row[f.col], nv = parseFloat(v), nf = parseFloat(f.value);
+      switch(f.op){
+        case '=':  return String(v)===String(f.value);
+        case '!=': return String(v)!==String(f.value);
+        case '>':  return nv >  nf;
+        case '>=': return nv >= nf;
+        case '<':  return nv <  nf;
+        case '<=': return nv <= nf;
+        case 'contains': return String(v).includes(String(f.value));
+        default: return true;
+      }
+    });
+  });
+  let result;
+  if(q.groupBy){
+    const groups = {};
+    rows.forEach(row=>{ const k = row[q.groupBy]; (groups[k] = groups[k] || []).push(row); });
+    result = Object.entries(groups).map(([k,grp])=>{
+      const o = { [q.groupBy]: k };
+      (q.aggregations||[]).forEach(a=>{
+        const nums = grp.map(r=>parseFloat(r[a.col])).filter(n=>!isNaN(n));
+        let val = 0;
+        switch(a.fn){
+          case 'sum':   val = nums.reduce((x,y)=>x+y,0); break;
+          case 'avg':   val = nums.length ? nums.reduce((x,y)=>x+y,0)/nums.length : 0; break;
+          case 'count': val = grp.length; break;
+          case 'max':   val = nums.length ? Math.max(...nums) : 0; break;
+          case 'min':   val = nums.length ? Math.min(...nums) : 0; break;
+        }
+        o[a.fn+'_'+a.col] = val;
+      });
+      return o;
+    });
+  } else {
+    result = rows;
+  }
+  if(q.sortBy){
+    result.sort((a,b)=>{
+      const x=a[q.sortBy], y=b[q.sortBy], nx=parseFloat(x), ny=parseFloat(y);
+      const cmp = (!isNaN(nx)&&!isNaN(ny)) ? (nx-ny) : String(x).localeCompare(String(y));
+      return (q.desc ? 1 : -1) * cmp;
+    });
+  }
+  if(q.limit) result = result.slice(0, q.limit);
+  return result;
+}
+
 const AI_TOOLS = [
   { type:'function', function:{ name:'list_tasks', description:'查询任务列表，可按状态/标签/关键词过滤。修改、完成或删除任务前先用它拿到任务 id。', parameters:{ type:'object', properties:{ status:{type:'string', enum:['all','not-started','in-progress','completed']}, tag:{type:'string'}, search:{type:'string'} } } } },
   { type:'function', function:{ name:'create_task', description:'新建一个任务', parameters:{ type:'object', properties:{ title:{type:'string'}, priority:{type:'integer', enum:[1,2,3]}, startDate:{type:'string', description:'YYYY-MM-DD'}, dueDate:{type:'string', description:'YYYY-MM-DD'}, tags:{type:'array', items:{type:'string'}}, parentTitle:{type:'string', description:'若作为某任务的子任务，填父任务标题'} }, required:['title'] } } },
