@@ -4408,6 +4408,27 @@ async function docGenXlsx(spec){
   saveAs(new Blob([buf], { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), (spec.filename||'export')+'.xlsx');
 }
 
+async function docGenDocx(spec){
+  const D = docx;
+  const children = [];
+  if(spec.title) children.push(new D.Paragraph({ text:String(spec.title), heading:D.HeadingLevel.TITLE }));
+  (spec.blocks||[]).forEach(b=>{
+    if(b.type === 'heading'){
+      children.push(new D.Paragraph({ text:String(b.text||''), heading: b.level===2 ? D.HeadingLevel.HEADING_2 : D.HeadingLevel.HEADING_1 }));
+    } else if(b.type === 'paragraph'){
+      children.push(new D.Paragraph({ children:[ new D.TextRun(String(b.text||'')) ] }));
+    } else if(b.type === 'list'){
+      (b.items||[]).forEach(it=> children.push(new D.Paragraph({ text:String(it), bullet:{ level:0 } })));
+    } else if(b.type === 'table'){
+      const rows = (b.rows||[]).map(r => new D.TableRow({ children: r.map(c => new D.TableCell({ children:[ new D.Paragraph(String(c==null?'':c)) ] })) }));
+      if(rows.length) children.push(new D.Table({ rows }));
+    }
+  });
+  const doc = new D.Document({ sections:[{ children }] });
+  const blob = await D.Packer.toBlob(doc);
+  saveAs(blob, (spec.filename||'document')+'.docx');
+}
+
 const AI_TOOLS = [
   { type:'function', function:{ name:'list_tasks', description:'查询任务列表，可按状态/标签/关键词过滤。修改、完成或删除任务前先用它拿到任务 id。', parameters:{ type:'object', properties:{ status:{type:'string', enum:['all','not-started','in-progress','completed']}, tag:{type:'string'}, search:{type:'string'} } } } },
   { type:'function', function:{ name:'create_task', description:'新建一个任务', parameters:{ type:'object', properties:{ title:{type:'string'}, priority:{type:'integer', enum:[1,2,3]}, startDate:{type:'string', description:'YYYY-MM-DD'}, dueDate:{type:'string', description:'YYYY-MM-DD'}, tags:{type:'array', items:{type:'string'}}, parentTitle:{type:'string', description:'若作为某任务的子任务，填父任务标题'} }, required:['title'] } } },
