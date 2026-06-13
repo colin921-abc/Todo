@@ -4345,6 +4345,17 @@ let aiDisplay = [];    // UI 渲染用
 let aiBusy = false;
 let aiPending = null;  // 等待用户确认写操作时的上下文
 
+// ---- 文档生成：规范化/校验（纯函数，可在 console 测） ----
+function validateDocSpec(type, spec){
+  const errs = [];
+  if(!spec || typeof spec !== 'object') return { ok:false, errors:['spec 不是对象'] };
+  if(type === 'pptx'){ if(!Array.isArray(spec.slides) || !spec.slides.length) errs.push('slides 为空'); }
+  else if(type === 'xlsx'){ if(!Array.isArray(spec.sheets) || !spec.sheets.length) errs.push('sheets 为空'); }
+  else if(type === 'docx'){ if(!spec.title && !(Array.isArray(spec.blocks) && spec.blocks.length)) errs.push('缺少 title 或 blocks'); }
+  else errs.push('未知文档类型 '+type);
+  return { ok: errs.length === 0, errors: errs };
+}
+
 const AI_TOOLS = [
   { type:'function', function:{ name:'list_tasks', description:'查询任务列表，可按状态/标签/关键词过滤。修改、完成或删除任务前先用它拿到任务 id。', parameters:{ type:'object', properties:{ status:{type:'string', enum:['all','not-started','in-progress','completed']}, tag:{type:'string'}, search:{type:'string'} } } } },
   { type:'function', function:{ name:'create_task', description:'新建一个任务', parameters:{ type:'object', properties:{ title:{type:'string'}, priority:{type:'integer', enum:[1,2,3]}, startDate:{type:'string', description:'YYYY-MM-DD'}, dueDate:{type:'string', description:'YYYY-MM-DD'}, tags:{type:'array', items:{type:'string'}}, parentTitle:{type:'string', description:'若作为某任务的子任务，填父任务标题'} }, required:['title'] } } },
