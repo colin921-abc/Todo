@@ -4547,6 +4547,14 @@ function aiLoadPastedText(text){
 window.aiLoadFile = aiLoadFile;
 window.aiLoadPastedText = aiLoadPastedText;
 
+function evalRowExpr(expr, row){
+  if(!/^[\w\s+\-*/().,]+$/.test(String(expr))) throw new Error('表达式含非法字符');
+  const keys = Object.keys(row);
+  const vals = keys.map(k=>{ const n = parseFloat(row[k]); return isNaN(n) ? 0 : n; });
+  const fn = new Function(...keys, 'return ('+expr+');');
+  return fn(...vals);
+}
+
 const AI_TOOLS = [
   { type:'function', function:{ name:'list_tasks', description:'查询任务列表，可按状态/标签/关键词过滤。修改、完成或删除任务前先用它拿到任务 id。', parameters:{ type:'object', properties:{ status:{type:'string', enum:['all','not-started','in-progress','completed']}, tag:{type:'string'}, search:{type:'string'} } } } },
   { type:'function', function:{ name:'create_task', description:'新建一个任务', parameters:{ type:'object', properties:{ title:{type:'string'}, priority:{type:'integer', enum:[1,2,3]}, startDate:{type:'string', description:'YYYY-MM-DD'}, dueDate:{type:'string', description:'YYYY-MM-DD'}, tags:{type:'array', items:{type:'string'}}, parentTitle:{type:'string', description:'若作为某任务的子任务，填父任务标题'} }, required:['title'] } } },
@@ -4562,6 +4570,7 @@ const AI_TOOLS = [
   ,{ type:'function', function:{ name:'inspect_excel', description:'查看用户已上传/粘贴的表格结构：每个 sheet 的列名、行数、前若干行样本。分析前先调用它了解数据。', parameters:{ type:'object', properties:{ sampleRows:{type:'integer', description:'样本行数，默认5'} } } } }
   ,{ type:'function', function:{ name:'query_excel', description:'在已加载表上做查询：筛选+分组聚合+排序+取前N。filters:[{col,op,value}] op取 =,!=,>,>=,<,<=,contains；groupBy 为列名；aggregations:[{fn,col}] fn取 sum,avg,count,max,min；sortBy 列名+desc布尔(降序)；limit 数字。返回结果行。', parameters:{ type:'object', properties:{ sheetIndex:{type:'integer', description:'第几个表，默认0'}, filters:{type:'array', items:{type:'object'}}, groupBy:{type:'string'}, aggregations:{type:'array', items:{type:'object'}}, sortBy:{type:'string'}, desc:{type:'boolean'}, limit:{type:'integer'} } } } }
   ,{ type:'function', function:{ name:'export_processed_xlsx', description:'把一次 query_excel 的查询结果导出成精致 Excel 下载。传与 query_excel 相同的查询参数，外加 filename。', parameters:{ type:'object', properties:{ filename:{type:'string'}, sheetIndex:{type:'integer'}, filters:{type:'array', items:{type:'object'}}, groupBy:{type:'string'}, aggregations:{type:'array', items:{type:'object'}}, sortBy:{type:'string'}, desc:{type:'boolean'}, limit:{type:'integer'} } } } }
+  ,{ type:'function', function:{ name:'add_computed_column', description:'给已加载表新增一个计算列。expr 用现有列名做算术（+ - * / 括号），如 "销售额 * 0.1"。newColumn 为新列名。', parameters:{ type:'object', properties:{ sheetIndex:{type:'integer'}, newColumn:{type:'string'}, expr:{type:'string'} }, required:['newColumn','expr'] } } }
 ];
 
 function isWriteTool(name) {
@@ -4708,6 +4717,19 @@ async function executeAITool(name, args) {
         const matrix = rows.map(r=>headers.map(h=>r[h]));
         await docGenXlsx({ filename: args.filename || '处理结果', sheets:[{ name:'结果', headers, rows:matrix }] });
         return { ok:true, message:'已导出 '+rows.length+' 行到 Excel' };
+      }
+      case 'add_computed_column': {
+        if(!loadedSheets.length) return { ok:false, message:'还没有已加载的表格' };
+        const sheet = loadedSheets[args.sheetIndex || 0];
+        if(!sheet) return { ok:false, message:'sheetIndex 越界' };
+        try {
+          sheet.rows = sheet.rows.map(r=>{
+            const obj = {}; sheet.headers.forEach((h,i)=>obj[h]=r[i]);
+            return [...r, evalRowExpr(args.expr, obj)];
+          });
+          sheet.headers = [...sheet.headers, args.newColumn];
+          return { ok:true, message:'已新增列「'+args.newColumn+'」', columns:sheet.headers };
+        } catch(e){ return { ok:false, message:'计算失败：'+(e.message||e) }; }
       }
     }
     return { ok:false, message:'未知工具 '+name };
