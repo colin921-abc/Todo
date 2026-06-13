@@ -1531,6 +1531,35 @@ textarea { resize: vertical; min-height: 60px; }
   .misc-history-note { grid-area: note; }
   .misc-history-actions { grid-area: actions; justify-content: flex-start; }
 }
+/* ============================================================
+   AI ASSISTANT
+   ============================================================ */
+#view-ai .ai-chat { flex:1; display:flex; flex-direction:column; overflow:hidden; padding:0 32px 20px; }
+.ai-messages { flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:12px; padding:8px 0 16px; }
+.ai-empty { color:var(--text-muted); font-size:13px; line-height:2; text-align:center; margin:auto; }
+.ai-msg { display:flex; }
+.ai-msg.user { justify-content:flex-end; }
+.ai-msg.assistant { justify-content:flex-start; }
+.ai-bubble { max-width:78%; padding:10px 14px; border-radius:14px; font-size:14px; line-height:1.6; white-space:pre-wrap; word-break:break-word; }
+.ai-msg.user .ai-bubble { background:var(--accent); color:#fff; border-bottom-right-radius:4px; }
+.ai-msg.assistant .ai-bubble { background:var(--card-bg); border:1px solid var(--border); color:var(--text); border-bottom-left-radius:4px; }
+.ai-tool-line { font-size:12px; color:var(--text-muted); padding:2px 4px; }
+.ai-typing span { animation:aiBlink 1.2s infinite; }
+.ai-typing span:nth-child(2){ animation-delay:.2s; }
+.ai-typing span:nth-child(3){ animation-delay:.4s; }
+@keyframes aiBlink { 0%,100%{opacity:.2} 50%{opacity:1} }
+.ai-confirm-card { align-self:flex-start; max-width:80%; background:#fff8e0; border:1px solid #e8c97a; border-radius:12px; padding:12px 14px; }
+.ai-confirm-card.done { background:var(--green-bg); border-color:var(--green); }
+.ai-confirm-card.cancelled { opacity:.55; }
+.ai-confirm-title { font-size:11px; font-weight:700; color:#9a7b3a; text-transform:uppercase; letter-spacing:.04em; margin-bottom:6px; }
+.ai-confirm-desc { font-size:13.5px; color:var(--text); line-height:1.5; }
+.ai-confirm-actions { display:flex; gap:8px; margin-top:10px; }
+.ai-confirm-status { font-size:12px; font-weight:600; margin-top:8px; }
+.ai-confirm-status.done { color:var(--green); }
+.ai-confirm-status.cancelled { color:var(--text-muted); }
+.ai-input-bar { display:flex; gap:8px; align-items:flex-end; border-top:1px solid var(--border); padding-top:12px; }
+.ai-input-bar textarea { flex:1; resize:none; max-height:140px; min-height:42px; border-radius:var(--radius-md); }
+.ai-input-bar .btn { flex-shrink:0; }
 </style>
 </head>
 <body>
@@ -1566,6 +1595,9 @@ textarea { resize: vertical; min-height: 60px; }
         </li>
         <li class="nav-item" data-view="report">
           <span class="nav-icon">📊</span> 工作汇报
+        </li>
+        <li class="nav-item" data-view="ai">
+          <span class="nav-icon">🤖</span> AI 助手
         </li>
       </ul>
       <div class="sidebar-tags" id="sidebarTags">
@@ -1670,6 +1702,23 @@ textarea { resize: vertical; min-height: 60px; }
         <h2>工作汇报</h2>
       </div>
       <div class="view-content" id="reportContent"></div>
+    </div>
+
+    <!-- View: AI Assistant -->
+    <div class="view-panel" id="view-ai" style="display:none;">
+      <div class="view-header">
+        <h2>AI 助手</h2>
+        <div class="view-actions">
+          <button class="btn btn-ghost btn-sm" onclick="aiReset()">清空对话</button>
+        </div>
+      </div>
+      <div class="ai-chat">
+        <div class="ai-messages" id="aiMessages"></div>
+        <div class="ai-input-bar">
+          <textarea id="aiInput" rows="1" placeholder="问我，或让我帮你记一笔 / 建任务…"></textarea>
+          <button class="btn btn-primary" onclick="aiSend()">发送</button>
+        </div>
+      </div>
     </div>
   </main>
 </div>
@@ -4211,6 +4260,300 @@ async function exportReportPPT() {
   showToast('PPT 已导出');
 }
 
+// ============================================================
+// AI ASSISTANT (DeepSeek agent)
+// ============================================================
+const AI_ENDPOINT = SUPABASE_URL + '/functions/v1/ask';
+const AI_MODEL = 'deepseek-chat';
+let aiMessages = [];   // OpenAI 格式消息数组（不含 system）
+let aiDisplay = [];    // UI 渲染用
+let aiBusy = false;
+let aiPending = null;  // 等待用户确认写操作时的上下文
+
+const AI_TOOLS = [
+  { type:'function', function:{ name:'list_tasks', description:'查询任务列表，可按状态/标签/关键词过滤。修改、完成或删除任务前先用它拿到任务 id。', parameters:{ type:'object', properties:{ status:{type:'string', enum:['all','not-started','in-progress','completed']}, tag:{type:'string'}, search:{type:'string'} } } } },
+  { type:'function', function:{ name:'create_task', description:'新建一个任务', parameters:{ type:'object', properties:{ title:{type:'string'}, priority:{type:'integer', enum:[1,2,3]}, startDate:{type:'string', description:'YYYY-MM-DD'}, dueDate:{type:'string', description:'YYYY-MM-DD'}, tags:{type:'array', items:{type:'string'}}, parentTitle:{type:'string', description:'若作为某任务的子任务，填父任务标题'} }, required:['title'] } } },
+  { type:'function', function:{ name:'update_task', description:'修改一个已存在任务的字段', parameters:{ type:'object', properties:{ id:{type:'integer'}, title:{type:'string'}, status:{type:'string', enum:['not-started','in-progress','completed']}, priority:{type:'integer', enum:[1,2,3]}, startDate:{type:'string'}, dueDate:{type:'string'} }, required:['id'] } } },
+  { type:'function', function:{ name:'complete_task', description:'把一个任务标记为已完成', parameters:{ type:'object', properties:{ id:{type:'integer'} }, required:['id'] } } },
+  { type:'function', function:{ name:'delete_task', description:'删除一个任务及其所有子任务', parameters:{ type:'object', properties:{ id:{type:'integer'} }, required:['id'] } } },
+  { type:'function', function:{ name:'get_misc_types', description:'获取所有杂项任务集类型（名称、单位）', parameters:{ type:'object', properties:{} } } },
+  { type:'function', function:{ name:'query_misc_records', description:'统计杂项记录数量。可指定类型名和日期范围(YYYY-MM-DD)，默认最近30天。', parameters:{ type:'object', properties:{ typeName:{type:'string'}, from:{type:'string'}, to:{type:'string'} } } } },
+  { type:'function', function:{ name:'add_misc_record', description:'给某个杂项类型记录一笔数量', parameters:{ type:'object', properties:{ typeName:{type:'string'}, count:{type:'integer'}, date:{type:'string', description:'YYYY-MM-DD，默认今天'}, note:{type:'string'} }, required:['typeName'] } } }
+];
+
+function isWriteTool(name) {
+  return ['create_task','update_task','complete_task','delete_task','add_misc_record'].includes(name);
+}
+
+function buildAISystem() {
+  const todayStr = toDateStr(new Date());
+  const types = activeMiscTypes().map(t => `${t.name}(单位:${t.unit})`).join('、') || '（暂无）';
+  return `你是用户的个人待办助手，嵌在一个"待办任务 + 杂项计数记录"的应用里。今天是 ${todayStr}（周${['日','一','二','三','四','五','六'][new Date().getDay()]}）。
+你能调用工具查询和修改用户的任务与杂项记录。需要数据时主动调用工具，绝不编造 id 或数字。
+当前杂项任务集类型：${types}。
+规则：
+- 所有日期用 YYYY-MM-DD 格式；"今天/明天/本周"等先自行换算成具体日期。
+- 要修改、完成或删除某个任务前，必须先用 list_tasks 拿到它真实的 id。
+- 记录杂项用 add_misc_record，typeName 要对上现有类型名。
+- 写操作（增/改/删/记录）会由界面再次向用户确认，你照常调用即可，不用自己问"要不要执行"。
+- 回复用中文，简洁明了。`;
+}
+
+async function callAI(apiMessages) {
+  const res = await fetch(AI_ENDPOINT, {
+    method:'POST',
+    headers:{ 'Content-Type':'application/json', 'apikey':SUPABASE_KEY, 'Authorization':'Bearer '+SUPABASE_KEY },
+    body: JSON.stringify({ model:AI_MODEL, messages:apiMessages, tools:AI_TOOLS, tool_choice:'auto' })
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+  if (!data.choices || !data.choices[0]) throw new Error('返回异常：' + JSON.stringify(data).slice(0,200));
+  return data.choices[0].message;
+}
+
+function aiToolActivity(name) {
+  if (name === 'list_tasks') return '🔍 正在查询任务…';
+  if (name === 'get_misc_types') return '🔍 正在读取杂项类型…';
+  if (name === 'query_misc_records') return '🔍 正在统计杂项记录…';
+  return '🔧 ' + name;
+}
+
+async function executeAITool(name, args) {
+  try {
+    switch (name) {
+      case 'list_tasks': {
+        let list = todos.slice();
+        if (args.status && args.status !== 'all') list = list.filter(t => t.status === args.status);
+        if (args.tag) list = list.filter(t => (t.tags||[]).includes(args.tag));
+        if (args.search) { const q = args.search.toLowerCase(); list = list.filter(t => t.title.toLowerCase().includes(q)); }
+        const mapped = list.slice(0, 80).map(t => ({ id:t.id, title:t.title, status:t.status, priority:t.priority, startDate:t.startDate, dueDate:t.dueDate, tags:t.tags, parentId:t.parentId }));
+        return { ok:true, count:mapped.length, tasks:mapped };
+      }
+      case 'create_task': {
+        if (!args.title) return { ok:false, message:'缺少标题' };
+        let parentId = null;
+        if (args.parentTitle) { const p = todos.find(t => t.title.toLowerCase().includes(args.parentTitle.toLowerCase())); if (p) parentId = p.id; }
+        const t = await addTask(args.title, parentId, { priority:args.priority||null, tags:args.tags||[], startDate:args.startDate||null, dueDate:args.dueDate||null });
+        return { ok:true, id:t.id, title:t.title };
+      }
+      case 'update_task': {
+        const t = getTask(args.id); if (!t) return { ok:false, message:'找不到任务 id='+args.id };
+        const changes = {};
+        ['title','status','priority','startDate','dueDate'].forEach(k => { if (k in args) changes[k] = args[k]; });
+        await updateTask(args.id, changes);
+        return { ok:true, id:args.id };
+      }
+      case 'complete_task': {
+        const t = getTask(args.id); if (!t) return { ok:false, message:'找不到任务 id='+args.id };
+        await updateTask(args.id, { status:'completed' });
+        return { ok:true, id:args.id };
+      }
+      case 'delete_task': {
+        const t = getTask(args.id); if (!t) return { ok:false, message:'找不到任务 id='+args.id };
+        await deleteTask(args.id);
+        return { ok:true, id:args.id };
+      }
+      case 'get_misc_types': {
+        return { ok:true, types: activeMiscTypes().map(t => ({ id:t.id, name:t.name, unit:t.unit, icon:t.icon })) };
+      }
+      case 'query_misc_records': {
+        let from, to;
+        if (args.from || args.to) { from = args.from || '0000-01-01'; to = args.to || '9999-12-31'; }
+        else { const r = rangeDates('30d'); from = r.from; to = r.to; }
+        let recs = miscRecords.filter(r => r.occurredAt >= from && r.occurredAt <= to);
+        if (args.typeName) { const ty = miscTypes.find(t => t.name.toLowerCase().includes(args.typeName.toLowerCase())); if (ty) recs = recs.filter(r => r.typeId === ty.id); }
+        const agg = {};
+        for (const r of recs) agg[r.typeId] = (agg[r.typeId]||0) + r.count;
+        const summary = Object.entries(agg).map(([tid,total]) => { const ty = miscTypes.find(t => t.id === tid); return { type: ty?ty.name:'(已删除)', total, unit: ty?ty.unit:'' }; });
+        return { ok:true, from, to, recordCount:recs.length, summary };
+      }
+      case 'add_misc_record': {
+        if (!args.typeName) return { ok:false, message:'缺少类型名' };
+        const ty = miscTypes.find(t => t.name.toLowerCase().includes(args.typeName.toLowerCase()));
+        if (!ty) return { ok:false, message:'找不到类型「'+args.typeName+'」，现有：'+activeMiscTypes().map(t=>t.name).join('、') };
+        const r = await addMiscRecord({ typeId:ty.id, count:args.count||1, occurredAt:args.date||toDateStr(new Date()), note:args.note||'' });
+        if (!r) return { ok:false, message:'保存失败' };
+        return { ok:true, type:ty.name, count:r.count, date:r.occurredAt };
+      }
+    }
+    return { ok:false, message:'未知工具 '+name };
+  } catch (e) {
+    return { ok:false, message:String(e && e.message || e) };
+  }
+}
+
+function aiConfirmText(name, args) {
+  switch (name) {
+    case 'create_task': {
+      let s = '新建任务：「' + (args.title||'') + '」';
+      if (args.priority) s += '  P' + args.priority;
+      if (args.dueDate) s += '  截止 ' + args.dueDate;
+      if (args.parentTitle) s += '（作为「' + args.parentTitle + '」的子任务）';
+      return s;
+    }
+    case 'update_task': {
+      const t = getTask(args.id);
+      const parts = [];
+      if ('title' in args) parts.push('标题→' + args.title);
+      if ('status' in args) parts.push('状态→' + statusLabel(args.status));
+      if ('priority' in args) parts.push('优先级→' + (args.priority?('P'+args.priority):'无'));
+      if ('dueDate' in args) parts.push('截止→' + (args.dueDate||'清空'));
+      if ('startDate' in args) parts.push('开始→' + (args.startDate||'清空'));
+      return '修改' + (t?'「'+t.title+'」':'任务 #'+args.id) + '：' + (parts.join('，') || '（无改动）');
+    }
+    case 'complete_task': {
+      const t = getTask(args.id);
+      return '把' + (t?'「'+t.title+'」':'任务 #'+args.id) + '标记为已完成';
+    }
+    case 'delete_task': {
+      const t = getTask(args.id);
+      const subs = t ? getDescendants(args.id).length : 0;
+      return '删除' + (t?'「'+t.title+'」':'任务 #'+args.id) + (subs?'（含 '+subs+' 个子任务）':'');
+    }
+    case 'add_misc_record': {
+      return '记录杂项：' + (args.typeName||'') + ' ' + (args.count||1) + '（' + (args.date||toDateStr(new Date())) + '）' + (args.note?'  备注:'+args.note:'');
+    }
+  }
+  return name;
+}
+
+function pushAIToolResults(calls, results) {
+  for (let i = 0; i < calls.length; i++) {
+    aiMessages.push({ role:'tool', tool_call_id: calls[i].id, content: JSON.stringify(results[i] != null ? results[i] : { ok:false }) });
+  }
+}
+
+async function aiRunTurn() {
+  aiBusy = true; renderAI();
+  let assistant;
+  try {
+    assistant = await callAI([{ role:'system', content: buildAISystem() }, ...aiMessages]);
+  } catch (e) {
+    aiBusy = false;
+    aiDisplay.push({ role:'assistant', text:'⚠ 出错了：' + (e.message||e) });
+    renderAI();
+    return;
+  }
+  aiMessages.push(assistant);
+  const calls = assistant.tool_calls || [];
+  if (calls.length === 0) {
+    aiBusy = false;
+    if (assistant.content) aiDisplay.push({ role:'assistant', text: assistant.content });
+    renderAI();
+    return;
+  }
+  if (assistant.content) aiDisplay.push({ role:'assistant', text: assistant.content });
+  const results = new Array(calls.length).fill(null);
+  const pendingWrites = [];
+  for (let i = 0; i < calls.length; i++) {
+    const call = calls[i];
+    let args = {};
+    try { args = JSON.parse(call.function.arguments || '{}'); } catch (e) {}
+    if (isWriteTool(call.function.name)) {
+      pendingWrites.push(i);
+      aiDisplay.push({ role:'confirm', confirmId: call.id, name: call.function.name, args, status:'pending' });
+    } else {
+      aiDisplay.push({ role:'tool', text: aiToolActivity(call.function.name) });
+      results[i] = await executeAITool(call.function.name, args);
+    }
+  }
+  if (pendingWrites.length === 0) {
+    pushAIToolResults(calls, results);
+    aiRunTurn();
+    return;
+  }
+  aiPending = { calls, results, remaining: pendingWrites.length };
+  aiBusy = false;
+  renderAI();
+}
+
+async function aiConfirm(confirmId, ok) {
+  if (!aiPending) return;
+  const idx = aiPending.calls.findIndex(c => c.id === confirmId);
+  if (idx < 0) return;
+  const disp = aiDisplay.find(d => d.role === 'confirm' && d.confirmId === confirmId);
+  if (disp && disp.status !== 'pending') return;
+  const call = aiPending.calls[idx];
+  let args = {};
+  try { args = JSON.parse(call.function.arguments || '{}'); } catch (e) {}
+  if (ok) {
+    const out = await executeAITool(call.function.name, args);
+    aiPending.results[idx] = out;
+    if (disp) disp.status = out && out.ok === false ? 'cancelled' : 'done';
+  } else {
+    aiPending.results[idx] = { ok:false, cancelled:true, message:'用户取消了该操作' };
+    if (disp) disp.status = 'cancelled';
+  }
+  aiPending.remaining--;
+  renderAI();
+  if (aiPending.remaining <= 0) {
+    const { calls, results } = aiPending;
+    aiPending = null;
+    pushAIToolResults(calls, results);
+    aiRunTurn();
+  }
+}
+window.aiConfirm = aiConfirm;
+
+function aiSend() {
+  const input = document.getElementById('aiInput');
+  const text = input.value.trim();
+  if (!text || aiBusy || aiPending) return;
+  aiMessages.push({ role:'user', content:text });
+  aiDisplay.push({ role:'user', text });
+  input.value = '';
+  renderAI();
+  aiRunTurn();
+}
+window.aiSend = aiSend;
+
+function aiReset() {
+  if (aiBusy) return;
+  aiMessages = [];
+  aiDisplay = [];
+  aiPending = null;
+  renderAI();
+}
+window.aiReset = aiReset;
+
+function renderConfirmCard(d) {
+  const desc = aiConfirmText(d.name, d.args);
+  let foot;
+  if (d.status === 'pending') {
+    foot = `<div class="ai-confirm-actions">
+      <button class="btn btn-primary btn-sm" onclick="aiConfirm('${d.confirmId}', true)">确认</button>
+      <button class="btn btn-ghost btn-sm" onclick="aiConfirm('${d.confirmId}', false)">取消</button>
+    </div>`;
+  } else if (d.status === 'done') {
+    foot = `<div class="ai-confirm-status done">✓ 已执行</div>`;
+  } else {
+    foot = `<div class="ai-confirm-status cancelled">已取消</div>`;
+  }
+  return `<div class="ai-confirm-card ${d.status}">
+    <div class="ai-confirm-title">⚠ AI 想执行操作</div>
+    <div class="ai-confirm-desc">${escHtml(desc)}</div>
+    ${foot}
+  </div>`;
+}
+
+function renderAI() {
+  const box = document.getElementById('aiMessages');
+  if (!box) return;
+  let html = '';
+  if (aiDisplay.length === 0 && !aiBusy) {
+    html += `<div class="ai-empty">问我点什么吧，比如：<br>"这个月不合格品处理了多少？"<br>"新建一个 P1 任务：写月度报告，周五截止"<br>"给设备点检记 3 次"</div>`;
+  }
+  for (const d of aiDisplay) {
+    if (d.role === 'user') html += `<div class="ai-msg user"><div class="ai-bubble">${escHtml(d.text)}</div></div>`;
+    else if (d.role === 'assistant') html += `<div class="ai-msg assistant"><div class="ai-bubble">${escHtml(d.text)}</div></div>`;
+    else if (d.role === 'tool') html += `<div class="ai-tool-line">${escHtml(d.text)}</div>`;
+    else if (d.role === 'confirm') html += renderConfirmCard(d);
+  }
+  if (aiBusy) html += `<div class="ai-msg assistant"><div class="ai-bubble ai-typing">思考中<span>.</span><span>.</span><span>.</span></div></div>`;
+  box.innerHTML = html;
+  box.scrollTop = box.scrollHeight;
+}
+
 function switchView(view) {
   currentView = view;
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -4230,6 +4573,7 @@ function renderView(view) {
     case 'gantt': renderGantt(); break;
     case 'misc': renderMisc(); break;
     case 'report': renderReport(); break;
+    case 'ai': renderAI(); break;
   }
 }
 
@@ -4351,6 +4695,11 @@ document.getElementById('miscRecordModal').addEventListener('click', function(e)
   if (e.target === this) closeMiscRecordModal();
 });
 
+// AI 助手：输入框 Enter 发送，Shift+Enter 换行
+document.getElementById('aiInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); aiSend(); }
+});
+
 // Focus presets
 document.querySelectorAll('.focus-preset-btn').forEach(btn => {
   btn.addEventListener('click', () => setFocusMinutes(Number(btn.dataset.min)));
@@ -4411,6 +4760,7 @@ const cmdK = {
       { name: '甘特图', view: 'gantt', icon: '▦' },
       { name: '杂项任务集', view: 'misc', icon: '☑' },
       { name: '工作汇报', view: 'report', icon: '📊' },
+      { name: 'AI 助手', view: 'ai', icon: '🤖' },
     ]) {
       if (!q || v.name.includes(q)) {
         items.push({ label: v.name, hint: '跳转', action: () => { switchView(v.view); this.close(); }, icon: v.icon });
@@ -4565,6 +4915,7 @@ document.addEventListener('keydown', function(e) {
       else if (ev.key === 'g') switchView('gantt');
       else if (ev.key === 'm') switchView('misc');
       else if (ev.key === 'r') switchView('report');
+      else if (ev.key === 'a') switchView('ai');
     };
     document.addEventListener('keydown', onGChord, { once: false });
     setTimeout(() => document.removeEventListener('keydown', onGChord), 800);
