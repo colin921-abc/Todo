@@ -4559,6 +4559,9 @@ const AI_TOOLS = [
   ,{ type:'function', function:{ name:'generate_pptx', description:'生成并下载一份 PPT。把内容组织成幻灯片结构。layout 用 title(标题页)/section(章节分隔页)/content(要点页)。导出 Todo 数据时先用 list_tasks/query_misc_records 查到数据再组织。', parameters:{ type:'object', properties:{ filename:{type:'string'}, slides:{ type:'array', items:{ type:'object', properties:{ layout:{type:'string', enum:['title','section','content']}, title:{type:'string'}, bullets:{type:'array', items:{type:'string'}}, note:{type:'string'} }, required:['layout'] } } }, required:['slides'] } } }
   ,{ type:'function', function:{ name:'generate_xlsx', description:'生成并下载一份 Excel。每个 sheet 给 headers(表头数组) 和 rows(二维数组)。', parameters:{ type:'object', properties:{ filename:{type:'string'}, sheets:{ type:'array', items:{ type:'object', properties:{ name:{type:'string'}, headers:{type:'array', items:{type:'string'}}, rows:{type:'array', items:{type:'array'}} }, required:['headers','rows'] } } }, required:['sheets'] } } }
   ,{ type:'function', function:{ name:'generate_docx', description:'生成并下载一份 Word。blocks 支持 type=heading(带 level 1/2)/paragraph(带 text)/list(带 items 数组)/table(带 rows 二维数组)。', parameters:{ type:'object', properties:{ filename:{type:'string'}, title:{type:'string'}, blocks:{ type:'array', items:{ type:'object', properties:{ type:{type:'string', enum:['heading','paragraph','list','table']}, level:{type:'integer'}, text:{type:'string'}, items:{type:'array', items:{type:'string'}}, rows:{type:'array', items:{type:'array'}} }, required:['type'] } } }, required:['title'] } } }
+  ,{ type:'function', function:{ name:'inspect_excel', description:'查看用户已上传/粘贴的表格结构：每个 sheet 的列名、行数、前若干行样本。分析前先调用它了解数据。', parameters:{ type:'object', properties:{ sampleRows:{type:'integer', description:'样本行数，默认5'} } } } }
+  ,{ type:'function', function:{ name:'query_excel', description:'在已加载表上做查询：筛选+分组聚合+排序+取前N。filters:[{col,op,value}] op取 =,!=,>,>=,<,<=,contains；groupBy 为列名；aggregations:[{fn,col}] fn取 sum,avg,count,max,min；sortBy 列名+desc布尔(降序)；limit 数字。返回结果行。', parameters:{ type:'object', properties:{ sheetIndex:{type:'integer', description:'第几个表，默认0'}, filters:{type:'array', items:{type:'object'}}, groupBy:{type:'string'}, aggregations:{type:'array', items:{type:'object'}}, sortBy:{type:'string'}, desc:{type:'boolean'}, limit:{type:'integer'} } } } }
+  ,{ type:'function', function:{ name:'export_processed_xlsx', description:'把一次 query_excel 的查询结果导出成精致 Excel 下载。传与 query_excel 相同的查询参数，外加 filename。', parameters:{ type:'object', properties:{ filename:{type:'string'}, sheetIndex:{type:'integer'}, filters:{type:'array', items:{type:'object'}}, groupBy:{type:'string'}, aggregations:{type:'array', items:{type:'object'}}, sortBy:{type:'string'}, desc:{type:'boolean'}, limit:{type:'integer'} } } } }
 ];
 
 function isWriteTool(name) {
@@ -4581,6 +4584,7 @@ function buildAISystem() {
 - 记录杂项用 add_misc_record，typeName 要对上现有类型名。
 - 写操作（增/改/删/记录）会由界面再次向用户确认，你照常调用即可，不用自己问"要不要执行"。
 - 可生成文档：generate_pptx / generate_xlsx / generate_docx。把内容组织成结构化参数。要"导出我的任务/杂项"时，先用查询工具拿真实数据，再组织成文档结构调用生成工具。生成会弹确认卡，照常调用即可。
+- 用户上传/粘贴表格后：先 inspect_excel 看结构，再 query_excel 做筛选/分组聚合/排序得到结果并解读；需要落地文件时 export_processed_xlsx 导出（会弹确认卡）。绝不臆造数据。
 - 回复用中文，简洁明了。`;
 }
 
@@ -4603,6 +4607,8 @@ function aiToolActivity(name) {
   if (name === 'generate_pptx') return '📊 正在生成 PPT…';
   if (name === 'generate_xlsx') return '📗 正在生成 Excel…';
   if (name === 'generate_docx') return '📄 正在生成 Word…';
+  if (name === 'inspect_excel') return '🔍 正在查看表结构…';
+  if (name === 'query_excel') return '🔍 正在分析表格…';
   return '🔧 ' + name;
 }
 
@@ -4681,6 +4687,28 @@ async function executeAITool(name, args) {
         await docGenDocx(args);
         return { ok:true, message:'已生成并下载 Word' };
       }
+      case 'inspect_excel': {
+        if(!loadedSheets.length) return { ok:false, message:'还没有已加载的表格，请用户先上传或粘贴' };
+        const n = args.sampleRows || 5;
+        return { ok:true, sheets: loadedSheets.map((s,i)=>({ index:i, name:s.name, columns:s.headers, rowCount:s.rows.length, sample:s.rows.slice(0,n) })) };
+      }
+      case 'query_excel': {
+        if(!loadedSheets.length) return { ok:false, message:'还没有已加载的表格' };
+        const sheet = loadedSheets[args.sheetIndex || 0];
+        if(!sheet) return { ok:false, message:'sheetIndex 越界' };
+        const rows = runExcelQuery(sheet, args);
+        return { ok:true, count:rows.length, rows: rows.slice(0, 200) };
+      }
+      case 'export_processed_xlsx': {
+        if(!loadedSheets.length) return { ok:false, message:'还没有已加载的表格' };
+        const sheet = loadedSheets[args.sheetIndex || 0];
+        if(!sheet) return { ok:false, message:'sheetIndex 越界' };
+        const rows = runExcelQuery(sheet, args);
+        const headers = rows.length ? Object.keys(rows[0]) : sheet.headers;
+        const matrix = rows.map(r=>headers.map(h=>r[h]));
+        await docGenXlsx({ filename: args.filename || '处理结果', sheets:[{ name:'结果', headers, rows:matrix }] });
+        return { ok:true, message:'已导出 '+rows.length+' 行到 Excel' };
+      }
     }
     return { ok:false, message:'未知工具 '+name };
   } catch (e) {
@@ -4725,6 +4753,8 @@ function aiConfirmText(name, args) {
       return '将生成 Excel：《'+(args.filename||'export')+'》，共 '+((args.sheets||[]).length)+' 个表';
     case 'generate_docx':
       return '将生成 Word：《'+(args.filename||args.title||'document')+'》';
+    case 'export_processed_xlsx':
+      return '将导出处理结果 Excel：《'+(args.filename||'处理结果')+'》';
   }
   return name;
 }
