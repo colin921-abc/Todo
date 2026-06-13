@@ -4382,6 +4382,32 @@ async function docGenPptx(spec){
   await pptx.writeFile({ fileName:(spec.filename||'presentation')+'.pptx' });
 }
 
+async function docGenXlsx(spec){
+  const wb = new ExcelJS.Workbook();
+  (spec.sheets||[]).forEach(s=>{
+    const ws = wb.addWorksheet(s.name || 'Sheet1');
+    const headers = s.headers || [];
+    if(headers.length){
+      const hr = ws.addRow(headers);
+      hr.font = { bold:true, color:{argb:'FFFFFFFF'} };
+      hr.alignment = { vertical:'middle' };
+      hr.eachCell(c=>{
+        c.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FF4F46E5'} };
+        c.border = { bottom:{ style:'thin', color:{argb:'FFCCCCCC'} } };
+      });
+    }
+    (s.rows||[]).forEach(r=>ws.addRow(r));
+    headers.forEach((h,i)=>{
+      let max = String(h==null?'':h).length;
+      (s.rows||[]).forEach(r=>{ const v = r[i]==null?'':String(r[i]); if(v.length>max) max=v.length; });
+      ws.getColumn(i+1).width = Math.min(Math.max(max+2, 8), 48);
+    });
+    if(headers.length) ws.views = [{ state:'frozen', ySplit:1 }];
+  });
+  const buf = await wb.xlsx.writeBuffer();
+  saveAs(new Blob([buf], { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), (spec.filename||'export')+'.xlsx');
+}
+
 const AI_TOOLS = [
   { type:'function', function:{ name:'list_tasks', description:'查询任务列表，可按状态/标签/关键词过滤。修改、完成或删除任务前先用它拿到任务 id。', parameters:{ type:'object', properties:{ status:{type:'string', enum:['all','not-started','in-progress','completed']}, tag:{type:'string'}, search:{type:'string'} } } } },
   { type:'function', function:{ name:'create_task', description:'新建一个任务', parameters:{ type:'object', properties:{ title:{type:'string'}, priority:{type:'integer', enum:[1,2,3]}, startDate:{type:'string', description:'YYYY-MM-DD'}, dueDate:{type:'string', description:'YYYY-MM-DD'}, tags:{type:'array', items:{type:'string'}}, parentTitle:{type:'string', description:'若作为某任务的子任务，填父任务标题'} }, required:['title'] } } },
