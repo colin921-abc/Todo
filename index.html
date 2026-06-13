@@ -4485,7 +4485,7 @@ function runExcelQuery(sheet, q){
     result.sort((a,b)=>{
       const x=a[q.sortBy], y=b[q.sortBy], nx=parseFloat(x), ny=parseFloat(y);
       const cmp = (!isNaN(nx)&&!isNaN(ny)) ? (nx-ny) : String(x).localeCompare(String(y));
-      return (q.desc ? 1 : -1) * cmp;
+      return (q.desc ? -1 : 1) * cmp;
     });
   }
   if(q.limit) result = result.slice(0, q.limit);
