@@ -1532,10 +1532,57 @@ textarea { resize: vertical; min-height: 60px; }
   .misc-history-actions { grid-area: actions; justify-content: flex-start; }
 }
 /* ============================================================
-   AI ASSISTANT
+   AI ASSISTANT — 浮动科比人偶
    ============================================================ */
-#view-ai .ai-chat { flex:1; display:flex; flex-direction:column; overflow:hidden; padding:0 32px 20px; }
-.ai-messages { flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:12px; padding:8px 0 16px; }
+.kobe-bot {
+  position: fixed; right: 30px; bottom: 100px; left: auto;
+  width: 76px; height: 92px;
+  background: transparent; border: none; cursor: pointer; padding: 0;
+  z-index: 45;
+  filter: drop-shadow(0 6px 10px rgba(0,0,0,0.25));
+  animation: kobeBob 3s ease-in-out infinite;
+  transition: transform .2s;
+}
+.kobe-bot:hover { transform: scale(1.08); }
+.kobe-bot:active { transform: scale(0.95); }
+.kobe-bot svg { display:block; margin:0 auto; pointer-events:none; }
+@keyframes kobeBob { 0%,100%{ transform: translateY(0); } 50%{ transform: translateY(-7px); } }
+.kobe-speech {
+  position:absolute; left:50%; bottom:100%; transform:translateX(-50%);
+  white-space:nowrap; background:var(--text); color:var(--bg);
+  font-size:11px; font-weight:600; padding:4px 10px; border-radius:12px;
+  margin-bottom:4px; opacity:0; pointer-events:none; transition:opacity .2s;
+}
+.kobe-bot:hover .kobe-speech { opacity:1; }
+
+.kobe-popup {
+  position: fixed; right: 24px; bottom: 100px; left: auto;
+  width: 372px; max-width: calc(100vw - 48px);
+  height: 70vh; max-height: calc(100vh - 140px);
+  background: var(--card-bg); border:1px solid var(--border);
+  border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);
+  display: none; flex-direction: column; overflow: hidden; z-index: 46;
+}
+.kobe-popup.open { display: flex; animation: fadeIn .2s ease; }
+.kobe-popup-header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 12px 14px; background: linear-gradient(135deg,#552583,#7a3fae); color:#fff; flex-shrink:0;
+}
+.kobe-popup-title { font-size:14px; font-weight:700; display:flex; align-items:baseline; gap:6px; }
+.kobe-sub { font-size:10px; font-weight:500; color:#FDB927; }
+.kobe-pop-btn {
+  background:rgba(255,255,255,0.16); border:none; color:#fff; cursor:pointer;
+  width:24px; height:24px; border-radius:50%; font-size:13px; margin-left:4px; line-height:1;
+}
+.kobe-pop-btn:hover { background:rgba(255,255,255,0.32); }
+.kobe-popup .ai-messages { flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:12px; padding:14px; }
+.kobe-popup .ai-input-bar { display:flex; gap:8px; align-items:flex-end; border-top:1px solid var(--border); padding:10px 12px; flex-shrink:0; }
+.kobe-popup .ai-input-bar textarea { flex:1; resize:none; max-height:120px; min-height:40px; border-radius:var(--radius-md); }
+.kobe-popup .ai-input-bar .btn { flex-shrink:0; }
+@media (max-width: 480px) {
+  .kobe-popup { left:12px; right:12px; width:auto; bottom:88px; height:auto; max-height:calc(100vh - 120px); }
+  .kobe-bot { right:16px; bottom:74px; }
+}
 .ai-empty { color:var(--text-muted); font-size:13px; line-height:2; text-align:center; margin:auto; }
 .ai-msg { display:flex; }
 .ai-msg.user { justify-content:flex-end; }
@@ -1557,9 +1604,6 @@ textarea { resize: vertical; min-height: 60px; }
 .ai-confirm-status { font-size:12px; font-weight:600; margin-top:8px; }
 .ai-confirm-status.done { color:var(--green); }
 .ai-confirm-status.cancelled { color:var(--text-muted); }
-.ai-input-bar { display:flex; gap:8px; align-items:flex-end; border-top:1px solid var(--border); padding-top:12px; }
-.ai-input-bar textarea { flex:1; resize:none; max-height:140px; min-height:42px; border-radius:var(--radius-md); }
-.ai-input-bar .btn { flex-shrink:0; }
 </style>
 </head>
 <body>
@@ -1595,9 +1639,6 @@ textarea { resize: vertical; min-height: 60px; }
         </li>
         <li class="nav-item" data-view="report">
           <span class="nav-icon">📊</span> 工作汇报
-        </li>
-        <li class="nav-item" data-view="ai">
-          <span class="nav-icon">🤖</span> AI 助手
         </li>
       </ul>
       <div class="sidebar-tags" id="sidebarTags">
@@ -1704,22 +1745,6 @@ textarea { resize: vertical; min-height: 60px; }
       <div class="view-content" id="reportContent"></div>
     </div>
 
-    <!-- View: AI Assistant -->
-    <div class="view-panel" id="view-ai" style="display:none;">
-      <div class="view-header">
-        <h2>AI 助手</h2>
-        <div class="view-actions">
-          <button class="btn btn-ghost btn-sm" onclick="aiReset()">清空对话</button>
-        </div>
-      </div>
-      <div class="ai-chat">
-        <div class="ai-messages" id="aiMessages"></div>
-        <div class="ai-input-bar">
-          <textarea id="aiInput" rows="1" placeholder="问我，或让我帮你记一笔 / 建任务…"></textarea>
-          <button class="btn btn-primary" onclick="aiSend()">发送</button>
-        </div>
-      </div>
-    </div>
   </main>
 </div>
 
@@ -1740,6 +1765,53 @@ textarea { resize: vertical; min-height: 60px; }
 
 <!-- FAB -->
 <button class="fab" id="fabBtn" title="快速添加 (Cmd+K)">+</button>
+
+<!-- Kobe Pet Assistant: chat popup -->
+<div class="kobe-popup" id="aiPopup">
+  <div class="kobe-popup-header">
+    <span class="kobe-popup-title">🏀 科比助理 <span class="kobe-sub">Mamba Mentality</span></span>
+    <div>
+      <button class="kobe-pop-btn" onclick="aiReset()" title="清空对话">⟳</button>
+      <button class="kobe-pop-btn" onclick="closeAIPopup()" title="收起">✕</button>
+    </div>
+  </div>
+  <div class="ai-messages" id="aiMessages"></div>
+  <div class="ai-input-bar">
+    <textarea id="aiInput" rows="1" placeholder="问问科比，或让我帮你记一笔 / 建任务…"></textarea>
+    <button class="btn btn-primary" onclick="aiSend()">发送</button>
+  </div>
+</div>
+
+<!-- Kobe Pet Assistant: floating figure -->
+<button class="kobe-bot" id="kobeBot" onclick="toggleAIPopup()" title="问问科比" aria-label="AI 助手">
+  <span class="kobe-speech" id="kobeSpeech">嗨，要点什么？</span>
+  <svg viewBox="0 0 80 100" width="64" height="80" xmlns="http://www.w3.org/2000/svg">
+    <!-- legs -->
+    <rect x="31" y="78" width="7" height="15" rx="3" fill="#552583"/>
+    <rect x="42" y="78" width="7" height="15" rx="3" fill="#552583"/>
+    <!-- shoes -->
+    <ellipse cx="34" cy="94" rx="6.5" ry="3.6" fill="#ffffff"/>
+    <ellipse cx="46" cy="94" rx="6.5" ry="3.6" fill="#ffffff"/>
+    <!-- arms -->
+    <rect x="17" y="52" width="7" height="21" rx="3.5" fill="#8a5a36"/>
+    <rect x="56" y="52" width="7" height="21" rx="3.5" fill="#8a5a36"/>
+    <!-- jersey -->
+    <path d="M23 52 q17 -9 34 0 l-3 28 q-14 5 -28 0 z" fill="#552583"/>
+    <path d="M30 50 l6 9 M50 50 l-6 9" stroke="#FDB927" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <text x="40" y="73" text-anchor="middle" font-size="13" font-weight="800" fill="#FDB927" font-family="Arial, sans-serif">24</text>
+    <!-- head -->
+    <circle cx="40" cy="33" r="20" fill="#8a5a36"/>
+    <!-- hair -->
+    <path d="M20 30 q2 -22 20 -22 q18 0 20 22 q-7 -11 -20 -11 q-13 0 -20 11 z" fill="#161616"/>
+    <!-- eyes + smile -->
+    <circle cx="33" cy="33" r="2.3" fill="#161616"/>
+    <circle cx="47" cy="33" r="2.3" fill="#161616"/>
+    <path d="M32 41 q8 7 16 0" stroke="#161616" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <!-- basketball -->
+    <circle cx="62" cy="71" r="9" fill="#e8772e" stroke="#a8531a" stroke-width="1.5"/>
+    <path d="M62 62 v18 M53 71 h18 M55.5 65 q6.5 6 0 12 M68.5 65 q-6.5 6 0 12" stroke="#a8531a" stroke-width="1.2" fill="none"/>
+  </svg>
+</button>
 
 <!-- Quick Add Modal -->
 <div class="quick-add-overlay" id="quickAddOverlay">
@@ -4516,6 +4588,26 @@ function aiReset() {
 }
 window.aiReset = aiReset;
 
+function openAIPopup() {
+  const p = document.getElementById('aiPopup');
+  if (!p) return;
+  p.classList.add('open');
+  renderAI();
+  setTimeout(() => document.getElementById('aiInput')?.focus(), 60);
+}
+function closeAIPopup() {
+  document.getElementById('aiPopup')?.classList.remove('open');
+}
+function toggleAIPopup() {
+  const p = document.getElementById('aiPopup');
+  if (!p) return;
+  if (p.classList.contains('open')) closeAIPopup();
+  else openAIPopup();
+}
+window.openAIPopup = openAIPopup;
+window.closeAIPopup = closeAIPopup;
+window.toggleAIPopup = toggleAIPopup;
+
 function renderConfirmCard(d) {
   const desc = aiConfirmText(d.name, d.args);
   let foot;
@@ -4573,7 +4665,6 @@ function renderView(view) {
     case 'gantt': renderGantt(); break;
     case 'misc': renderMisc(); break;
     case 'report': renderReport(); break;
-    case 'ai': renderAI(); break;
   }
 }
 
@@ -4760,7 +4851,6 @@ const cmdK = {
       { name: '甘特图', view: 'gantt', icon: '▦' },
       { name: '杂项任务集', view: 'misc', icon: '☑' },
       { name: '工作汇报', view: 'report', icon: '📊' },
-      { name: 'AI 助手', view: 'ai', icon: '🤖' },
     ]) {
       if (!q || v.name.includes(q)) {
         items.push({ label: v.name, hint: '跳转', action: () => { switchView(v.view); this.close(); }, icon: v.icon });
@@ -4769,6 +4859,7 @@ const cmdK = {
     html += '<div class="cmdk-group-label">操作</div>';
     const actions = [
       { label: '新建任务', hint: MOD_LABEL + '+N', action: () => { this.close(); openQuickAdd(); }, icon: '+' },
+      { label: '科比助理', hint: 'AI', action: () => { this.close(); openAIPopup(); }, icon: '🏀' },
       { label: '清空已完成任务', hint: '', action: () => { this.close(); cleanCompleted(); }, icon: '🧹' },
       { label: '导出 PPT 报告', hint: '', action: () => { this.close(); generatePPT(); }, icon: '📊' },
     ];
@@ -4891,6 +4982,7 @@ document.addEventListener('keydown', function(e) {
 
   // Escape
   if (e.key === 'Escape') {
+    if (document.getElementById('aiPopup')?.classList.contains('open')) { closeAIPopup(); return; }
     if (document.getElementById('cmdkOverlay').classList.contains('show')) { cmdK.close(); return; }
     if (document.getElementById('quickAddOverlay').classList.contains('show')) { closeQuickAdd(); return; }
     if (document.getElementById('miscTypeModal').classList.contains('show')) { closeMiscTypeModal(); return; }
@@ -4915,7 +5007,7 @@ document.addEventListener('keydown', function(e) {
       else if (ev.key === 'g') switchView('gantt');
       else if (ev.key === 'm') switchView('misc');
       else if (ev.key === 'r') switchView('report');
-      else if (ev.key === 'a') switchView('ai');
+      else if (ev.key === 'a') openAIPopup();
     };
     document.addEventListener('keydown', onGChord, { once: false });
     setTimeout(() => document.removeEventListener('keydown', onGChord), 800);
