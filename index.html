@@ -1781,6 +1781,9 @@ textarea { resize: vertical; min-height: 60px; }
   <div class="ai-messages" id="aiMessages"></div>
   <div class="ai-input-bar">
     <textarea id="aiInput" rows="1" placeholder="问问科比，或让我帮你记一笔 / 建任务…"></textarea>
+    <input type="file" id="aiFileInput" accept=".xlsx,.csv" style="display:none" onchange="if(this.files[0]){aiLoadFile(this.files[0]);this.value='';}">
+    <button class="btn btn-primary btn-sm" title="上传 Excel/CSV" onclick="document.getElementById('aiFileInput').click()">📎</button>
+    <button class="btn btn-primary btn-sm" title="粘贴表格" onclick="(function(){var t=prompt('粘贴表格（含表头，制表符或逗号分隔）：');if(t)aiLoadPastedText(t);})()">📋</button>
     <button class="btn btn-primary" onclick="aiSend()">发送</button>
   </div>
 </div>
@@ -4344,6 +4347,7 @@ let aiMessages = [];   // OpenAI 格式消息数组（不含 system）
 let aiDisplay = [];    // UI 渲染用
 let aiBusy = false;
 let aiPending = null;  // 等待用户确认写操作时的上下文
+let loadedSheets = [];  // [{name, headers, rows}]，AI 分析用的已加载表
 
 // ---- 文档生成：规范化/校验（纯函数，可在 console 测） ----
 function validateDocSpec(type, spec){
@@ -4491,6 +4495,57 @@ function runExcelQuery(sheet, q){
   if(q.limit) result = result.slice(0, q.limit);
   return result;
 }
+
+async function parseXlsxFile(file){
+  const wb = new ExcelJS.Workbook();
+  await wb.xlsx.load(await file.arrayBuffer());
+  const sheets = [];
+  wb.eachSheet(ws=>{
+    let headers = []; const rows = [];
+    ws.eachRow({ includeEmpty:false }, (row, rn)=>{
+      const vals = [];
+      row.eachCell({ includeEmpty:true }, c=>{
+        let v = c.value;
+        if(v && typeof v === 'object') v = (v.text!=null?v.text : (v.result!=null?v.result : JSON.stringify(v)));
+        vals.push(v==null ? '' : v);
+      });
+      if(rn === 1) headers = vals.map(String); else rows.push(vals);
+    });
+    sheets.push({ name: ws.name, headers, rows });
+  });
+  return sheets;
+}
+
+async function aiLoadFile(file){
+  try{
+    let sheets;
+    if(/\.csv$/i.test(file.name)){
+      const txt = await file.text();
+      const p = parseDelimited(txt);
+      sheets = [{ name: file.name.replace(/\.csv$/i,''), headers:p.headers, rows:p.rows }];
+    } else {
+      if(typeof ExcelJS === 'undefined'){ showToast('Excel 库未加载'); return; }
+      sheets = await parseXlsxFile(file);
+    }
+    loadedSheets = sheets;
+    const summary = sheets.map(s=>`${s.name}(${s.headers.length}列 ${s.rows.length}行)`).join('、');
+    aiDisplay.push({ role:'tool', text:'📎 已加载：'+summary });
+    aiMessages.push({ role:'user', content:'[系统] 我已上传表格，可用 inspect_excel/query_excel 分析。已加载：'+summary });
+    renderAI();
+  }catch(e){ showToast('解析失败：'+(e.message||e)); }
+}
+
+function aiLoadPastedText(text){
+  const p = parseDelimited(text);
+  if(!p.headers.length){ showToast('没解析到表格'); return; }
+  loadedSheets = [{ name:'粘贴表', headers:p.headers, rows:p.rows }];
+  const summary = `粘贴表(${p.headers.length}列 ${p.rows.length}行)`;
+  aiDisplay.push({ role:'tool', text:'📋 已加载：'+summary });
+  aiMessages.push({ role:'user', content:'[系统] 我已粘贴表格，可用 inspect_excel/query_excel 分析。已加载：'+summary });
+  renderAI();
+}
+window.aiLoadFile = aiLoadFile;
+window.aiLoadPastedText = aiLoadPastedText;
 
 const AI_TOOLS = [
   { type:'function', function:{ name:'list_tasks', description:'查询任务列表，可按状态/标签/关键词过滤。修改、完成或删除任务前先用它拿到任务 id。', parameters:{ type:'object', properties:{ status:{type:'string', enum:['all','not-started','in-progress','completed']}, tag:{type:'string'}, search:{type:'string'} } } } },
