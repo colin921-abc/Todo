@@ -4596,7 +4596,7 @@ function ensurePyodide(onProgress){
     await loadScript('https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js');
     const py = await loadPyodide({ indexURL:'https://cdn.jsdelivr.net/pyodide/v0.26.2/full/' });
     onProgress && onProgress('加载 pandas…（首次约 35MB，请稍候）');
-    await py.loadPackage(['pandas','numpy','openpyxl','lxml']);
+    await py.loadPackage(['pandas','numpy','lxml']); // 注：openpyxl 不在 Pyodide 0.26.2 发行版，去掉以免加载失败
     _pyodide = py;
     return py;
   })();
@@ -4664,7 +4664,7 @@ const AI_TOOLS = [
   ,{ type:'function', function:{ name:'export_processed_xlsx', description:'把一次 query_excel 的查询结果导出成精致 Excel 下载。传与 query_excel 相同的查询参数，外加 filename。', parameters:{ type:'object', properties:{ filename:{type:'string'}, sheetIndex:{type:'integer'}, filters:{type:'array', items:{type:'object'}}, groupBy:{type:'string'}, aggregations:{type:'array', items:{type:'object'}}, sortBy:{type:'string'}, desc:{type:'boolean'}, limit:{type:'integer'} } } } }
   ,{ type:'function', function:{ name:'add_computed_column', description:'给已加载表新增一个计算列。expr 用现有列名做算术（+ - * / 括号），如 "销售额 * 0.1"。newColumn 为新列名。', parameters:{ type:'object', properties:{ sheetIndex:{type:'integer'}, newColumn:{type:'string'}, expr:{type:'string'} }, required:['newColumn','expr'] } } }
   ,{ type:'function', function:{ name:'generate_chart', description:'用 labels 和 data 生成一张图表 PNG 下载。type 取 bar/line/pie。可配合 query_excel 的结果。', parameters:{ type:'object', properties:{ type:{type:'string', enum:['bar','line','pie']}, labels:{type:'array', items:{type:'string'}}, data:{type:'array', items:{type:'number'}}, title:{type:'string'}, filename:{type:'string'} }, required:['labels','data'] } } }
-  ,{ type:'function', function:{ name:'run_python', description:'在浏览器内置 Python(Pyodide) 里跑 pandas 代码做任意复杂分析。已注入：df=第一个已加载表的 DataFrame，sheets=所有表的 DataFrame 列表。要让用户下载文件就写到 /output/（如 df.to_excel("/output/result.xlsx")）。print 的内容会返回。仅在用户已启用高级分析时可用。', parameters:{ type:'object', properties:{ code:{type:'string', description:'要执行的 Python 代码'} }, required:['code'] } } }
+  ,{ type:'function', function:{ name:'run_python', description:'在浏览器内置 Python(Pyodide) 里跑 pandas 代码做任意复杂分析。已注入：df=第一个已加载表的 DataFrame，sheets=所有表的 DataFrame 列表。要让用户下载文件就写到 /output/，用 CSV：df.to_csv("/output/result.csv", index=False)（不支持 .xlsx——要 Excel 文件请改用 export_processed_xlsx/generate_xlsx 工具）。print 的内容会返回。仅在用户已启用高级分析时可用。', parameters:{ type:'object', properties:{ code:{type:'string', description:'要执行的 Python 代码'} }, required:['code'] } } }
 ];
 
 function isWriteTool(name) {
@@ -4688,7 +4688,7 @@ function buildAISystem() {
 - 写操作（增/改/删/记录）会由界面再次向用户确认，你照常调用即可，不用自己问"要不要执行"。
 - 可生成文档：generate_pptx / generate_xlsx / generate_docx。把内容组织成结构化参数。要"导出我的任务/杂项"时，先用查询工具拿真实数据，再组织成文档结构调用生成工具。生成会弹确认卡，照常调用即可。
 - 用户上传/粘贴表格后：先 inspect_excel 看结构，再 query_excel 做筛选/分组聚合/排序得到结果并解读；需要落地文件时 export_processed_xlsx 导出（会弹确认卡）。绝不臆造数据。
-- 复杂/任意分析，或需要透视、多表关联、复杂计算时，可用 run_python（浏览器内置 pandas，已注入 df 和 sheets）。简单的筛选/汇总仍优先用 query_excel（快、免加载）。run_python 仅在用户启用高级分析后可用；若返回未启用提示，请转告用户点对话框里的「⚡ 启用高级分析」按钮。要生成下载文件就写到 /output/。用了 run_python 后，回复里简述「我运行了这段代码…」并解读结果。
+- 复杂/任意分析，或需要透视、多表关联、复杂计算时，可用 run_python（浏览器内置 pandas，已注入 df 和 sheets）。简单的筛选/汇总仍优先用 query_excel（快、免加载）。run_python 仅在用户启用高级分析后可用；若返回未启用提示，请转告用户点对话框里的「⚡ 启用高级分析」按钮。要生成下载文件就写到 /output/，用 CSV（to_csv）；run_python 不支持生成 .xlsx，要 Excel 文件请改用 generate_xlsx/export_processed_xlsx。用了 run_python 后，回复里简述「我运行了这段代码…」并解读结果。
 - 回复用中文，简洁明了。`;
 }
 
