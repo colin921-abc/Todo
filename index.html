@@ -1779,6 +1779,9 @@ textarea { resize: vertical; min-height: 60px; }
     </div>
   </div>
   <div class="ai-messages" id="aiMessages"></div>
+  <div class="ai-py-bar" style="display:flex; justify-content:flex-end; padding:0 12px 6px; flex-shrink:0;">
+    <button class="btn btn-ghost btn-sm" id="aiPyBtn" onclick="enablePyodide()" title="加载浏览器内置 Python(pandas)，做任意复杂分析。首次约下载 35MB。">⚡ 启用高级分析</button>
+  </div>
   <div class="ai-input-bar">
     <textarea id="aiInput" rows="1" placeholder="问问科比，或让我帮你记一笔 / 建任务…"></textarea>
     <input type="file" id="aiFileInput" accept=".xlsx,.csv" style="display:none" onchange="if(this.files[0]){aiLoadFile(this.files[0]);this.value='';}">
@@ -4570,6 +4573,80 @@ async function docGenChart(spec){
   chart.destroy(); canvas.remove();
 }
 
+// ===== Pyodide 浏览器端 Python 引擎（方案2 阶段D：任意 pandas 分析）=====
+let _pyodide = null, _pyLoading = null;
+
+// 动态插入 <script> 并在 onload 时 resolve
+function loadScript(url){
+  return new Promise((resolve, reject)=>{
+    const s = document.createElement('script');
+    s.src = url; s.async = true;
+    s.onload = ()=>resolve();
+    s.onerror = ()=>reject(new Error('脚本加载失败：'+url));
+    document.head.appendChild(s);
+  });
+}
+
+// 单例懒加载 Pyodide（防并发重复加载）
+function ensurePyodide(onProgress){
+  if(_pyodide) return Promise.resolve(_pyodide);
+  if(_pyLoading) return _pyLoading;
+  _pyLoading = (async ()=>{
+    onProgress && onProgress('下载 Python 运行时…');
+    await loadScript('https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js');
+    const py = await loadPyodide({ indexURL:'https://cdn.jsdelivr.net/pyodide/v0.26.2/full/' });
+    onProgress && onProgress('加载 pandas…（首次约 35MB，请稍候）');
+    await py.loadPackage(['pandas','numpy','openpyxl','lxml']);
+    _pyodide = py;
+    return py;
+  })();
+  _pyLoading.catch(()=>{ _pyLoading = null; }); // 失败后允许重试
+  return _pyLoading;
+}
+
+// 注入 loadedSheets → 执行 AI 代码 → 收 stdout 与 /output 文件 → 下载
+async function runUserPython(code){
+  const py = _pyodide;            // 调用方保证已启用
+  py.globals.set('__sheets_json', JSON.stringify(loadedSheets));
+  py.globals.set('__user_code', code);
+  const setup = `
+import json, os, io, contextlib, pandas as pd
+os.makedirs('/output', exist_ok=True)
+for __f in os.listdir('/output'):
+    os.remove('/output/'+__f)
+_sheets = json.loads(__sheets_json)
+sheets = [pd.DataFrame(s['rows'], columns=s['headers']) for s in _sheets]
+df = sheets[0] if sheets else pd.DataFrame()
+__buf = io.StringIO()
+with contextlib.redirect_stdout(__buf):
+    exec(__user_code, globals())
+__stdout = __buf.getvalue()
+`;
+  await py.runPythonAsync(setup);
+  const stdout = py.globals.get('__stdout');
+  const files = py.FS.readdir('/output').filter(f => f !== '.' && f !== '..');
+  for(const f of files){
+    const data = py.FS.readFile('/output/'+f);
+    saveAs(new Blob([data]), f);
+  }
+  return { stdout: String(stdout||''), files };
+}
+
+// ⚡ 按钮：手动启用高级分析，按钮上显示进度
+async function enablePyodide(){
+  const btn = document.getElementById('aiPyBtn');
+  if(_pyodide){ if(btn){ btn.textContent='⚡ 高级分析已就绪 ✅'; btn.disabled=true; } return; }
+  if(btn){ btn.disabled = true; }
+  try {
+    await ensurePyodide(text => { if(btn) btn.textContent = '⏳ ' + text; });
+    if(btn){ btn.textContent='⚡ 高级分析已就绪 ✅'; btn.disabled=true; }
+    if(typeof showToast==='function') showToast('高级分析已就绪');
+  } catch(e){
+    if(btn){ btn.textContent='⚡ 启用高级分析（重试）'; btn.disabled=false; }
+    if(typeof showToast==='function') showToast('加载失败：'+(e.message||e));
+  }
+}
+
 const AI_TOOLS = [
   { type:'function', function:{ name:'list_tasks', description:'查询任务列表，可按状态/标签/关键词过滤。修改、完成或删除任务前先用它拿到任务 id。', parameters:{ type:'object', properties:{ status:{type:'string', enum:['all','not-started','in-progress','completed']}, tag:{type:'string'}, search:{type:'string'} } } } },
   { type:'function', function:{ name:'create_task', description:'新建一个任务', parameters:{ type:'object', properties:{ title:{type:'string'}, priority:{type:'integer', enum:[1,2,3]}, startDate:{type:'string', description:'YYYY-MM-DD'}, dueDate:{type:'string', description:'YYYY-MM-DD'}, tags:{type:'array', items:{type:'string'}}, parentTitle:{type:'string', description:'若作为某任务的子任务，填父任务标题'} }, required:['title'] } } },
@@ -4587,6 +4664,7 @@ const AI_TOOLS = [
   ,{ type:'function', function:{ name:'export_processed_xlsx', description:'把一次 query_excel 的查询结果导出成精致 Excel 下载。传与 query_excel 相同的查询参数，外加 filename。', parameters:{ type:'object', properties:{ filename:{type:'string'}, sheetIndex:{type:'integer'}, filters:{type:'array', items:{type:'object'}}, groupBy:{type:'string'}, aggregations:{type:'array', items:{type:'object'}}, sortBy:{type:'string'}, desc:{type:'boolean'}, limit:{type:'integer'} } } } }
   ,{ type:'function', function:{ name:'add_computed_column', description:'给已加载表新增一个计算列。expr 用现有列名做算术（+ - * / 括号），如 "销售额 * 0.1"。newColumn 为新列名。', parameters:{ type:'object', properties:{ sheetIndex:{type:'integer'}, newColumn:{type:'string'}, expr:{type:'string'} }, required:['newColumn','expr'] } } }
   ,{ type:'function', function:{ name:'generate_chart', description:'用 labels 和 data 生成一张图表 PNG 下载。type 取 bar/line/pie。可配合 query_excel 的结果。', parameters:{ type:'object', properties:{ type:{type:'string', enum:['bar','line','pie']}, labels:{type:'array', items:{type:'string'}}, data:{type:'array', items:{type:'number'}}, title:{type:'string'}, filename:{type:'string'} }, required:['labels','data'] } } }
+  ,{ type:'function', function:{ name:'run_python', description:'在浏览器内置 Python(Pyodide) 里跑 pandas 代码做任意复杂分析。已注入：df=第一个已加载表的 DataFrame，sheets=所有表的 DataFrame 列表。要让用户下载文件就写到 /output/（如 df.to_excel("/output/result.xlsx")）。print 的内容会返回。仅在用户已启用高级分析时可用。', parameters:{ type:'object', properties:{ code:{type:'string', description:'要执行的 Python 代码'} }, required:['code'] } } }
 ];
 
 function isWriteTool(name) {
@@ -4610,6 +4688,7 @@ function buildAISystem() {
 - 写操作（增/改/删/记录）会由界面再次向用户确认，你照常调用即可，不用自己问"要不要执行"。
 - 可生成文档：generate_pptx / generate_xlsx / generate_docx。把内容组织成结构化参数。要"导出我的任务/杂项"时，先用查询工具拿真实数据，再组织成文档结构调用生成工具。生成会弹确认卡，照常调用即可。
 - 用户上传/粘贴表格后：先 inspect_excel 看结构，再 query_excel 做筛选/分组聚合/排序得到结果并解读；需要落地文件时 export_processed_xlsx 导出（会弹确认卡）。绝不臆造数据。
+- 复杂/任意分析，或需要透视、多表关联、复杂计算时，可用 run_python（浏览器内置 pandas，已注入 df 和 sheets）。简单的筛选/汇总仍优先用 query_excel（快、免加载）。run_python 仅在用户启用高级分析后可用；若返回未启用提示，请转告用户点对话框里的「⚡ 启用高级分析」按钮。要生成下载文件就写到 /output/。用了 run_python 后，回复里简述「我运行了这段代码…」并解读结果。
 - 回复用中文，简洁明了。`;
 }
 
@@ -4635,6 +4714,7 @@ function aiToolActivity(name) {
   if (name === 'inspect_excel') return '🔍 正在查看表结构…';
   if (name === 'query_excel') return '🔍 正在分析表格…';
   if (name === 'generate_chart') return '📈 正在生成图表…';
+  if (name === 'run_python') return '🐍 正在运行 Python…';
   return '🔧 ' + name;
 }
 
@@ -4752,6 +4832,13 @@ async function executeAITool(name, args) {
         if(typeof Chart==='undefined') return { ok:false, message:'图表库未加载' };
         await docGenChart(args);
         return { ok:true, message:'已生成图表 PNG' };
+      }
+      case 'run_python': {
+        if(!_pyodide) return { ok:false, message:'高级分析未启用。请用户点对话框里的「⚡ 启用高级分析」按钮（首次约下载 35MB）。' };
+        try {
+          const out = await runUserPython(args.code || '');
+          return { ok:true, stdout: out.stdout.slice(0, 4000), files: out.files, ranCode: args.code };
+        } catch(e){ return { ok:false, message:'Python 执行出错：'+String(e && e.message || e) }; }
       }
     }
     return { ok:false, message:'未知工具 '+name };
