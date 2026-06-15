@@ -1786,7 +1786,7 @@ textarea { resize: vertical; min-height: 60px; }
     <textarea id="aiInput" rows="1" placeholder="问问科比，或让我帮你记一笔 / 建任务…"></textarea>
     <input type="file" id="aiFileInput" accept=".xlsx,.csv" style="display:none" onchange="if(this.files[0]){aiLoadFile(this.files[0]);this.value='';}">
     <button class="btn btn-primary btn-sm" title="上传 Excel/CSV" onclick="document.getElementById('aiFileInput').click()">📎</button>
-    <button class="btn btn-primary btn-sm" title="粘贴表格" onclick="(function(){var t=prompt('粘贴表格（含表头，制表符或逗号分隔）：');if(t)aiLoadPastedText(t);})()">📋</button>
+    <button class="btn btn-primary btn-sm" title="粘贴表格" onclick="openPasteTable()">📋</button>
     <button class="btn btn-primary" onclick="aiSend()">发送</button>
   </div>
 </div>
@@ -1834,6 +1834,21 @@ textarea { resize: vertical; min-height: 60px; }
     <div class="quick-add-actions">
       <button class="btn btn-ghost btn-sm" onclick="closeQuickAdd()">取消</button>
       <button class="btn btn-primary btn-sm" onclick="submitQuickAdd()">创建</button>
+    </div>
+  </div>
+</div>
+
+<!-- Paste Table Modal -->
+<div class="misc-modal-overlay" id="pasteTableModal">
+  <div class="misc-modal" style="width:680px;">
+    <h3>粘贴表格</h3>
+    <div class="field">
+      <label>含表头，制表符或逗号分隔（可粘贴上万行，从 Excel 全选复制即可）</label>
+      <textarea id="pasteTableInput" style="min-height:300px; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:12px; white-space:pre; overflow:auto;" placeholder="在 Excel 里全选(Ctrl+A)→ 复制(Ctrl+C)→ 在此粘贴(Ctrl+V)…"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-sm" onclick="closePasteTable()">取消</button>
+      <button class="btn btn-primary btn-sm" onclick="confirmPasteTable()">加载</button>
     </div>
   </div>
 </div>
@@ -4549,6 +4564,25 @@ function aiLoadPastedText(text){
 }
 window.aiLoadFile = aiLoadFile;
 window.aiLoadPastedText = aiLoadPastedText;
+
+function openPasteTable(){
+  const el = document.getElementById('pasteTableInput');
+  el.value = '';
+  document.getElementById('pasteTableModal').classList.add('show');
+  setTimeout(()=>el.focus(), 50);
+}
+function closePasteTable(){
+  document.getElementById('pasteTableModal').classList.remove('show');
+}
+function confirmPasteTable(){
+  const text = document.getElementById('pasteTableInput').value;
+  if(!text || !text.trim()){ showToast('没粘贴到内容'); return; }
+  closePasteTable();
+  aiLoadPastedText(text);
+}
+window.openPasteTable = openPasteTable;
+window.closePasteTable = closePasteTable;
+window.confirmPasteTable = confirmPasteTable;
 
 function evalRowExpr(expr, row){
   if(!/^[\w\s+\-*/().,]+$/.test(String(expr))) throw new Error('表达式含非法字符');
