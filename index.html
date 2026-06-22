@@ -1787,12 +1787,13 @@ body::before {
 .mm-canvas-inner { position: absolute; transform-origin: 0 0; }
 .mm-node {
   position: absolute; user-select: none; cursor: pointer;
-  min-width: 120px; max-width: 200px;
+  width: 140px; height: 44px;
 }
 .mm-node-body {
   background: var(--glass-bg); border: 1px solid var(--glass-border);
-  border-radius: var(--radius-md); padding: 8px 14px;
-  box-shadow: var(--shadow-sm); font-size: 13px; font-weight: 500;
+  border-radius: var(--radius-md); padding: 6px 12px;
+  box-shadow: var(--shadow-sm); font-size: 12.5px; font-weight: 500;
+  width: 100%; height: 100%; box-sizing: border-box;
   color: var(--text); display: flex; align-items: center; gap: 6px;
   transition: box-shadow .2s, border-color .2s;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -6135,64 +6136,72 @@ function updateLayoutButtons() {
   document.getElementById('mmBtnRadial')?.classList.toggle('active', mindmapLayout === 'radial');
 }
 
-// --- Mind Map Layout ---
-function layoutTree(map) {
-  const nodes = map.nodes;
-  if (nodes.length === 0) return;
-  const roots = nodes.filter(n => !n.parentId);
-  const GAP_X = 160, GAP_Y = 120;
-  let nextY = 80;
-  for (const root of roots) {
-    const h = layoutSubtree(root, 0, nextY, nodes, GAP_X, GAP_Y);
-    nextY += h + 60;
+// --- Mind Map Layout (XMind two-pass: bottom-up dims, top-down pos) ---
+const MM_NODE_W = 140, MM_NODE_H = 44, MM_GAP_X = 24, MM_GAP_Y = 96;
+// Per-node computed layout data (cached during layout, not persisted)
+let _mmLayout = {}; // nodeId -> {w, h, cleft, ctop}
+
+function _computeLayout(node, map) {
+  if (_mmLayout[node.id]) return _mmLayout[node.id];
+  const children = map.nodes.filter(n => n.parentId === node.id && !n.collapsed);
+  let w = MM_NODE_W, h = MM_NODE_H;
+  if (children.length > 0) {
+    let totalChildW = 0, maxChildH = 0;
+    for (const c of children) { const d = _computeLayout(c, map); totalChildW += d.w; maxChildH = Math.max(maxChildH, d.h); }
+    w = Math.max(MM_NODE_W, totalChildW + (children.length - 1) * MM_GAP_X);
+    h = MM_NODE_H + MM_GAP_Y + maxChildH;
   }
-}
-function layoutSubtree(node, x, y, nodes, gapX, gapY) {
-  node.x = x; node.y = y;
-  if (node.collapsed) return 80;
-  const children = nodes.filter(n => n.parentId === node.id);
-  if (children.length === 0) return 80;
-  const totalW = children.reduce((s, c) => s + subtreeWidth(c, nodes, gapX), 0) + (children.length - 1) * gapX;
-  let cx = x - totalW / 2;
-  let maxH = 0;
-  for (const child of children) {
-    const w = subtreeWidth(child, nodes, gapX);
-    const h = layoutSubtree(child, cx + w / 2, y + gapY, nodes, gapX, gapY);
-    cx += w + gapX;
-    maxH = Math.max(maxH, h);
-  }
-  return gapY + maxH;
-}
-function subtreeWidth(node, nodes, gapX) {
-  if (node.collapsed) return 120;
-  const children = nodes.filter(n => n.parentId === node.id);
-  if (children.length === 0) return 120;
-  const total = children.reduce((s, c) => s + subtreeWidth(c, nodes, gapX), 0);
-  return Math.max(120, total + (children.length - 1) * gapX);
+  const cleft = w / 2;
+  return (_mmLayout[node.id] = { w, h, cleft, ctop: MM_NODE_H / 2 });
 }
 
-function layoutRadial(map) {
-  const nodes = map.nodes;
-  if (nodes.length === 0) return;
-  const roots = nodes.filter(n => !n.parentId);
-  const CX = 600, CY = 400, R_STEP = 160;
-  for (const root of roots) {
-    root.x = CX; root.y = CY;
-    const children = nodes.filter(n => n.parentId === root.id && !n.collapsed);
-    if (children.length > 0) {
-      layoutRadialChildren(children, CX, CY, R_STEP, -Math.PI / 2, 2 * Math.PI, nodes, R_STEP);
-    }
+function _assignPositions(node, x, y, map) {
+  const d = _mmLayout[node.id] || { w: MM_NODE_W, h: MM_NODE_H, cleft: MM_NODE_W / 2, ctop: MM_NODE_H / 2 };
+  node.x = x; node.y = y;
+  const children = map.nodes.filter(n => n.parentId === node.id && !n.collapsed);
+  if (children.length === 0) return;
+  let cx = x - d.cleft;
+  for (const child of children) {
+    const cd = _mmLayout[child.id] || { w: MM_NODE_W, cleft: MM_NODE_W / 2 };
+    _assignPositions(child, cx + cd.cleft, y + MM_GAP_Y + MM_NODE_H, map);
+    cx += cd.w + MM_GAP_X;
   }
 }
-function layoutRadialChildren(children, px, py, r, startAngle, arcSpan, nodes, rStep) {
-  const total = children.length;
-  for (let i = 0; i < total; i++) {
-    const a = startAngle + (total > 1 ? (i / (total - 1)) * arcSpan : startAngle + arcSpan / 2);
-    children[i].x = px + r * Math.cos(a);
-    children[i].y = py + r * Math.sin(a);
-    const grand = nodes.filter(n => n.parentId === children[i].id && !n.collapsed);
+
+function layoutTree(map) {
+  _mmLayout = {};
+  const roots = map.nodes.filter(n => !n.parentId);
+  let rx = 200;
+  for (const root of roots) {
+    const d = _computeLayout(root, map);
+    _assignPositions(root, rx + d.cleft, 60, map);
+    rx += d.w + 80;
+  }
+}
+
+// ---- Radial Layout ----
+function layoutRadial(map) {
+  _mmLayout = {};
+  const roots = map.nodes.filter(n => !n.parentId);
+  const CX = 500, CY = 350, R = 180;
+  let angleOffset = -Math.PI / 2;
+  for (const root of roots) {
+    root.x = CX; root.y = CY;
+    const children = map.nodes.filter(n => n.parentId === root.id && !n.collapsed);
+    if (children.length > 0) {
+      _radialPosition(children, CX, CY, R, angleOffset, 2 * Math.PI / roots.length, map, R * 0.85);
+    }
+    angleOffset += 2 * Math.PI / Math.max(roots.length, 1);
+  }
+}
+function _radialPosition(children, px, py, r, startAngle, arcSpan, map, rStep) {
+  const n = children.length;
+  for (let i = 0; i < n; i++) {
+    const a = startAngle + (n > 1 ? (i / (n - 1)) * arcSpan : startAngle + arcSpan / 2);
+    children[i].x = px + r * Math.cos(a); children[i].y = py + r * Math.sin(a);
+    const grand = map.nodes.filter(c => c.parentId === children[i].id && !c.collapsed);
     if (grand.length > 0) {
-      layoutRadialChildren(grand, children[i].x, children[i].y, rStep, a - arcSpan / 3, arcSpan * 2 / 3, nodes, rStep * 0.7);
+      _radialPosition(grand, children[i].x, children[i].y, rStep * 0.8, a - arcSpan / 3, arcSpan * 2 / 3, map, rStep * 0.7);
     }
   }
 }
@@ -6259,18 +6268,12 @@ function renderMindmapConnections(map) {
     // Apply current zoom/pan transform to match node visual position
     const px = parent.x * mmScale + mmOffsetX, py = parent.y * mmScale + mmOffsetY;
     const cx = n.x * mmScale + mmOffsetX, cy = n.y * mmScale + mmOffsetY;
-    const x1 = px + 60, y1 = py + 38;
-    const x2 = cx + 60, y2 = cy;
-    let el;
-    if (mindmapLayout === 'tree') {
-      el = document.createElementNS(NS, 'path');
-      const cy = (y1 + y2) / 2;
-      el.setAttribute('d', 'M' + x1 + ',' + y1 + ' C' + x1 + ',' + cy + ' ' + x2 + ',' + cy + ' ' + x2 + ',' + y2);
-    } else {
-      el = document.createElementNS(NS, 'line');
-      el.setAttribute('x1', x1); el.setAttribute('y1', y1);
-      el.setAttribute('x2', x2); el.setAttribute('y2', y2);
-    }
+    // Parent bottom-center → child top-center
+    const x1 = px + MM_NODE_W / 2, y1 = py + MM_NODE_H;
+    const x2 = cx + MM_NODE_W / 2, y2 = cy;
+    const el = document.createElementNS(NS, 'path');
+    const my = (y1 + y2) / 2;
+    el.setAttribute('d', 'M' + x1 + ',' + y1 + ' C' + x1 + ',' + my + ' ' + x2 + ',' + my + ' ' + x2 + ',' + y2);
     el.setAttribute('class', 'mm-conn-line');
     el.setAttribute('stroke', '#c8a86c');
     el.setAttribute('stroke-width', '2.5');
@@ -6491,8 +6494,8 @@ document.getElementById('mmCanvas')?.addEventListener('dblclick', (e) => {
     }
     const svg = document.getElementById('mmSvg');
     const svgRect = svg.getBoundingClientRect();
-    _tempLine.setAttribute('x1', node.x * mmScale + mmOffsetX + 60);
-    _tempLine.setAttribute('y1', node.y * mmScale + mmOffsetY + 38);
+    _tempLine.setAttribute('x1', node.x * mmScale + mmOffsetX + MM_NODE_W / 2);
+    _tempLine.setAttribute('y1', node.y * mmScale + mmOffsetY + MM_NODE_H);
     _tempLine.setAttribute('x2', cx - svgRect.left);
     _tempLine.setAttribute('y2', cy - svgRect.top);
     // highlight target on hover
