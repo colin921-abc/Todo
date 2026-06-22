@@ -5469,6 +5469,7 @@ function renderView(view) {
     case 'gantt': renderGantt(); break;
     case 'misc': renderMisc(); break;
     case 'report': renderReport(); break;
+    case 'mindmap': renderMindmap(); break;
   }
 }
 
@@ -6117,6 +6118,133 @@ document.getElementById('mmBtnRadial')?.addEventListener('click', () => { mindma
 function updateLayoutButtons() {
   document.getElementById('mmBtnTree')?.classList.toggle('active', mindmapLayout === 'tree');
   document.getElementById('mmBtnRadial')?.classList.toggle('active', mindmapLayout === 'radial');
+}
+
+// --- Mind Map Layout ---
+function layoutTree(map) {
+  const nodes = map.nodes;
+  if (nodes.length === 0) return;
+  const roots = nodes.filter(n => !n.parentId);
+  const GAP_X = 160, GAP_Y = 120;
+  let nextY = 80;
+  for (const root of roots) {
+    const h = layoutSubtree(root, 0, nextY, nodes, GAP_X, GAP_Y);
+    nextY += h + 60;
+  }
+}
+function layoutSubtree(node, x, y, nodes, gapX, gapY) {
+  node.x = x; node.y = y;
+  if (node.collapsed) return 80;
+  const children = nodes.filter(n => n.parentId === node.id);
+  if (children.length === 0) return 80;
+  const totalW = children.reduce((s, c) => s + subtreeWidth(c, nodes, gapX), 0) + (children.length - 1) * gapX;
+  let cx = x - totalW / 2;
+  let maxH = 0;
+  for (const child of children) {
+    const w = subtreeWidth(child, nodes, gapX);
+    const h = layoutSubtree(child, cx + w / 2, y + gapY, nodes, gapX, gapY);
+    cx += w + gapX;
+    maxH = Math.max(maxH, h);
+  }
+  return gapY + maxH;
+}
+function subtreeWidth(node, nodes, gapX) {
+  if (node.collapsed) return 120;
+  const children = nodes.filter(n => n.parentId === node.id);
+  if (children.length === 0) return 120;
+  const total = children.reduce((s, c) => s + subtreeWidth(c, nodes, gapX), 0);
+  return Math.max(120, total + (children.length - 1) * gapX);
+}
+
+function layoutRadial(map) {
+  const nodes = map.nodes;
+  if (nodes.length === 0) return;
+  const roots = nodes.filter(n => !n.parentId);
+  const CX = 600, CY = 400, R_STEP = 160;
+  for (const root of roots) {
+    root.x = CX; root.y = CY;
+    const children = nodes.filter(n => n.parentId === root.id && !n.collapsed);
+    if (children.length > 0) {
+      layoutRadialChildren(children, CX, CY, R_STEP, -Math.PI / 2, 2 * Math.PI, nodes, R_STEP);
+    }
+  }
+}
+function layoutRadialChildren(children, px, py, r, startAngle, arcSpan, nodes, rStep) {
+  const total = children.length;
+  for (let i = 0; i < total; i++) {
+    const a = startAngle + (total > 1 ? (i / (total - 1)) * arcSpan : startAngle + arcSpan / 2);
+    children[i].x = px + r * Math.cos(a);
+    children[i].y = py + r * Math.sin(a);
+    const grand = nodes.filter(n => n.parentId === children[i].id && !n.collapsed);
+    if (grand.length > 0) {
+      layoutRadialChildren(grand, children[i].x, children[i].y, rStep, a - arcSpan / 3, arcSpan * 2 / 3, nodes, rStep * 0.7);
+    }
+  }
+}
+
+// --- Mind Map Rendering ---
+function renderMindmap() {
+  const panel = document.getElementById('view-mindmap');
+  if (!panel || panel.style.display === 'none') return;
+  const map = getCurrentMap();
+  const inner = document.getElementById('mmCanvasInner');
+  const svg = document.getElementById('mmSvg');
+  const hint = document.getElementById('mmEmptyHint');
+  if (!map || map.nodes.length === 0) {
+    if (inner) inner.innerHTML = '';
+    if (svg) svg.innerHTML = '';
+    if (hint) hint.style.display = 'flex';
+    document.getElementById('mmNodeCount').textContent = '0 节点';
+    return;
+  }
+  if (hint) hint.style.display = 'none';
+  if (mindmapLayout === 'tree') layoutTree(map);
+  else layoutRadial(map);
+  document.getElementById('mmNodeCount').textContent = map.nodes.length + ' 节点';
+  renderMindmapNodes(map);
+  renderMindmapConnections(map);
+}
+
+function renderMindmapNodes(map) {
+  const inner = document.getElementById('mmCanvasInner');
+  let html = '';
+  for (const n of map.nodes) {
+    const hasTask = n.taskId && todos.some(t => t.id === n.taskId);
+    const colorStyle = n.color ? 'border-left: 3px solid ' + n.color + ';' : '';
+    const childCount = map.nodes.filter(c => c.parentId === n.id).length;
+    html += '<div class="mm-node' + (hasTask ? ' has-task' : '') + '" data-id="' + n.id + '" style="transform:translate(' + n.x + 'px,' + n.y + 'px);" data-nx="' + n.x + '" data-ny="' + n.y + '">'
+      + '<div class="mm-node-body" style="' + colorStyle + '">'
+      + (childCount > 0 ? '<span class="mm-collapse' + (n.collapsed ? ' collapsed' : '') + '" data-action="toggleCollapse">▾</span>' : '<span style="width:16px;flex-shrink:0;"></span>')
+      + '<span class="mm-label">' + escapeHtml(n.label || '未命名') + '</span>'
+      + (hasTask ? '<span class="mm-task-badge" data-action="gotoTask" data-taskid="' + n.taskId + '">\u{1f517}</span>' : '')
+      + '</div>'
+      + '<div class="mm-connector-out" data-action="connector"></div>'
+      + '</div>';
+  }
+  inner.innerHTML = html;
+}
+
+function renderMindmapConnections(map) {
+  const svg = document.getElementById('mmSvg');
+  const canvas = document.getElementById('mmCanvas');
+  if (!svg || !canvas) return;
+  const top = canvas.offsetTop || 52;
+  let paths = '';
+  for (const n of map.nodes) {
+    if (!n.parentId) continue;
+    if (!map.nodes.some(p => p.id === n.parentId)) continue;
+    const parent = map.nodes.find(p => p.id === n.parentId);
+    if (parent && parent.collapsed) continue;
+    const x1 = (parent ? parent.x : 0) + 60, y1 = (parent ? parent.y : 0) + 38 + top;
+    const x2 = n.x + 60, y2 = n.y + top;
+    if (mindmapLayout === 'tree') {
+      const cy = (y1 + y2) / 2;
+      paths += '<path d="M' + x1 + ',' + y1 + ' C' + x1 + ',' + cy + ' ' + x2 + ',' + cy + ' ' + x2 + ',' + y2 + '"/>';
+    } else {
+      paths += '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '"/>';
+    }
+  }
+  svg.innerHTML = paths;
 }
 </script>
 
