@@ -1768,6 +1768,63 @@ body::before {
 }
 /* 任务列表等内容区显式保持实底，避免被祖先玻璃影响可读性 */
 .view-content .task-row { backdrop-filter: none; }
+
+/* ============================================================
+   MIND MAP
+   ============================================================ */
+#view-mindmap { position: relative; overflow: hidden; }
+.mm-toolbar {
+  display: flex; align-items: center; gap: 8px; padding: 10px 16px;
+  border-bottom: 1px solid var(--border); flex-shrink: 0; flex-wrap: wrap;
+}
+.mm-toolbar select { font-size: 13px; padding: 5px 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--card-bg); color: var(--text); font-family: inherit; }
+.mm-toolbar button { padding: 5px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: transparent; cursor: pointer; font-size: 12px; font-weight: 600; color: var(--text-secondary); font-family: inherit; transition: all var(--transition); }
+.mm-toolbar button:hover { background: var(--hover); color: var(--text); }
+.mm-toolbar button.active { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.mm-sep { width: 1px; height: 20px; background: var(--border); margin: 0 4px; }
+.mm-canvas { position: absolute; inset: 0; top: 52px; overflow: hidden; cursor: grab; }
+.mm-canvas.grabbing { cursor: grabbing; }
+.mm-canvas-inner { position: absolute; transform-origin: 0 0; }
+.mm-node {
+  position: absolute; user-select: none; cursor: pointer;
+  min-width: 120px; max-width: 200px;
+}
+.mm-node-body {
+  background: var(--glass-bg); border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md); padding: 8px 14px;
+  box-shadow: var(--shadow-sm); font-size: 13px; font-weight: 500;
+  color: var(--text); display: flex; align-items: center; gap: 6px;
+  transition: box-shadow .2s, border-color .2s;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+}
+.mm-node-body:hover { border-color: var(--accent); box-shadow: var(--shadow-md); }
+.mm-node.dragging .mm-node-body { box-shadow: var(--shadow-lg); border-color: var(--accent); opacity: .85; }
+.mm-node.reparent-target .mm-node-body { border-color: var(--accent); border-width: 2px; background: var(--accent-subtle); }
+.mm-node.has-task .mm-node-body { border-left: 3px solid var(--accent); }
+.mm-collapse { font-size: 10px; width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; background: var(--hover); cursor: pointer; flex-shrink: 0; }
+.mm-collapse:hover { background: var(--hover-strong); }
+.mm-collapse.collapsed { transform: rotate(-90deg); }
+.mm-label { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+.mm-label-input { flex: 1; border: 1px solid var(--accent); border-radius: 4px; padding: 2px 6px; font-size: 13px; font-family: inherit; background: var(--card-bg); color: var(--text); outline: none; min-width: 80px; }
+.mm-connector-out { position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%); width: 12px; height: 12px; border-radius: 50%; background: var(--accent); opacity: 0; transition: opacity .2s; cursor: crosshair; }
+.mm-node-body:hover + .mm-connector-out, .mm-connector-out:hover { opacity: 1; }
+.mm-task-badge { font-size: 10px; background: var(--accent-subtle); color: var(--accent-hover); padding: 1px 6px; border-radius: 10px; cursor: pointer; flex-shrink: 0; }
+.mm-svg { position: absolute; inset: 0; pointer-events: none; top: 52px; }
+.mm-svg line, .mm-svg path { stroke: var(--border); stroke-width: 2; fill: none; stroke-linecap: round; }
+.mm-empty-hint { position: absolute; inset: 0; top: 52px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 18px; pointer-events: none; }
+.mm-context-menu {
+  position: fixed; z-index: 200; background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: var(--radius-md); box-shadow: var(--shadow-lg); padding: 6px 0; min-width: 160px;
+  display: none;
+}
+.mm-context-menu .mm-cm-item {
+  padding: 8px 16px; font-size: 13px; cursor: pointer; color: var(--text);
+  transition: background .15s; display: flex; align-items: center; gap: 8px;
+}
+.mm-context-menu .mm-cm-item:hover { background: var(--hover); }
+.mm-context-menu .mm-cm-item.danger { color: var(--red); }
+.mm-context-menu .mm-cm-sep { height: 1px; background: var(--border); margin: 4px 0; }
 </style>
 <script>
   /* 防闪烁：首屏绘制前就定主题 */
@@ -1811,6 +1868,10 @@ body::before {
         <li class="nav-item" data-view="gantt">
           <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="9" height="3.2" rx="1"/><rect x="7" y="10.4" width="10" height="3.2" rx="1"/><rect x="11" y="15.8" width="8" height="3.2" rx="1"/></svg></span>
           <span class="nav-label">甘特图</span>
+        </li>
+        <li class="nav-item" data-view="mindmap">
+          <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 22v-7M12 9V2M4.93 17.07l4.95-4.95M14.12 5.88l4.95-4.95M2 12h7M15 12h7"/></svg></span>
+          <span class="nav-label">思维导图</span>
         </li>
         <li class="nav-item" data-view="misc">
           <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="4" width="15" height="16" rx="2"/><path d="M9 3v2.5h6V3M8 11l2 2 3.5-3.5"/><path d="M8 16h6"/></svg></span>
@@ -1935,6 +1996,40 @@ body::before {
         <h2>工作汇报</h2>
       </div>
       <div class="view-content" id="reportContent"></div>
+    </div>
+
+    <!-- View: Mind Map -->
+    <div class="view-panel" id="view-mindmap" style="display:none;">
+      <div class="mm-toolbar" id="mmToolbar">
+        <select id="mmProjectSelect" style="min-width:140px;"><option value="">无导图</option></select>
+        <button id="mmBtnNew" title="新建导图">+</button>
+        <button id="mmBtnRename" title="重命名">✏</button>
+        <span class="mm-sep"></span>
+        <button id="mmBtnTree" class="active" data-layout="tree">🌲 树状</button>
+        <button id="mmBtnRadial" data-layout="radial">☀ 放射</button>
+        <span class="mm-sep"></span>
+        <button id="mmBtnZoomOut" title="缩小">🔍-</button>
+        <span id="mmZoomLabel" style="font-size:12px;color:var(--text-muted);min-width:36px;text-align:center;">100%</span>
+        <button id="mmBtnZoomIn" title="放大">🔍+</button>
+        <span class="mm-sep"></span>
+        <span id="mmNodeCount" style="font-size:11px;color:var(--text-muted);"></span>
+        <button id="mmBtnFit" title="适应画面" style="margin-left:auto;">⊞</button>
+        <button id="mmBtnDelete" title="删除导图" style="color:var(--red);">🗑</button>
+      </div>
+      <div class="mm-canvas" id="mmCanvas">
+        <div class="mm-canvas-inner" id="mmCanvasInner"></div>
+      </div>
+      <svg class="mm-svg" id="mmSvg"></svg>
+      <div class="mm-empty-hint" id="mmEmptyHint">双击空白处创建第一个节点</div>
+    </div>
+    <div class="mm-context-menu" id="mmContextMenu">
+      <div class="mm-cm-item" data-action="addChild">＋ 新建子节点</div>
+      <div class="mm-cm-item" data-action="edit">✎ 编辑</div>
+      <div class="mm-cm-item" data-action="color">🎨 设色</div>
+      <div class="mm-cm-sep"></div>
+      <div class="mm-cm-item" data-action="collapse">▾ 折叠/展开</div>
+      <div class="mm-cm-sep"></div>
+      <div class="mm-cm-item danger" data-action="delete">✕ 删除</div>
     </div>
 
   </main>
