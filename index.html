@@ -6489,11 +6489,12 @@ document.getElementById('mmCanvas')?.addEventListener('dblclick', (e) => {
       _tempLine.setAttribute('stroke-dasharray', '8,4');
       document.getElementById('mmSvg').appendChild(_tempLine);
     }
-    const top = document.getElementById('mmCanvas')?.offsetTop || 52;
-    _tempLine.setAttribute('x1', node.x + 60);
-    _tempLine.setAttribute('y1', node.y + 38 + top);
-    _tempLine.setAttribute('x2', cx);
-    _tempLine.setAttribute('y2', cy);
+    const svg = document.getElementById('mmSvg');
+    const svgRect = svg.getBoundingClientRect();
+    _tempLine.setAttribute('x1', node.x * mmScale + mmOffsetX + 60);
+    _tempLine.setAttribute('y1', node.y * mmScale + mmOffsetY + 38);
+    _tempLine.setAttribute('x2', cx - svgRect.left);
+    _tempLine.setAttribute('y2', cy - svgRect.top);
     // highlight target on hover
     const target = findDropTarget(cx, cy, dragNodeId);
     document.querySelectorAll('.mm-node.reparent-target').forEach(el => el.classList.remove('reparent-target'));
