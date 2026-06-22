@@ -6251,14 +6251,16 @@ function renderMindmapConnections(map) {
   // clear all existing connection lines (keep temp line if any)
   svg.querySelectorAll('.mm-conn-line').forEach(l => l.remove());
   const NS = 'http://www.w3.org/2000/svg';
-  const top = canvas.offsetTop || 52;
-  let drawnCount = 0;
   for (const n of map.nodes) {
     if (!n.parentId) continue;
     const parent = map.nodes.find(p => p.id === n.parentId);
     if (!parent || parent.collapsed) continue;
-    const x1 = parent.x + 60, y1 = parent.y + 38 + top;
-    const x2 = n.x + 60, y2 = n.y + top;
+    // SVG coords match canvas-inner coords (both at top:52px, viewBox aligned)
+    // Apply current zoom/pan transform to match node visual position
+    const px = parent.x * mmScale + mmOffsetX, py = parent.y * mmScale + mmOffsetY;
+    const cx = n.x * mmScale + mmOffsetX, cy = n.y * mmScale + mmOffsetY;
+    const x1 = px + 60, y1 = py + 38;
+    const x2 = cx + 60, y2 = cy;
     let el;
     if (mindmapLayout === 'tree') {
       el = document.createElementNS(NS, 'path');
@@ -6305,8 +6307,9 @@ document.getElementById('mmContextMenu')?.addEventListener('click', (e) => {
   if (!node && action !== 'delete') return;
   switch (action) {
     case 'addChild': {
-      const newNode = { id: nextNodeId(), label: '新节点', parentId: nodeId, x: (node?.x || 400) + 30, y: (node?.y || 300) + 130, taskId: null, color: null, collapsed: false };
+      const newNode = { id: nextNodeId(), label: '新节点', parentId: nodeId, x: (node?.x || 400), y: (node?.y || 300), taskId: null, color: null, collapsed: false };
       map.nodes.push(newNode); map.updatedAt = Date.now();
+      relayoutAll(); // auto-arrange after adding
       saveMapsLocal(); saveMapCloud(map); renderMindmap(); break;
     }
     case 'edit': startInlineEdit(nodeId); break;
