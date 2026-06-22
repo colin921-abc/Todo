@@ -2252,19 +2252,25 @@ async function loadTodos() {
 }
 
 async function saveTodos() {
-  saveLocal();
-  if (supabaseClient) {
-    try {
-      const rows = todos.map(toDB);
-      await supabaseClient.from('todos').delete().neq('id', -1);
-      if (rows.length > 0) {
-        const chunkSize = 50;
-        for (let i = 0; i < rows.length; i += chunkSize) {
-          await supabaseClient.from('todos').insert(rows.slice(i, i + chunkSize));
-        }
+  saveLocal(); // 本地永远先存
+  if (!supabaseClient) return;
+  try {
+    const rows = todos.map(toDB);
+    if (rows.length > 0) {
+      const chunkSize = 50;
+      for (let i = 0; i < rows.length; i += chunkSize) {
+        const { error } = await supabaseClient.from('todos')
+          .upsert(rows.slice(i, i + chunkSize), { onConflict: 'id' });
+        if (error) throw error;
       }
-    } catch(e) { console.warn('Supabase save failed:', e); }
-  }
+    }
+    // 仅删除云端有但本地已移除的行(绝不在写入成功前清空云端)
+    const localIds = todos.map(t => t.id);
+    if (localIds.length > 0) {
+      await supabaseClient.from('todos').delete()
+        .not('id', 'in', '(' + localIds.join(',') + ')');
+    }
+  } catch(e) { console.warn('云端保存失败，本地数据完好:', e); }
 }
 
 // ============================================================
