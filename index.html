@@ -6451,7 +6451,8 @@ document.getElementById('mmCanvas')?.addEventListener('dblclick', (e) => {
     dragType = null; dragNodeId = null;
   });
 
-  canvas.addEventListener('wheel', (e) => { e.preventDefault(); const delta = e.deltaY > 0 ? -0.1 : 0.1; setZoom(mmScale + delta); }, { passive: false });
+  // wheel zoom disabled — use toolbar buttons instead
+  // canvas.addEventListener('wheel', ...);
 
   function setZoom(s) { mmScale = Math.max(0.3, Math.min(3, s)); applyCanvasTransform(); const lbl = document.getElementById('mmZoomLabel'); if (lbl) lbl.textContent = Math.round(mmScale * 100) + '%'; }
   function findDropTarget(cx, cy, excludeId) { const map = getCurrentMap(); if (!map) return null; for (const n of map.nodes) { if (n.id === excludeId) continue; const el = document.querySelector('.mm-node[data-id="' + n.id + '"]'); if (!el) continue; const r = el.getBoundingClientRect(); if (cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom) return n; } return null; }
