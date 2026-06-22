@@ -1807,8 +1807,8 @@ body::before {
 .mm-collapse.collapsed { transform: rotate(-90deg); }
 .mm-label { flex: 1; overflow: hidden; text-overflow: ellipsis; }
 .mm-label-input { flex: 1; border: 1px solid var(--accent); border-radius: 4px; padding: 2px 6px; font-size: 13px; font-family: inherit; background: var(--card-bg); color: var(--text); outline: none; min-width: 80px; }
-.mm-connector-out { position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%); width: 12px; height: 12px; border-radius: 50%; background: var(--accent); opacity: 0; transition: opacity .2s; cursor: crosshair; }
-.mm-node-body:hover + .mm-connector-out, .mm-connector-out:hover { opacity: 1; }
+.mm-connector-out { position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%); width: 16px; height: 16px; border-radius: 50%; background: var(--accent); opacity: 0.55; transition: opacity .2s, transform .2s; cursor: crosshair; z-index: 10; }
+.mm-node-body:hover + .mm-connector-out, .mm-connector-out:hover { opacity: 1; transform: translateX(-50%) scale(1.3); }
 .mm-task-badge { font-size: 10px; background: var(--accent-subtle); color: var(--accent-hover); padding: 1px 6px; border-radius: 10px; cursor: pointer; flex-shrink: 0; }
 .mm-svg { position: absolute; inset: 0; pointer-events: none; top: 52px; }
 .mm-svg line, .mm-svg path { stroke: var(--border); stroke-width: 2; fill: none; stroke-linecap: round; }
@@ -1825,6 +1825,9 @@ body::before {
 .mm-context-menu .mm-cm-item:hover { background: var(--hover); }
 .mm-context-menu .mm-cm-item.danger { color: var(--red); }
 .mm-context-menu .mm-cm-sep { height: 1px; background: var(--border); margin: 4px 0; }
+.mm-color-panel { position: fixed; z-index: 201; background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); }
+.mm-color-swatch { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: all .15s; display: inline-block; }
+.mm-color-swatch:hover { border-color: var(--accent); transform: scale(1.15); }
 </style>
 <script>
   /* 防闪烁：首屏绘制前就定主题 */
@@ -2030,6 +2033,18 @@ body::before {
       <div class="mm-cm-item" data-action="collapse">▾ 折叠/展开</div>
       <div class="mm-cm-sep"></div>
       <div class="mm-cm-item danger" data-action="delete">✕ 删除</div>
+    </div>
+    <div class="mm-color-panel" id="mmColorPanel" style="display:none;">
+      <div style="display:flex;flex-wrap:wrap;gap:6px;padding:8px;">
+        <span class="mm-color-swatch" data-color="#e06a60" style="background:#e06a60" title="红"></span>
+        <span class="mm-color-swatch" data-color="#e8a24a" style="background:#e8a24a" title="橙"></span>
+        <span class="mm-color-swatch" data-color="#f0c94a" style="background:#f0c94a" title="黄"></span>
+        <span class="mm-color-swatch" data-color="#5cb497" style="background:#5cb497" title="绿"></span>
+        <span class="mm-color-swatch" data-color="#5b9bd5" style="background:#5b9bd5" title="蓝"></span>
+        <span class="mm-color-swatch" data-color="#9b7ad4" style="background:#9b7ad4" title="紫"></span>
+        <span class="mm-color-swatch" data-color="#e89ab8" style="background:#e89ab8" title="粉"></span>
+        <span class="mm-color-swatch" data-color="" style="background:transparent;border:2px dashed var(--border);" title="清除颜色"></span>
+      </div>
     </div>
 
   </main>
@@ -6114,8 +6129,8 @@ document.getElementById('mmProjectSelect')?.addEventListener('change', (e) => {
   const id = parseInt(e.target.value);
   if (id) switchMap(id);
 });
-document.getElementById('mmBtnTree')?.addEventListener('click', () => { mindmapLayout = 'tree'; updateLayoutButtons(); renderMindmap(); });
-document.getElementById('mmBtnRadial')?.addEventListener('click', () => { mindmapLayout = 'radial'; updateLayoutButtons(); renderMindmap(); });
+document.getElementById('mmBtnTree')?.addEventListener('click', () => { mindmapLayout = 'tree'; updateLayoutButtons(); relayoutAll(); renderMindmap(); });
+document.getElementById('mmBtnRadial')?.addEventListener('click', () => { mindmapLayout = 'radial'; updateLayoutButtons(); relayoutAll(); renderMindmap(); });
 function updateLayoutButtons() {
   document.getElementById('mmBtnTree')?.classList.toggle('active', mindmapLayout === 'tree');
   document.getElementById('mmBtnRadial')?.classList.toggle('active', mindmapLayout === 'radial');
@@ -6199,8 +6214,8 @@ function renderMindmap() {
     return;
   }
   if (hint) hint.style.display = 'none';
-  if (mindmapLayout === 'tree') layoutTree(map);
-  else layoutRadial(map);
+  // NOTE: layout is only applied on mode toggle, not every render
+  // so manual node positions are preserved across drags
   document.getElementById('mmNodeCount').textContent = map.nodes.length + ' 节点';
   renderMindmapNodes(map);
   renderMindmapConnections(map);
@@ -6260,7 +6275,10 @@ document.getElementById('mmCanvas')?.addEventListener('contextmenu', (e) => {
   menu.style.left = e.clientX + 'px';
   menu.style.top = e.clientY + 'px';
 });
-document.addEventListener('click', () => { const m = document.getElementById('mmContextMenu'); if (m) m.style.display = 'none'; });
+document.addEventListener('click', () => {
+  const m = document.getElementById('mmContextMenu'); if (m) m.style.display = 'none';
+  const cp = document.getElementById('mmColorPanel'); if (cp) cp.style.display = 'none';
+});
 document.getElementById('mmContextMenu')?.addEventListener('click', (e) => {
   e.stopPropagation();
   const action = e.target.closest('[data-action]')?.dataset.action;
@@ -6277,8 +6295,13 @@ document.getElementById('mmContextMenu')?.addEventListener('click', (e) => {
     }
     case 'edit': startInlineEdit(nodeId); break;
     case 'color': {
-      const c = prompt('颜色(hex 如 #ff6600,或留空取消):', node.color || '');
-      if (c !== null) { node.color = c || null; map.updatedAt = Date.now(); saveMapsLocal(); saveMapCloud(map); renderMindmap(); }
+      // show custom color panel near context menu
+      const menu = document.getElementById('mmContextMenu');
+      const panel = document.getElementById('mmColorPanel');
+      panel.style.display = 'block';
+      panel.style.left = (parseInt(menu.style.left) + 170) + 'px';
+      panel.style.top = menu.style.top;
+      window._mmColorTargetId = nodeId;
       break;
     }
     case 'collapse': node.collapsed = !node.collapsed; map.updatedAt = Date.now(); saveMapsLocal(); saveMapCloud(map); renderMindmap(); break;
@@ -6464,6 +6487,31 @@ document.getElementById('mmBtnFit')?.addEventListener('click', fitToScreen);
     saveMapsLocal(); saveMapCloud(map); renderMindmap();
   });
 })();
+
+// --- Color panel click ---
+document.getElementById('mmColorPanel')?.addEventListener('click', (e) => {
+  e.stopPropagation();
+  const swatch = e.target.closest('.mm-color-swatch');
+  if (!swatch) return;
+  const color = swatch.dataset.color || null;
+  const nodeId = window._mmColorTargetId;
+  const map = getCurrentMap();
+  if (map && nodeId) {
+    const node = map.nodes.find(n => n.id === nodeId);
+    if (node) { node.color = color; map.updatedAt = Date.now(); saveMapsLocal(); saveMapCloud(map); renderMindmap(); }
+  }
+  document.getElementById('mmColorPanel').style.display = 'none';
+  document.getElementById('mmContextMenu').style.display = 'none';
+});
+
+// --- Re-layout (only on mode toggle or explicit request) ---
+function relayoutAll() {
+  const map = getCurrentMap();
+  if (!map || map.nodes.length === 0) return;
+  if (mindmapLayout === 'tree') layoutTree(map);
+  else layoutRadial(map);
+}
+
 </script>
 
 </body>
