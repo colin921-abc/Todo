@@ -6457,8 +6457,32 @@ document.getElementById('mmCanvas')?.addEventListener('dblclick', (e) => {
   function findDropTarget(cx, cy, excludeId) { const map = getCurrentMap(); if (!map) return null; for (const n of map.nodes) { if (n.id === excludeId) continue; const el = document.querySelector('.mm-node[data-id="' + n.id + '"]'); if (!el) continue; const r = el.getBoundingClientRect(); if (cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom) return n; } return null; }
   function isDescendant(map, ancestorId, childId) { const visited = new Set(); let cur = childId; while (cur) { if (cur === ancestorId) return true; if (visited.has(cur)) return false; visited.add(cur); const n = map.nodes.find(nd => nd.id === cur); cur = n?.parentId || null; } return false; }
   function updateNodePosition(id, x, y) { const el = document.querySelector('.mm-node[data-id="' + id + '"]'); if (el) { el.style.transform = 'translate(' + x + 'px,' + y + 'px)'; el.dataset.nx = x; el.dataset.ny = y; } }
-  function drawTempConnector(cx, cy) { const map = getCurrentMap(); const node = map?.nodes.find(n => n.id === dragNodeId); if (!node) return; const svg = document.getElementById('mmSvg'); const top = document.getElementById('mmCanvas')?.offsetTop || 52; svg.innerHTML += '<line x1="' + (node.x + 60) + '" y1="' + (node.y + 38 + top) + '" x2="' + cx + '" y2="' + cy + '" stroke="var(--accent)" stroke-width="2" stroke-dasharray="6,3" id="mmTempLine"/>'; }
-  function clearTempConnector() { const l = document.getElementById('mmTempLine'); if (l) l.remove(); }
+  let _tempLine = null;
+  function drawTempConnector(cx, cy) {
+    const map = getCurrentMap(); const node = map?.nodes.find(n => n.id === dragNodeId);
+    if (!node) return;
+    if (!_tempLine) {
+      _tempLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      _tempLine.id = 'mmTempLine';
+      _tempLine.setAttribute('stroke', '#c8a86c');
+      _tempLine.setAttribute('stroke-width', '2.5');
+      _tempLine.setAttribute('stroke-dasharray', '8,4');
+      document.getElementById('mmSvg').appendChild(_tempLine);
+    }
+    const top = document.getElementById('mmCanvas')?.offsetTop || 52;
+    _tempLine.setAttribute('x1', node.x + 60);
+    _tempLine.setAttribute('y1', node.y + 38 + top);
+    _tempLine.setAttribute('x2', cx);
+    _tempLine.setAttribute('y2', cy);
+    // highlight target on hover
+    const target = findDropTarget(cx, cy, dragNodeId);
+    document.querySelectorAll('.mm-node.reparent-target').forEach(el => el.classList.remove('reparent-target'));
+    if (target) document.querySelector('.mm-node[data-id="' + target.id + '"]')?.classList.add('reparent-target');
+  }
+  function clearTempConnector() {
+    if (_tempLine) { _tempLine.remove(); _tempLine = null; }
+    document.querySelectorAll('.mm-node.reparent-target').forEach(el => el.classList.remove('reparent-target'));
+  }
 })();
 
 function applyCanvasTransform() { const el = document.getElementById('mmCanvasInner'); if (el) el.style.transform = 'translate(' + mmOffsetX + 'px, ' + mmOffsetY + 'px) scale(' + mmScale + ')'; }
