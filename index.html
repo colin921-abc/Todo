@@ -6378,8 +6378,19 @@ document.getElementById('mmCanvas')?.addEventListener('dblclick', (e) => {
     const collapseBtn = e.target.closest('.mm-collapse');
     const taskBadge = e.target.closest('.mm-task-badge');
     if (collapseBtn || taskBadge) return;
-    if (connector) {
+    // connector mode: click on the connector dot OR bottom ~35% of node body
+    let isConnector = !!connector;
+    if (nodeEl && !connector) {
+      const body = nodeEl.querySelector('.mm-node-body');
+      if (body) {
+        const br = body.getBoundingClientRect();
+        const relY = (e.clientY - br.top) / br.height;
+        if (relY > 0.65) isConnector = true;
+      }
+    }
+    if (isConnector) {
       dragType = 'connector'; dragNodeId = nodeEl?.dataset.id; dragStartX = e.clientX; dragStartY = e.clientY;
+      if (nodeEl) { nodeEl.style.opacity = '0.8'; nodeEl.style.zIndex = '50'; }
       e.preventDefault(); return;
     }
     if (nodeEl) {
@@ -6430,6 +6441,11 @@ document.getElementById('mmCanvas')?.addEventListener('dblclick', (e) => {
         saveMapsLocal(); saveMapCloud(map); renderMindmap();
       }
       clearTempConnector();
+    }
+    // cleanup connector drag visual state
+    if (dragNodeId) {
+      const el = document.querySelector('.mm-node[data-id="' + dragNodeId + '"]');
+      if (el) { el.style.opacity = ''; el.style.zIndex = ''; }
     }
     if (dragType === 'pan') canvas.classList.remove('grabbing');
     dragType = null; dragNodeId = null;
