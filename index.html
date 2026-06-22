@@ -5810,7 +5810,8 @@ document.addEventListener('keydown', function(e) {
       else if (ev.key === 'o') switchView('list');
       else if (ev.key === 'c') switchView('calendar');
       else if (ev.key === 'g') switchView('gantt');
-      else if (ev.key === 'm') switchView('misc');
+      else if (ev.key === 'm') switchView('mindmap');
+      else if (ev.key === 'x') switchView('misc');
       else if (ev.key === 'r') switchView('report');
       else if (ev.key === 'a') openAIPopup();
     };
@@ -6427,6 +6428,42 @@ function fitToScreen() { mmScale = 1; mmOffsetX = 40; mmOffsetY = 20; applyCanva
 document.getElementById('mmBtnZoomIn')?.addEventListener('click', () => { mmScale = Math.min(3, mmScale + 0.1); applyCanvasTransform(); const lbl = document.getElementById('mmZoomLabel'); if (lbl) lbl.textContent = Math.round(mmScale * 100) + '%'; });
 document.getElementById('mmBtnZoomOut')?.addEventListener('click', () => { mmScale = Math.max(0.3, mmScale - 0.1); applyCanvasTransform(); const lbl = document.getElementById('mmZoomLabel'); if (lbl) lbl.textContent = Math.round(mmScale * 100) + '%'; });
 document.getElementById('mmBtnFit')?.addEventListener('click', fitToScreen);
+
+// --- Task Drag into Mindmap ---
+(function(){
+  const _origRenderList = renderList;
+  renderList = function() {
+    _origRenderList();
+    document.querySelectorAll('.task-row').forEach(row => {
+      row.setAttribute('draggable', 'true');
+      row.addEventListener('dragstart', function(e) {
+        e.dataTransfer.setData('text/plain', this.dataset.id);
+        e.dataTransfer.effectAllowed = 'copy';
+        this.style.opacity = '0.5';
+      });
+      row.addEventListener('dragend', function() { this.style.opacity = ''; });
+    });
+  };
+
+  const mmCanvas = document.getElementById('mmCanvas');
+  mmCanvas?.addEventListener('dragover', (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; });
+  mmCanvas?.addEventListener('drop', (e) => {
+    e.preventDefault();
+    const taskId = parseInt(e.dataTransfer.getData('text/plain'));
+    if (!taskId) return;
+    const task = getTask(taskId);
+    if (!task) return;
+    let map = getCurrentMap();
+    if (!map) { createMap('默认导图'); map = getCurrentMap(); }
+    if (!map) return;
+    const rect = mmCanvas.getBoundingClientRect();
+    const x = (e.clientX - rect.left - mmOffsetX) / mmScale - 60;
+    const y = (e.clientY - rect.top - mmOffsetY) / mmScale - 19;
+    const newNode = { id: nextNodeId(), label: task.title, parentId: null, x, y, taskId, color: null, collapsed: false };
+    map.nodes.push(newNode); map.updatedAt = Date.now();
+    saveMapsLocal(); saveMapCloud(map); renderMindmap();
+  });
+})();
 </script>
 
 </body>
