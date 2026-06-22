@@ -6246,6 +6246,96 @@ function renderMindmapConnections(map) {
   }
   svg.innerHTML = paths;
 }
+
+// --- Mind Map Interactions ---
+document.getElementById('mmCanvas')?.addEventListener('contextmenu', (e) => {
+  e.preventDefault();
+  const nodeEl = e.target.closest('.mm-node');
+  if (!nodeEl) return;
+  mmContextNodeId = nodeEl.dataset.id;
+  const menu = document.getElementById('mmContextMenu');
+  menu.style.display = 'block';
+  menu.style.left = e.clientX + 'px';
+  menu.style.top = e.clientY + 'px';
+});
+document.addEventListener('click', () => { const m = document.getElementById('mmContextMenu'); if (m) m.style.display = 'none'; });
+document.getElementById('mmContextMenu')?.addEventListener('click', (e) => {
+  e.stopPropagation();
+  const action = e.target.closest('[data-action]')?.dataset.action;
+  const map = getCurrentMap();
+  const nodeId = mmContextNodeId;
+  if (!map || !nodeId || !action) return;
+  const node = map.nodes.find(n => n.id === nodeId);
+  if (!node && action !== 'delete') return;
+  switch (action) {
+    case 'addChild': {
+      const newNode = { id: nextNodeId(), label: '新节点', parentId: nodeId, x: (node?.x || 400) + 30, y: (node?.y || 300) + 130, taskId: null, color: null, collapsed: false };
+      map.nodes.push(newNode); map.updatedAt = Date.now();
+      saveMapsLocal(); saveMapCloud(map); renderMindmap(); break;
+    }
+    case 'edit': startInlineEdit(nodeId); break;
+    case 'color': {
+      const c = prompt('颜色(hex 如 #ff6600,或留空取消):', node.color || '');
+      if (c !== null) { node.color = c || null; map.updatedAt = Date.now(); saveMapsLocal(); saveMapCloud(map); renderMindmap(); }
+      break;
+    }
+    case 'collapse': node.collapsed = !node.collapsed; map.updatedAt = Date.now(); saveMapsLocal(); saveMapCloud(map); renderMindmap(); break;
+    case 'delete': {
+      const delRecursive = (nid) => { map.nodes = map.nodes.filter(n => n.id !== nid); map.nodes.filter(n => n.parentId === nid).forEach(c => delRecursive(c.id)); };
+      delRecursive(nodeId); map.updatedAt = Date.now();
+      saveMapsLocal(); saveMapCloud(map); renderMindmap(); break;
+    }
+  }
+  document.getElementById('mmContextMenu').style.display = 'none';
+});
+
+function startInlineEdit(nodeId) {
+  const el = document.querySelector('.mm-node[data-id="' + nodeId + '"] .mm-label');
+  if (!el) return;
+  const oldText = el.textContent;
+  el.innerHTML = '<input class="mm-label-input" value="' + escapeHtml(oldText) + '" id="mmInlineInput">';
+  const inp = document.getElementById('mmInlineInput');
+  inp.focus(); inp.select();
+  inp.addEventListener('blur', () => finishInlineEdit(nodeId, inp.value, oldText));
+  inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); finishInlineEdit(nodeId, inp.value, oldText); } if (e.key === 'Escape') finishInlineEdit(nodeId, oldText, oldText); });
+}
+function finishInlineEdit(nodeId, newLabel, fallback) {
+  const map = getCurrentMap();
+  if (!map) return;
+  const text = newLabel.trim() || fallback;
+  const node = map.nodes.find(n => n.id === nodeId);
+  if (node) { node.label = text; map.updatedAt = Date.now(); saveMapsLocal(); saveMapCloud(map); }
+  renderMindmap();
+}
+
+document.getElementById('mmCanvas')?.addEventListener('dblclick', (e) => {
+  const map = getCurrentMap();
+  if (!map) return;
+  const nodeEl = e.target.closest('.mm-node');
+  const collapseEl = e.target.closest('.mm-collapse');
+  const taskBadge = e.target.closest('.mm-task-badge');
+  if (collapseEl) {
+    const nid = nodeEl?.dataset.id;
+    if (nid) { const n = map.nodes.find(nd => nd.id === nid); if (n) { n.collapsed = !n.collapsed; map.updatedAt = Date.now(); saveMapsLocal(); saveMapCloud(map); renderMindmap(); } }
+    return;
+  }
+  if (taskBadge) {
+    const tid = parseInt(taskBadge.dataset.taskid);
+    if (tid) { switchView('list'); setTimeout(() => { openDetail(tid); }, 100); }
+    return;
+  }
+  if (nodeEl) {
+    startInlineEdit(nodeEl.dataset.id);
+  } else {
+    const canvas = document.getElementById('mmCanvas');
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX - rect.left - mmOffsetX) / mmScale - 60;
+    const y = (e.clientY - rect.top - mmOffsetY) / mmScale - 19;
+    const newNode = { id: nextNodeId(), label: '新节点', parentId: null, x, y, taskId: null, color: null, collapsed: false };
+    map.nodes.push(newNode); map.updatedAt = Date.now();
+    saveMapsLocal(); saveMapCloud(map); renderMindmap();
+  }
+});
 </script>
 
 </body>
