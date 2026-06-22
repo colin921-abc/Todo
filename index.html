@@ -2587,6 +2587,11 @@ async function initData() {
   if (needsSave) await saveTodos();
 
   nextId = todos.length > 0 ? Math.max(...todos.map(t => t.id)) + 1 : 1;
+
+  // init mindmap data
+  mindmaps = loadMapsLocal();
+  if (mindmaps.length > 0 && !currentMapId) currentMapId = mindmaps[0].id;
+  loadMapsCloud();
 }
 
 function getTask(id) { return todos.find(t => t.id === id); }
@@ -5981,6 +5986,138 @@ initApp().catch(e => {
     }
     apply(pref());
   })();
+</script>
+<script>
+// --- Mind Map Data Layer ---
+const MINDMAPS_KEY = 'mindmaps';
+let mindmaps = [];
+let currentMapId = null;
+let mindmapLayout = 'tree';
+let mmScale = 1;
+let mmOffsetX = 0, mmOffsetY = 0;
+let mmContextNodeId = null;
+
+function nextMapId() { return mindmaps.length > 0 ? Math.max(...mindmaps.map(m => m.id)) + 1 : 1; }
+function nextNodeId() { return 'n' + Date.now() + '_' + Math.random().toString(36).slice(2, 6); }
+
+function loadMapsLocal() {
+  try { return JSON.parse(localStorage.getItem(MINDMAPS_KEY)) || []; }
+  catch { return []; }
+}
+function saveMapsLocal() {
+  const prev = localStorage.getItem(MINDMAPS_KEY);
+  if (prev && prev !== '[]') localStorage.setItem(MINDMAPS_KEY + '_backup', prev);
+  localStorage.setItem(MINDMAPS_KEY, JSON.stringify(mindmaps));
+}
+
+function getCurrentMap() { return mindmaps.find(m => m.id === currentMapId); }
+
+// ---- Supabase Cloud Sync ----
+async function loadMapsCloud() {
+  if (!supabaseClient) return;
+  try {
+    const { data, error } = await supabaseClient.from('mindmaps').select('*');
+    if (!error && data && data.length > 0) {
+      const cloudMaps = data.map(r => ({ id: r.id, name: r.name, createdAt: r.created_at, updatedAt: r.updated_at, nodes: r.nodes || [] }));
+      for (const cm of cloudMaps) {
+        const localIdx = mindmaps.findIndex(m => m.id === cm.id);
+        if (localIdx >= 0) {
+          if (cm.updatedAt > mindmaps[localIdx].updatedAt) mindmaps[localIdx] = cm;
+        } else { mindmaps.push(cm); }
+      }
+      saveMapsLocal();
+    } else if (mindmaps.length > 0) { await syncAllMapsUp(); }
+  } catch(e) { console.warn('mindmaps cloud load failed:', e); }
+}
+
+async function saveMapCloud(map) {
+  if (!supabaseClient) return;
+  try {
+    const row = { id: map.id, name: map.name, created_at: map.createdAt, updated_at: Date.now(), nodes: map.nodes };
+    await supabaseClient.from('mindmaps').upsert(row, { onConflict: 'id' });
+  } catch(e) { console.warn('mindmap cloud save failed:', e); }
+}
+
+async function deleteMapCloud(id) {
+  if (!supabaseClient) return;
+  try { await supabaseClient.from('mindmaps').delete().eq('id', id); }
+  catch(e) { console.warn('mindmap cloud delete failed:', e); }
+}
+
+async function syncAllMapsUp() {
+  if (!supabaseClient || mindmaps.length === 0) return;
+  try { for (const m of mindmaps) await saveMapCloud(m); }
+  catch(e) { console.warn('sync all maps up failed:', e); }
+}
+
+function createMap(name) {
+  const now = Date.now();
+  const map = { id: nextMapId(), name, createdAt: now, updatedAt: now, nodes: [] };
+  mindmaps.push(map);
+  saveMapsLocal();
+  saveMapCloud(map);
+  currentMapId = map.id;
+  refreshMapProjectSelect();
+  renderMindmap();
+}
+
+function renameMap(id, newName) {
+  const map = mindmaps.find(m => m.id === id);
+  if (!map) return;
+  map.name = newName; map.updatedAt = Date.now();
+  saveMapsLocal(); saveMapCloud(map);
+  refreshMapProjectSelect();
+}
+
+function deleteMap(id) {
+  if (!confirm('确定删除导图「' + (mindmaps.find(m => m.id === id)?.name || '') + '」？结点将永久丢失。')) return;
+  mindmaps = mindmaps.filter(m => m.id !== id);
+  saveMapsLocal(); deleteMapCloud(id);
+  currentMapId = mindmaps.length > 0 ? mindmaps[0].id : null;
+  refreshMapProjectSelect();
+  renderMindmap();
+}
+
+function switchMap(id) {
+  currentMapId = id;
+  refreshMapProjectSelect();
+  renderMindmap();
+}
+
+function refreshMapProjectSelect() {
+  const sel = document.getElementById('mmProjectSelect');
+  if (!sel) return;
+  sel.innerHTML = mindmaps.length === 0
+    ? '<option value="">无导图</option>'
+    : mindmaps.map(m => '<option value="' + m.id + '" ' + (m.id === currentMapId ? 'selected' : '') + '>' + escapeHtml(m.name) + '</option>').join('');
+}
+
+function escapeHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+// --- Mind Map Toolbar Events ---
+document.getElementById('mmBtnNew')?.addEventListener('click', () => {
+  const name = prompt('导图名称:')?.trim();
+  if (name) createMap(name);
+});
+document.getElementById('mmBtnRename')?.addEventListener('click', () => {
+  const map = getCurrentMap();
+  if (!map) return;
+  const name = prompt('新名称:', map.name)?.trim();
+  if (name) renameMap(map.id, name);
+});
+document.getElementById('mmBtnDelete')?.addEventListener('click', () => {
+  if (currentMapId) deleteMap(currentMapId);
+});
+document.getElementById('mmProjectSelect')?.addEventListener('change', (e) => {
+  const id = parseInt(e.target.value);
+  if (id) switchMap(id);
+});
+document.getElementById('mmBtnTree')?.addEventListener('click', () => { mindmapLayout = 'tree'; updateLayoutButtons(); renderMindmap(); });
+document.getElementById('mmBtnRadial')?.addEventListener('click', () => { mindmapLayout = 'radial'; updateLayoutButtons(); renderMindmap(); });
+function updateLayoutButtons() {
+  document.getElementById('mmBtnTree')?.classList.toggle('active', mindmapLayout === 'tree');
+  document.getElementById('mmBtnRadial')?.classList.toggle('active', mindmapLayout === 'radial');
+}
 </script>
 
 </body>
