@@ -7605,7 +7605,17 @@ document.getElementById('mmBtnFit')?.addEventListener('click', function() {
         deferredPrompt = null;
       });
     } else {
-      showToast && showToast('点击浏览器地址栏的 ⊕ 安装按钮即可');
+      // Manual install instructions
+      var isChrome = !!window.chrome;
+      var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+      var msg = isSafari
+        ? 'Safari: 点分享按钮 → "添加到主屏幕"'
+        : isChrome
+        ? 'Chrome: 点地址栏右侧 ⊕ → 安装'
+        : '点浏览器菜单 → 安装应用 / 添加到主屏幕';
+      var el = document.getElementById('pwaInstallMsg');
+      if (el) el.textContent = '📱 ' + msg;
+      showToast && showToast(msg);
     }
   };
 
@@ -7617,9 +7627,9 @@ document.getElementById('mmBtnFit')?.addEventListener('click', function() {
 })();
 </script>
 
-<div id="pwaInstallBar" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;background:var(--accent);color:#fff;padding:10px 16px;align-items:center;justify-content:center;gap:12px;font-size:14px;font-weight:600;">
-  💻 将此应用安装到桌面
-  <button onclick="pwaInstall()" style="background:#fff;color:var(--accent);border:none;padding:6px 16px;border-radius:6px;font-weight:700;cursor:pointer;font-family:inherit;">安装</button>
+<div id="pwaInstallBar" style="display:flex;position:fixed;bottom:0;left:0;right:0;z-index:9999;background:var(--accent);color:#fff;padding:10px 16px;align-items:center;justify-content:center;gap:12px;font-size:14px;font-weight:600;">
+  <span id="pwaInstallMsg">💻 安装桌面应用</span>
+  <button onclick="pwaInstall()" style="background:#fff;color:var(--accent);border:none;padding:6px 16px;border-radius:6px;font-weight:700;cursor:pointer;font-family:inherit;">一键安装</button>
   <button onclick="this.parentElement.style.display='none'" style="background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.4);padding:6px 10px;border-radius:6px;cursor:pointer;font-family:inherit;">✕</button>
 </div>
 
