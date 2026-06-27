@@ -3,15 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#b8965a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="工作待办">
+<link rel="manifest" href="/Todo/manifest.json">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23b8965a'/><text x='50' y='68' text-anchor='middle' font-size='50' fill='white'>✅</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/mind-elixir@5.13.0/dist/MindElixir.css" rel="stylesheet">
 <title>工作待办</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/mind-elixir@5.13.0/dist/MindElixir.iife.js" defer></script>
 <style>
 /* ============================================================
    DESIGN SYSTEM — 暖奶油 · 高密度
@@ -1426,7 +1433,13 @@ textarea { resize: vertical; min-height: 60px; }
 }
 .misc-history-row:last-child { border-bottom: none; }
 .misc-history-row:hover { background: var(--surface-2); }
+.misc-history-row.selected { background: var(--accent-subtle); }
 .misc-history-date { font-size: 12px; color: var(--text-secondary); }
+.misc-hist-check { width: 16px; height: 16px; cursor: pointer; accent-color: var(--accent); flex-shrink: 0; }
+.misc-batch-bar { display: none; align-items: center; gap: 10px; padding: 10px 14px; background: var(--accent-subtle); border: 1px solid var(--accent); border-radius: var(--radius-md); margin-bottom: 12px; flex-wrap: wrap; }
+.misc-batch-bar.show { display: flex; }
+.misc-batch-bar select, .misc-batch-bar input[type=date] { padding: 5px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 12px; background: var(--card-bg); color: var(--text); font-family: inherit; }
+.misc-batch-bar .btn { font-size: 12px; }
 .misc-history-type {
   display: inline-flex; align-items: center; gap: 5px;
   padding: 3px 9px; border-radius: 11px;
@@ -1599,8 +1612,63 @@ textarea { resize: vertical; min-height: 60px; }
   text-align: center;
   color: var(--text-muted);
 }
+/* Dashboard stat cards */
+.dash-stat-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 14px; }
+.dash-stat-card {
+  background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius-md);
+  padding: 16px; text-align: center;
+}
+.dash-stat-num { font-size: 28px; font-weight: 700; color: var(--accent); line-height: 1.2; }
+.dash-stat-card.warn .dash-stat-num { color: var(--red); }
+.dash-stat-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+.dash-charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.dash-record-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.dash-record-table th, .dash-record-table td { padding: 6px 10px; border-bottom: 1px solid var(--border-light); text-align: left; }
+.dash-record-table th { font-size: 11px; color: var(--text-muted); font-weight: 600; white-space: nowrap; }
+.dash-record-table .sev-major { color: var(--red); font-weight: 600; }
+.dash-record-table .sev-minor { color: var(--text-muted); }
+.dash-record-table .st-closed { color: var(--green); }
+.dash-record-table .st-open { color: var(--accent); }
+.dash-badge { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+.dash-badge-closed { background: var(--green-bg); color: var(--green); }
+.dash-badge-open { background: var(--accent-subtle); color: var(--accent-hover); }
+.dash-tabs { display: flex; gap: 4px; margin-bottom: 12px; }
+.dash-tab-btn {
+  padding: 8px 16px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--card-bg); cursor: pointer; font-size: 13px; font-weight: 600;
+  color: var(--text-secondary); font-family: inherit; transition: all var(--transition);
+}
+.dash-tab-btn:hover { background: var(--hover); }
+.dash-tab-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+/* Case wall */
+.case-card {
+  background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius-md);
+  padding: 16px; margin-bottom: 12px; border-left: 4px solid var(--accent);
+}
+.case-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+.case-card .case-meta { font-size: 11px; color: var(--text-muted); margin-bottom: 10px; display: flex; gap: 16px; flex-wrap: wrap; }
+.case-card .case-section { margin-bottom: 8px; }
+.case-card .case-section strong { font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 2px; }
+.case-card .case-section p { font-size: 13px; color: var(--text); margin: 0; }
+.case-loss { color: var(--red); font-weight: 600; }
+/* Timeline */
+.timeline-group { margin-bottom: 16px; }
+.timeline-month { font-size: 14px; font-weight: 700; color: var(--accent); margin-bottom: 8px; padding-left: 8px; border-left: 3px solid var(--accent); }
+.timeline-item { display: flex; gap: 12px; padding: 8px 0 8px 16px; border-left: 2px solid var(--border-light); margin-left: 7px; position: relative; }
+.timeline-item::before { content: ''; position: absolute; left: -5px; top: 14px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+.timeline-date { font-size: 11px; color: var(--text-muted); min-width: 80px; padding-top: 2px; }
+.timeline-body { flex: 1; font-size: 13px; }
+.timeline-body .tl-type { font-weight: 600; margin-right: 6px; }
+.timeline-body .tl-note { color: var(--text-secondary); font-size: 12px; margin-top: 2px; }
+.timeline-badge { display: inline-block; padding: 0 6px; border-radius: 8px; font-size: 10px; font-weight: 600; margin-left: 4px; }
+.tl-sev-major { color: var(--red); font-weight: 600; }
+.tl-sev-minor { color: var(--text-muted); }
 
 @media (max-width: 720px) {
+  .dash-stat-row { grid-template-columns: repeat(2,1fr); }
+  .dash-charts-row { grid-template-columns: 1fr; }
+  .dash-tabs { overflow-x: auto; }
+}
   .misc-history-row {
     grid-template-columns: 80px 1fr 50px;
     grid-template-areas: "date type count" "note note note" "actions actions actions";
@@ -1616,16 +1684,16 @@ textarea { resize: vertical; min-height: 60px; }
    AI ASSISTANT — 浮动科比人偶
    ============================================================ */
 .kobe-bot {
-  position: fixed; right: 30px; bottom: 100px; left: auto;
+  position: fixed; right: 30px; top: 10px; left: auto;
   width: 76px; height: 92px;
-  background: transparent; border: none; cursor: pointer; padding: 0;
-  z-index: 45;
+  background: red; border: 2px solid black; cursor: pointer; padding: 0;
+  z-index: 99999;
   filter: drop-shadow(0 6px 10px rgba(0,0,0,0.25));
   animation: kobeBob 3s ease-in-out infinite;
   transition: transform .2s;
 }
 .polish-bot {
-  position:fixed; right:30px; bottom:170px; z-index:45;
+  position:fixed; right:30px; bottom:170px; z-index:999;
   width:48px; height:48px; border-radius:50%;
   background:var(--accent); color:#fff; border:none;
   font-size:22px; cursor:pointer; display:flex; align-items:center; justify-content:center;
@@ -1670,7 +1738,7 @@ textarea { resize: vertical; min-height: 60px; }
 .kobe-bot:hover .kobe-speech { opacity:1; }
 
 .kobe-popup {
-  position: fixed; right: 24px; bottom: 100px; left: auto;
+  position: fixed; right: 24px; bottom: 100px; left: auto; z-index: 999;
   width: 372px; max-width: calc(100vw - 48px);
   height: 70vh; max-height: calc(100vh - 140px);
   background: var(--card-bg); border:1px solid var(--border);
@@ -1770,64 +1838,115 @@ body::before {
 .view-content .task-row { backdrop-filter: none; }
 
 /* ============================================================
-   MIND MAP
+   ISSUE COLLECTION
+   ============================================================ */
+.issue-input-area {
+  padding: 16px; background: var(--card-bg); border-bottom: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 8px; flex-shrink: 0;
+}
+.issue-title-input {
+  padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  font-size: 14px; font-family: inherit; background: var(--bg); color: var(--text);
+  outline: none;
+}
+.issue-title-input:focus { border-color: var(--accent); }
+.issue-desc-input {
+  padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  font-size: 13px; font-family: inherit; background: var(--bg); color: var(--text);
+  resize: vertical; outline: none;
+}
+.issue-desc-input:focus { border-color: var(--accent); }
+.issue-image-zone {
+  min-height: 80px; border: 2px dashed var(--border); border-radius: var(--radius-md);
+  padding: 12px; cursor: pointer; transition: border-color .2s;
+}
+.issue-image-zone:hover, .issue-image-zone.drag-over { border-color: var(--accent); background: var(--accent-subtle); }
+.issue-image-hint { font-size: 12px; color: var(--text-muted); text-align: center; }
+.issue-image-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.issue-thumb {
+  position: relative; width: 100px; height: 80px; border-radius: 6px;
+  overflow: hidden; border: 1px solid var(--border);
+}
+.issue-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.issue-thumb .issue-thumb-del {
+  position: absolute; top: 2px; right: 2px; width: 20px; height: 20px;
+  border-radius: 50%; background: rgba(0,0,0,0.6); color: #fff; border: none;
+  cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center;
+}
+.issue-paste-count { font-size: 12px; color: var(--text-muted); align-self: center; }
+.issue-list-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 16px; font-size: 13px; font-weight: 600; color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-light); flex-shrink: 0;
+}
+.issue-list-header select {
+  padding: 4px 8px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  font-size: 12px; background: var(--card-bg); color: var(--text); font-family: inherit;
+}
+.issue-card {
+  background: var(--card-bg); border-bottom: 1px solid var(--border-light);
+  padding: 14px 16px; cursor: pointer; transition: background .15s;
+}
+.issue-card:hover { background: var(--surface-2); }
+.issue-card .issue-head {
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;
+}
+.issue-card .issue-title { font-size: 14px; font-weight: 600; color: var(--text); flex: 1; }
+.issue-card .issue-date { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+.issue-card .issue-desc { font-size: 13px; color: var(--text-secondary); margin-top: 6px; }
+.issue-card .issue-thumbs { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.issue-card .issue-thumbs img {
+  width: 80px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border);
+  cursor: pointer;
+}
+.issue-card .issue-actions { display: flex; gap: 6px; margin-top: 10px; }
+.issue-badge { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+.issue-badge-open { background: var(--accent-subtle); color: var(--accent-hover); }
+.issue-badge-closed { background: var(--green-bg); color: var(--green); }
+
+/* ============================================================
+   MIND MAP (Mind Elixir)
    ============================================================ */
 #view-mindmap { position: relative; overflow: hidden; }
 .mm-toolbar {
   display: flex; align-items: center; gap: 8px; padding: 10px 16px;
   border-bottom: 1px solid var(--border); flex-shrink: 0; flex-wrap: wrap;
+  z-index: 10; position: relative; background: var(--card-bg);
 }
 .mm-toolbar select { font-size: 13px; padding: 5px 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--card-bg); color: var(--text); font-family: inherit; }
 .mm-toolbar button { padding: 5px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: transparent; cursor: pointer; font-size: 12px; font-weight: 600; color: var(--text-secondary); font-family: inherit; transition: all var(--transition); }
 .mm-toolbar button:hover { background: var(--hover); color: var(--text); }
-.mm-toolbar button.active { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
 .mm-sep { width: 1px; height: 20px; background: var(--border); margin: 0 4px; }
-.mm-canvas { position: absolute; inset: 0; top: 52px; overflow: hidden; cursor: grab; }
-.mm-canvas.grabbing { cursor: grabbing; }
-.mm-canvas-inner { position: absolute; transform-origin: 0 0; }
-.mm-node {
-  position: absolute; user-select: none; cursor: pointer;
-  width: 140px; height: 44px;
+.mm-map-container { position: absolute; inset: 0; top: 52px; }
+/* Kill MindElixir's built-in panel backgrounds */
+.mm-map-container .map-container,
+.mm-map-container .map-container > svg,
+.mm-map-container .mind-elixir-toolbar,
+.mm-map-container .tips { background: transparent !important; background-color: transparent !important; }
+.mm-empty-hint { position: absolute; inset: 0; top: 52px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 18px; pointer-events: none; z-index: 5; }
+.mm-color-bar {
+  display: flex; align-items: center; gap: 4px; padding: 4px 16px;
+  border-bottom: 1px solid var(--border); flex-shrink: 0; z-index: 10;
+  position: relative; background: var(--card-bg);
 }
-.mm-node-body {
-  background: var(--glass-bg); border: 1px solid var(--glass-border);
-  border-radius: var(--radius-md); padding: 6px 12px;
-  box-shadow: var(--shadow-sm); font-size: 12.5px; font-weight: 500;
-  width: 100%; height: 100%; box-sizing: border-box;
-  color: var(--text); display: flex; align-items: center; gap: 6px;
-  transition: box-shadow .2s, border-color .2s;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+.mm-fmt-group { display: flex; align-items: center; gap: 2px; }
+.mm-fmt-sep { width: 1px; height: 18px; background: var(--border); margin: 0 4px; }
+.mm-fmt-btn {
+  width: 26px; height: 26px; border-radius: 4px; border: 1px solid transparent;
+  background: transparent; cursor: pointer; font-size: 12px; font-family: inherit;
+  color: var(--text-secondary); display: flex; align-items: center; justify-content: center;
+  transition: all .15s; padding: 0; line-height: 1;
 }
-.mm-node-body:hover { border-color: var(--accent); box-shadow: var(--shadow-md); }
-.mm-node.dragging .mm-node-body { box-shadow: var(--shadow-lg); border-color: var(--accent); opacity: .85; }
-.mm-node.reparent-target .mm-node-body { border-color: var(--accent); border-width: 2px; background: var(--accent-subtle); }
-.mm-node.has-task .mm-node-body { border-left: 3px solid var(--accent); }
-.mm-collapse { font-size: 10px; width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; background: var(--hover); cursor: pointer; flex-shrink: 0; }
-.mm-collapse:hover { background: var(--hover-strong); }
-.mm-collapse.collapsed { transform: rotate(-90deg); }
-.mm-label { flex: 1; overflow: hidden; text-overflow: ellipsis; }
-.mm-label-input { flex: 1; border: 1px solid var(--accent); border-radius: 4px; padding: 2px 6px; font-size: 13px; font-family: inherit; background: var(--card-bg); color: var(--text); outline: none; min-width: 80px; }
-.mm-connector-out { position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%); width: 16px; height: 16px; border-radius: 50%; background: var(--accent); opacity: 0.55; transition: opacity .2s, transform .2s; cursor: crosshair; z-index: 10; }
-.mm-node-body:hover + .mm-connector-out, .mm-connector-out:hover { opacity: 1; transform: translateX(-50%) scale(1.3); }
-.mm-task-badge { font-size: 10px; background: var(--accent-subtle); color: var(--accent-hover); padding: 1px 6px; border-radius: 10px; cursor: pointer; flex-shrink: 0; }
-.mm-svg { position: absolute; left: 0; right: 0; bottom: 0; top: 52px; pointer-events: none; overflow: visible; }
-.mm-empty-hint { position: absolute; inset: 0; top: 52px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 18px; pointer-events: none; }
-.mm-context-menu {
-  position: fixed; z-index: 200; background: var(--card-bg); border: 1px solid var(--border);
-  border-radius: var(--radius-md); box-shadow: var(--shadow-lg); padding: 6px 0; min-width: 160px;
-  display: none;
-}
-.mm-context-menu .mm-cm-item {
-  padding: 8px 16px; font-size: 13px; cursor: pointer; color: var(--text);
-  transition: background .15s; display: flex; align-items: center; gap: 8px;
-}
-.mm-context-menu .mm-cm-item:hover { background: var(--hover); }
-.mm-context-menu .mm-cm-item.danger { color: var(--red); }
-.mm-context-menu .mm-cm-sep { height: 1px; background: var(--border); margin: 4px 0; }
-.mm-color-panel { position: fixed; z-index: 201; background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); }
-.mm-color-swatch { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: all .15s; display: inline-block; }
-.mm-color-swatch:hover { border-color: var(--accent); transform: scale(1.15); }
+.mm-fmt-btn:hover { background: var(--hover); border-color: var(--border); color: var(--text); }
+.mm-fmt-btn.active { background: var(--accent-subtle); border-color: var(--accent); color: var(--accent-hover); }
+.mm-fmt-btn small { font-size: 8px; }
+.mm-fmt-label { font-size: 11px; font-weight: 600; color: var(--text-muted); }
+.mm-text-color-input { width: 22px; height: 22px; border: 1px solid var(--border); border-radius: 4px; cursor: pointer; padding: 0; background: transparent; }
+.mm-fmt-hint { font-size: 10px; color: var(--text-muted); white-space: nowrap; }
+.mm-color-dot { width: 20px; height: 20px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: all .15s; flex-shrink: 0; }
+.mm-color-dot:hover { border-color: var(--accent); transform: scale(1.2); }
+.mm-color-dot.active { border-color: var(--text); box-shadow: 0 0 0 2px var(--accent); }
+.mm-color-none { display: flex; align-items: center; justify-content: center; font-size: 9px; color: var(--text-muted); border: 1px dashed var(--border); background: transparent; }
 </style>
 <script>
   /* 防闪烁：首屏绘制前就定主题 */
@@ -1872,7 +1991,12 @@ body::before {
           <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="9" height="3.2" rx="1"/><rect x="7" y="10.4" width="10" height="3.2" rx="1"/><rect x="11" y="15.8" width="8" height="3.2" rx="1"/></svg></span>
           <span class="nav-label">甘特图</span>
         </li>
-        <li class="nav-item" data-view="mindmap">
+        <li class="nav-item" data-view="issues">
+          <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
+          <span class="nav-label">问题收集</span>
+          <span class="nav-badge" id="navCountIssues" style="display:none;">0</span>
+        </li>
+<li class="nav-item" data-view="mindmap">
           <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 22v-7M12 9V2M4.93 17.07l4.95-4.95M14.12 5.88l4.95-4.95M2 12h7M15 12h7"/></svg></span>
           <span class="nav-label">思维导图</span>
         </li>
@@ -1883,7 +2007,7 @@ body::before {
         </li>
         <li class="nav-item" data-view="report">
           <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3.75 3v11.25A2.25 2.25 0 006 16.5h12a2.25 2.25 0 002.25-2.25V3M3 21h18"/><path d="M8.5 12.5l2.5-2.75 2 1.75 2.75-3.25"/></svg></span>
-          <span class="nav-label">工作汇报</span>
+          <span class="nav-label">📊 数据看板</span>
         </li>
       </ul>
       <div class="sidebar-tags" id="sidebarTags">
@@ -1996,7 +2120,7 @@ body::before {
     <!-- View: Work Report -->
     <div class="view-panel" id="view-report" style="display:none;">
       <div class="view-header">
-        <h2>工作汇报</h2>
+        <h2>📊 数据看板</h2>
       </div>
       <div class="view-content" id="reportContent"></div>
     </div>
@@ -2008,9 +2132,6 @@ body::before {
         <button id="mmBtnNew" title="新建导图">+</button>
         <button id="mmBtnRename" title="重命名">✏</button>
         <span class="mm-sep"></span>
-        <button id="mmBtnTree" class="active" data-layout="tree">🌲 树状</button>
-        <button id="mmBtnRadial" data-layout="radial">☀ 放射</button>
-        <span class="mm-sep"></span>
         <button id="mmBtnZoomOut" title="缩小">🔍-</button>
         <span id="mmZoomLabel" style="font-size:12px;color:var(--text-muted);min-width:36px;text-align:center;">100%</span>
         <button id="mmBtnZoomIn" title="放大">🔍+</button>
@@ -2019,32 +2140,64 @@ body::before {
         <button id="mmBtnFit" title="适应画面" style="margin-left:auto;">⊞</button>
         <button id="mmBtnDelete" title="删除导图" style="color:var(--red);">🗑</button>
       </div>
-      <div class="mm-canvas" id="mmCanvas">
-        <div class="mm-canvas-inner" id="mmCanvasInner"></div>
+      <div class="mm-color-bar" id="mmColorBar" style="display:none;">
+        <span class="mm-fmt-group">
+          <button class="mm-fmt-btn" data-fmt="bold" title="粗体"><b>B</b></button>
+          <button class="mm-fmt-btn" data-fmt="italic" title="斜体"><i>I</i></button>
+          <button class="mm-fmt-btn" data-fmt="fontSizeDown" title="缩小字号">A<small>−</small></button>
+          <button class="mm-fmt-btn" data-fmt="fontSizeUp" title="放大字号">A<small>+</small></button>
+        </span>
+        <span class="mm-fmt-sep"></span>
+        <span class="mm-fmt-group" id="mmTextColorGrp" title="字体颜色">
+          <span class="mm-fmt-label">A</span>
+          <input type="color" id="mmTextColor" class="mm-text-color-input" value="#1f2630">
+        </span>
+        <span class="mm-fmt-sep"></span>
+        <span class="mm-fmt-group" id="mmColorDots">
+          <span class="mm-fmt-label" style="font-size:10px;">bg</span>
+          <span class="mm-color-dot" data-bg="#e06a60" style="background:#e06a60" title="红"></span>
+          <span class="mm-color-dot" data-bg="#e8a24a" style="background:#e8a24a" title="橙"></span>
+          <span class="mm-color-dot" data-bg="#f0c94a" style="background:#f0c94a" title="黄"></span>
+          <span class="mm-color-dot" data-bg="#5cb497" style="background:#5cb497" title="绿"></span>
+          <span class="mm-color-dot" data-bg="#5b9bd5" style="background:#5b9bd5" title="蓝"></span>
+          <span class="mm-color-dot" data-bg="#9b7ad4" style="background:#9b7ad4" title="紫"></span>
+          <span class="mm-color-dot" data-bg="#e89ab8" style="background:#e89ab8" title="粉"></span>
+          <span class="mm-color-dot" data-bg="#ffffff" style="background:#ffffff;border:2px solid var(--border);" title="白"></span>
+          <span class="mm-color-dot mm-color-none" data-bg="" title="清除">✕</span>
+        </span>
+        <span class="mm-fmt-sep"></span>
+        <span class="mm-fmt-hint">📋 选中节点后 Ctrl+V 粘贴图片</span>
       </div>
-      <svg class="mm-svg" id="mmSvg"></svg>
-      <div class="mm-empty-hint" id="mmEmptyHint">双击空白处创建第一个节点</div>
+      <div class="mm-map-container" id="mmMapContainer"></div>
+      <div class="mm-empty-hint" id="mmEmptyHint">点击"+"新建导图开始</div>
     </div>
-    <div class="mm-context-menu" id="mmContextMenu">
-      <div class="mm-cm-item" data-action="addChild">＋ 新建子节点</div>
-      <div class="mm-cm-item" data-action="edit">✎ 编辑</div>
-      <div class="mm-cm-item" data-action="color">🎨 设色</div>
-      <div class="mm-cm-sep"></div>
-      <div class="mm-cm-item" data-action="collapse">▾ 折叠/展开</div>
-      <div class="mm-cm-sep"></div>
-      <div class="mm-cm-item danger" data-action="delete">✕ 删除</div>
-    </div>
-    <div class="mm-color-panel" id="mmColorPanel" style="display:none;">
-      <div style="display:flex;flex-wrap:wrap;gap:6px;padding:8px;">
-        <span class="mm-color-swatch" data-color="#e06a60" style="background:#e06a60" title="红"></span>
-        <span class="mm-color-swatch" data-color="#e8a24a" style="background:#e8a24a" title="橙"></span>
-        <span class="mm-color-swatch" data-color="#f0c94a" style="background:#f0c94a" title="黄"></span>
-        <span class="mm-color-swatch" data-color="#5cb497" style="background:#5cb497" title="绿"></span>
-        <span class="mm-color-swatch" data-color="#5b9bd5" style="background:#5b9bd5" title="蓝"></span>
-        <span class="mm-color-swatch" data-color="#9b7ad4" style="background:#9b7ad4" title="紫"></span>
-        <span class="mm-color-swatch" data-color="#e89ab8" style="background:#e89ab8" title="粉"></span>
-        <span class="mm-color-swatch" data-color="" style="background:transparent;border:2px dashed var(--border);" title="清除颜色"></span>
+
+    <!-- View: Issue Collection -->
+    <div class="view-panel" id="view-issues" style="display:none;">
+      <div class="view-header">
+        <h2>🐛 工作问题收集</h2>
       </div>
+      <div class="issue-input-area">
+        <input type="text" id="issueTitle" placeholder="问题简述..." maxlength="100" class="issue-title-input">
+        <textarea id="issueDesc" placeholder="问题描述、备注..." rows="3" class="issue-desc-input"></textarea>
+        <div class="issue-image-zone" id="issueImageZone">
+          <div class="issue-image-list" id="issueImageList"></div>
+          <div class="issue-image-hint">📋 点击此处后 Ctrl+V 粘贴图片，或拖放图片到这里</div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <button class="btn btn-primary" onclick="saveIssue()">保存问题</button>
+          <span class="issue-paste-count" id="issueImgCount"></span>
+        </div>
+      </div>
+      <div class="issue-list-header">
+        <span>已收集问题</span>
+        <select id="issueFilter" onchange="renderIssues()">
+          <option value="all">全部</option>
+          <option value="open">未解决</option>
+          <option value="closed">已解决</option>
+        </select>
+      </div>
+      <div class="view-content" id="issuesContent"></div>
     </div>
 
   </main>
@@ -2193,6 +2346,22 @@ body::before {
       <input type="text" id="miscTypeUnit" maxlength="10" placeholder="件 / 次 / 分钟">
     </div>
     <div class="field">
+      <label>工作分类</label>
+      <select id="miscTypeCategory">
+        <option value="">未分类</option>
+        <option value="文档">📄 生产文档</option>
+        <option value="质量">🔍 过程质量</option>
+        <option value="试制">🔧 新品试制</option>
+        <option value="不合格品">⚠️ 不合格品</option>
+        <option value="医院上报">🏥 医院上报</option>
+        <option value="变更">📝 生产变更</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>SLA 目标关闭天数</label>
+      <input type="number" id="miscTypeSla" value="7" min="1" max="365" step="1">
+    </div>
+    <div class="field">
       <label>排序值（数字，越小越前）</label>
       <input type="number" id="miscTypeSort" value="0">
     </div>
@@ -2225,7 +2394,42 @@ body::before {
     </div>
     <div class="field">
       <label>备注（可选）</label>
-      <textarea id="miscRecordNote" placeholder="备注..."></textarea>
+      <textarea id="miscRecordNote" placeholder="备注..." style="min-height:40px;"></textarea>
+    </div>
+    <div class="field">
+      <label>严重程度</label>
+      <select id="miscRecordSeverity">
+        <option value="normal">一般</option>
+        <option value="major">重大</option>
+        <option value="minor">轻微</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>状态</label>
+      <select id="miscRecordStatus">
+        <option value="open">处理中</option>
+        <option value="closed">已关闭</option>
+      </select>
+    </div>
+    <div class="field" id="miscRecordCloseDateField" style="display:none;">
+      <label>关闭日期</label>
+      <input type="date" id="miscRecordCloseDate">
+    </div>
+    <div class="field">
+      <label>根因分析（可选）</label>
+      <textarea id="miscRecordRootCause" placeholder="根本原因..." style="min-height:40px;"></textarea>
+    </div>
+    <div class="field">
+      <label>采取措施（可选）</label>
+      <textarea id="miscRecordMeasures" placeholder="采取的措施..." style="min-height:40px;"></textarea>
+    </div>
+    <div class="field">
+      <label>效果描述（可选）</label>
+      <textarea id="miscRecordEffect" placeholder="取得的效果..." style="min-height:40px;"></textarea>
+    </div>
+    <div class="field">
+      <label>避免的损失（可选）</label>
+      <input type="text" id="miscRecordLossAvoided" placeholder="如：避免批量报废 200 件">
     </div>
     <div class="modal-actions">
       <button class="btn btn-danger btn-sm" id="miscRecordDeleteBtn" style="display:none;" onclick="deleteMiscRecordConfirm()">删除</button>
@@ -2401,25 +2605,35 @@ function miscTypeFromDB(r) {
     id: r.id, name: r.name, icon: r.icon || '📌',
     color: r.color || MISC_COLOR_PALETTE[0],
     unit: r.unit || '次', sortOrder: r.sort_order || 0,
-    archived: !!r.archived, createdAt: r.created_at
+    archived: !!r.archived, createdAt: r.created_at,
+    category: r.category || '', slaDays: r.sla_days || 7
   };
 }
 function miscTypeToDB(t) {
   return {
     name: t.name, icon: t.icon, color: t.color, unit: t.unit,
-    sort_order: t.sortOrder, archived: t.archived
+    sort_order: t.sortOrder, archived: t.archived,
+    category: t.category || '', sla_days: t.slaDays || 7
   };
 }
 function miscRecordFromDB(r) {
   return {
     id: r.id, typeId: r.type_id, count: r.count, note: r.note || '',
-    occurredAt: r.occurred_at, createdAt: r.created_at
+    occurredAt: r.occurred_at, createdAt: r.created_at,
+    severity: r.severity || 'normal', status: r.status || 'open',
+    closeDate: r.close_date || null,
+    rootCause: r.root_cause || '', measures: r.measures || '',
+    effect: r.effect || '', lossAvoided: r.loss_avoided || ''
   };
 }
 function miscRecordToDB(r) {
   return {
     type_id: r.typeId, count: r.count,
-    note: r.note || null, occurred_at: r.occurredAt
+    note: r.note || null, occurred_at: r.occurredAt,
+    severity: r.severity || 'normal', status: r.status || 'open',
+    close_date: r.closeDate || null,
+    root_cause: r.rootCause || '', measures: r.measures || '',
+    effect: r.effect || '', loss_avoided: r.lossAvoided || ''
   };
 }
 
@@ -2451,12 +2665,41 @@ async function loadMiscData() {
     ]);
 
     // 保护原则：远端空数据不覆盖本地非空数据
+    // Merge cloud + local: keep local modifications (new columns not in Supabase yet)
     if (!typesRes.error && typesRes.data && typesRes.data.length > 0) {
-      miscTypes = typesRes.data.map(miscTypeFromDB);
+      var cloudTypes = typesRes.data.map(miscTypeFromDB);
+      var localTM = {};
+      miscTypes.forEach(function(t) { localTM[t.id] = t; });
+      cloudTypes.forEach(function(ct) {
+        if (localTM[ct.id]) Object.assign(ct, localTM[ct.id]);
+      });
+      miscTypes = cloudTypes;
+      cloudTypes.forEach(function(ct) { delete localTM[ct.id]; });
+      Object.values(localTM).forEach(function(t) { miscTypes.push(t); });
       saveMiscLocal(MISC_TYPES_KEY, miscTypes);
     }
     if (!recordsRes.error && recordsRes.data && recordsRes.data.length > 0) {
-      miscRecords = recordsRes.data.map(miscRecordFromDB);
+      var cloudRecs = recordsRes.data.map(miscRecordFromDB);
+      var localRM = {};
+      miscRecords.forEach(function(r) { localRM[r.id] = r; });
+      cloudRecs.forEach(function(cr) {
+        if (localRM[cr.id]) {
+          var lr = localRM[cr.id];
+          // Preserve local edits (new fields not stored in Supabase yet)
+          if (lr.severity) cr.severity = lr.severity;
+          if (lr.status) cr.status = lr.status;
+          if (lr.closeDate) cr.closeDate = lr.closeDate;
+          if (lr.rootCause) cr.rootCause = lr.rootCause;
+          if (lr.measures) cr.measures = lr.measures;
+          if (lr.effect) cr.effect = lr.effect;
+          if (lr.lossAvoided) cr.lossAvoided = lr.lossAvoided;
+          if (lr.note) cr.note = lr.note;
+          if (lr.count !== cr.count) cr.count = lr.count;
+        }
+      });
+      miscRecords = cloudRecs;
+      cloudRecs.forEach(function(cr) { delete localRM[cr.id]; });
+      Object.values(localRM).forEach(function(r) { miscRecords.unshift(r); });
       saveMiscLocal(MISC_RECORDS_KEY, miscRecords);
     }
     if (typesRes.error) console.warn('misc types load error:', typesRes.error);
@@ -3983,6 +4226,7 @@ function updateSidebarProgress() {
 // MISC TASKS — UI STATE & RENDER
 // ============================================================
 let miscHistoryRange = 'week'; // today | week | month | all
+let selectedMiscRecords = new Set();
 let miscHistoryTypeFilter = 'all';
 let editingMiscTypeId = null;
 let editingMiscRecordId = null;
@@ -4085,6 +4329,15 @@ function renderMisc() {
         <option value="all">全部类型</option>
         ${miscTypes.map(t => `<option value="${t.id}"${miscHistoryTypeFilter===t.id?' selected':''}>${escHtml(t.icon)} ${escHtml(t.name)}</option>`).join('')}
       </select>
+      <button class="btn btn-ghost btn-sm" id="miscSelectAllBtn" onclick="toggleSelectAllMisc()" style="margin-left:auto;">☐ 全选</button>
+    </div>
+    <div class="misc-batch-bar" id="miscBatchBar">
+      <span id="miscBatchCount" style="font-size:12px;font-weight:600;color:var(--accent-hover);"></span>
+      <select id="miscBatchStatus" onchange="var cd=document.getElementById('miscBatchCloseDate');if(cd)cd.style.display=this.value==='closed'?'':'none';"><option value="">设置状态...</option><option value="open">处理中</option><option value="closed">已关闭</option></select>
+      <input type="date" id="miscBatchCloseDate" title="关闭日期（仅状态=已关闭时有效）" style="display:none;">
+      <select id="miscBatchSeverity"><option value="">设置严重程度...</option><option value="major">重大</option><option value="normal">一般</option><option value="minor">轻微</option></select>
+      <button class="btn btn-primary btn-sm" onclick="applyBatchEdit()">应用</button> <button class="btn btn-danger btn-sm" onclick="applyBatchDelete()">🗑 批量删除</button>
+      <button class="btn btn-ghost btn-sm" onclick="clearMiscSelection()">取消</button>
     </div>`;
 
   const { from, to } = rangeDates(miscHistoryRange);
@@ -4105,7 +4358,8 @@ function renderMisc() {
       const tagBg = t ? hexWithAlpha(t.color, 0.18) : 'var(--accent-subtle)';
       const tagColor = t ? t.color : 'var(--text-secondary)';
       html += `
-        <div class="misc-history-row">
+        <div class="misc-history-row" id="miscRow${r.id}">
+          <input type="checkbox" class="misc-hist-check" ${selectedMiscRecords.has(r.id)?"checked":""} onclick="event.stopPropagation(); toggleMiscSelect('${r.id}')">
           <span class="misc-history-date">${formatDateShort(r.occurredAt)}</span>
           <span class="misc-history-type" style="background:${tagBg};color:${tagColor};">
             ${t ? escHtml(t.icon) + ' ' + escHtml(t.name) : '(已删除)'}
@@ -4122,6 +4376,7 @@ function renderMisc() {
   html += '</div>';
 
   c.innerHTML = html;
+  updateBatchBar();
 }
 
 function hexWithAlpha(hex, alpha) {
@@ -4154,6 +4409,8 @@ function openMiscTypeModal(id) {
     document.getElementById('miscTypeIcon').value = t.icon;
     document.getElementById('miscTypeUnit').value = t.unit;
     document.getElementById('miscTypeSort').value = t.sortOrder;
+    document.getElementById('miscTypeCategory').value = t.category || '';
+    document.getElementById('miscTypeSla').value = t.slaDays || 7;
     document.getElementById('miscTypeArchived').checked = t.archived;
     miscTypeColorPick = t.color;
     delBtn.style.display = '';
@@ -4164,6 +4421,8 @@ function openMiscTypeModal(id) {
     document.getElementById('miscTypeIcon').value = '📌';
     document.getElementById('miscTypeUnit').value = '次';
     document.getElementById('miscTypeSort').value = miscTypes.length;
+    document.getElementById('miscTypeCategory').value = '';
+    document.getElementById('miscTypeSla').value = 7;
     document.getElementById('miscTypeArchived').checked = false;
     miscTypeColorPick = MISC_COLOR_PALETTE[miscTypes.length % MISC_COLOR_PALETTE.length];
     delBtn.style.display = 'none';
@@ -4195,7 +4454,9 @@ async function saveMiscType() {
     color: miscTypeColorPick,
     unit: document.getElementById('miscTypeUnit').value.trim() || '次',
     sortOrder: parseInt(document.getElementById('miscTypeSort').value) || 0,
-    archived: document.getElementById('miscTypeArchived').checked
+    archived: document.getElementById('miscTypeArchived').checked,
+      category: document.getElementById('miscTypeCategory').value,
+      slaDays: parseInt(document.getElementById('miscTypeSla').value) || 7
   };
   if (editingMiscTypeId) {
     await updateMiscType(editingMiscTypeId, data);
@@ -4222,6 +4483,84 @@ async function deleteMiscTypeConfirm() {
   updateNavBadges();
 }
 
+// ---- Batch Edit Functions ----
+function toggleMiscSelect(id) {
+  id = parseInt(id);
+  if (selectedMiscRecords.has(id)) selectedMiscRecords.delete(id);
+  else selectedMiscRecords.add(id);
+  updateBatchBar();
+  var row = document.getElementById("miscRow" + id);
+  if (row) row.classList.toggle("selected", selectedMiscRecords.has(id));
+}
+
+function toggleSelectAllMisc() {
+  var range = rangeDates(miscHistoryRange);
+  var rows = miscRecords.filter(function(r) { return r.occurredAt >= range.from && r.occurredAt <= range.to; });
+  if (miscHistoryTypeFilter !== "all") rows = rows.filter(function(r) { return r.typeId === miscHistoryTypeFilter; });
+  rows = rows.slice(0, 100);
+  if (selectedMiscRecords.size === rows.length && rows.length > 0) { selectedMiscRecords.clear(); }
+  else { rows.forEach(function(r) { selectedMiscRecords.add(String(r.id)); }); }
+  renderMisc();
+}
+
+function clearMiscSelection() { selectedMiscRecords.clear(); renderMisc(); }
+
+function updateBatchBar() {
+  var bar = document.getElementById("miscBatchBar");
+  var countEl = document.getElementById("miscBatchCount");
+  var statusSel = document.getElementById("miscBatchStatus");
+  var closeDate = document.getElementById("miscBatchCloseDate");
+  var btn = document.getElementById("miscSelectAllBtn");
+  if (!bar) return;
+  var count = selectedMiscRecords.size;
+  if (count > 0) {
+    bar.classList.add("show");
+    if (countEl) countEl.textContent = "已选 " + count + " 条";
+    if (statusSel && closeDate) closeDate.style.display = statusSel.value === "closed" ? "" : "none";
+    if (btn) btn.textContent = "☑ 取消全选";
+  } else {
+    bar.classList.remove("show");
+    if (statusSel) statusSel.value = "";
+    if (closeDate) closeDate.style.display = "none";
+    if (btn) btn.textContent = "☐ 全选";
+  }
+}
+
+
+async function applyBatchEdit() {
+  var count = selectedMiscRecords.size;
+  if (count === 0) return;
+  var sv = document.getElementById("miscBatchStatus").value;
+  var sev = document.getElementById("miscBatchSeverity").value;
+  var cdv = document.getElementById("miscBatchCloseDate").value;
+  if (!sv && !sev && !cdv) { showToast("请至少选择一个要修改的字段"); return; }
+  if (!confirm("将批量修改 " + count + " 条记录，确认？")) return;
+  var ch = {};
+  if (sv) ch.status = sv;
+  if (sev) ch.severity = sev;
+  if (sv === "closed" && cdv) ch.closeDate = cdv;
+  if (sv === "open") ch.closeDate = null;
+  var ids = Array.from(selectedMiscRecords);
+  for (var i = 0; i < ids.length; i++) {
+    await updateMiscRecord(ids[i], Object.assign({}, ch));
+  }
+  selectedMiscRecords.clear();
+  renderMisc();
+  showToast("已更新 " + count + " 条记录");
+}
+
+async function applyBatchDelete() {
+  var count = selectedMiscRecords.size;
+  if (count === 0) return;
+  if (!confirm("⚠️ 将永久删除 " + count + " 条记录，不可恢复！确认？")) return;
+  if (!confirm("再次确认：删除 " + count + " 条记录？")) return;
+  var ids = Array.from(selectedMiscRecords);
+  for (var i = 0; i < ids.length; i++) { await deleteMiscRecord(ids[i]); }
+  selectedMiscRecords.clear();
+  renderMisc();
+  showToast("已删除 " + count + " 条记录");
+}
+
 // ---- Record Modal ----
 function openMiscRecordModal(recordId, presetTypeId) {
   editingMiscRecordId = recordId;
@@ -4242,6 +4581,14 @@ function openMiscRecordModal(recordId, presetTypeId) {
     document.getElementById('miscRecordCount').value = r.count;
     document.getElementById('miscRecordDate').value = r.occurredAt;
     document.getElementById('miscRecordNote').value = r.note || '';
+    document.getElementById('miscRecordSeverity').value = r.severity || 'normal';
+    document.getElementById('miscRecordStatus').value = r.status || 'open';
+    document.getElementById('miscRecordCloseDate').value = r.closeDate || '';
+    document.getElementById('miscRecordRootCause').value = r.rootCause || '';
+    document.getElementById('miscRecordMeasures').value = r.measures || '';
+    document.getElementById('miscRecordEffect').value = r.effect || '';
+    document.getElementById('miscRecordLossAvoided').value = r.lossAvoided || '';
+    toggleMiscCloseDate();
     delBtn.style.display = '';
   } else {
     title.textContent = '记录一笔';
@@ -4249,11 +4596,27 @@ function openMiscRecordModal(recordId, presetTypeId) {
     document.getElementById('miscRecordCount').value = 1;
     document.getElementById('miscRecordDate').value = toDateStr(new Date());
     document.getElementById('miscRecordNote').value = '';
+    document.getElementById('miscRecordSeverity').value = 'normal';
+    document.getElementById('miscRecordStatus').value = 'open';
+    document.getElementById('miscRecordCloseDate').value = '';
+    document.getElementById('miscRecordRootCause').value = '';
+    document.getElementById('miscRecordMeasures').value = '';
+    document.getElementById('miscRecordEffect').value = '';
+    document.getElementById('miscRecordLossAvoided').value = '';
+    toggleMiscCloseDate();
     delBtn.style.display = 'none';
   }
   modal.classList.add('show');
   setTimeout(() => document.getElementById('miscRecordCount').focus(), 50);
 }
+
+function toggleMiscCloseDate() {
+  var status = document.getElementById('miscRecordStatus').value;
+  var field = document.getElementById('miscRecordCloseDateField');
+  if (field) field.style.display = status === 'closed' ? '' : 'none';
+}
+// Wire status change to toggle close date
+document.getElementById('miscRecordStatus')?.addEventListener('change', toggleMiscCloseDate);
 
 function closeMiscRecordModal() {
   document.getElementById('miscRecordModal').classList.remove('show');
@@ -4269,10 +4632,18 @@ async function saveMiscRecord() {
   if (!count || count < 1) { showToast('数量必须 ≥ 1'); return; }
   if (!occurredAt) { showToast('请选择日期'); return; }
 
+  const severity = document.getElementById('miscRecordSeverity').value;
+  const status = document.getElementById('miscRecordStatus').value;
+  const closeDate = status === 'closed' ? (document.getElementById('miscRecordCloseDate').value || toDateStr(new Date())) : null;
+  const rootCause = document.getElementById('miscRecordRootCause').value.trim();
+  const measures = document.getElementById('miscRecordMeasures').value.trim();
+  const effect = document.getElementById('miscRecordEffect').value.trim();
+  const lossAvoided = document.getElementById('miscRecordLossAvoided').value.trim();
+
   if (editingMiscRecordId) {
-    await updateMiscRecord(editingMiscRecordId, { typeId, count, occurredAt, note });
+    await updateMiscRecord(editingMiscRecordId, { typeId, count, occurredAt, note, severity, status, closeDate, rootCause, measures, effect, lossAvoided });
   } else {
-    const r = await addMiscRecord({ typeId, count, occurredAt, note });
+    const r = await addMiscRecord({ typeId, count, occurredAt, note, severity, status, closeDate, rootCause, measures, effect, lossAvoided });
     if (!r) return;
   }
   closeMiscRecordModal();
@@ -4306,28 +4677,14 @@ async function quickAddMiscRecord(typeId) {
 }
 
 // ============================================================
-// REPORT VIEW
+// REPORT VIEW (Data Dashboard)
 // ============================================================
-let reportRange = 'week';
+let reportRange = 'month';
+let dashTab = 'dashboard'; // 'dashboard' | 'cases' | 'timeline'
 let reportFromDate = null;
 let reportToDate = null;
 let reportSelectedTypes = new Set();
-let reportTrendTypeId = null;
-let reportCharts = { bar: null, pie: null, line: null };
-
-async function ensureChartJs() {
-  if (typeof Chart !== 'undefined') return true;
-  // Defer attribute may still be loading; wait briefly
-  for (let i = 0; i < 30; i++) {
-    if (typeof Chart !== 'undefined') return true;
-    await new Promise(r => setTimeout(r, 100));
-  }
-  if (typeof Chart === 'undefined') {
-    showToast('图表库加载失败，请检查网络');
-    return false;
-  }
-  return true;
-}
+let reportCharts = {};
 
 function reportEffectiveRange() {
   if (reportRange === 'custom' && reportFromDate && reportToDate) {
@@ -4345,14 +4702,38 @@ function reportFilteredRecords() {
   );
 }
 
+function reportClosedRecords() {
+  return reportFilteredRecords().filter(r => r.status === 'closed');
+}
+
+function reportOpenRecords() {
+  return reportFilteredRecords().filter(r => r.status === 'open');
+}
+
+async function ensureChartJs() {
+  if (typeof Chart !== 'undefined') return true;
+  for (let i = 0; i < 30; i++) {
+    if (typeof Chart !== 'undefined') return true;
+    await new Promise(r => setTimeout(r, 100));
+  }
+  if (typeof Chart === 'undefined') {
+    showToast('图表库加载失败，请检查网络');
+    return false;
+  }
+  return true;
+}
+
+function toggleReportType(id) {
+  if (reportSelectedTypes.has(id)) reportSelectedTypes.delete(id);
+  else reportSelectedTypes.add(id);
+  renderReport();
+}
+
 async function renderReport() {
   const c = document.getElementById('reportContent');
   // Init defaults
   if (reportSelectedTypes.size === 0) {
     reportSelectedTypes = new Set(activeMiscTypes().map(t => t.id));
-  }
-  if (!reportTrendTypeId && activeMiscTypes().length > 0) {
-    reportTrendTypeId = activeMiscTypes()[0].id;
   }
 
   const types = miscTypes.filter(t => !t.archived);
@@ -4361,8 +4742,46 @@ async function renderReport() {
     return;
   }
 
+  const records = reportFilteredRecords();
+  const closed = reportClosedRecords();
+  const open = reportOpenRecords();
+  const now = new Date();
+
+  // Compute stats
+  const totalRecords = records.length;
+  const closedCount = closed.length;
+  const closeRate = totalRecords > 0 ? Math.round(closedCount / totalRecords * 100) : 0;
+
+  // Avg close days
+  let totalCloseDays = 0, closeDaysCount = 0;
+  for (const r of closed) {
+    if (r.closeDate && r.occurredAt) {
+      var d1 = new Date(r.occurredAt), d2 = new Date(r.closeDate);
+      var days = Math.max(0, Math.round((d2 - d1) / 86400000));
+      totalCloseDays += days; closeDaysCount++;
+    }
+  }
+  var avgCloseDays = closeDaysCount > 0 ? (totalCloseDays / closeDaysCount).toFixed(1) : '-';
+
+  // SLA overdue count
+  var slaOverdue = 0;
+  var today = toDateStr(now);
+  for (const r of open) {
+    var tp = miscTypes.find(t => t.id === r.typeId);
+    var sla = tp ? (tp.slaDays || 7) : 7;
+    if (r.occurredAt) {
+      var elapsed = Math.round((now - new Date(r.occurredAt)) / 86400000);
+      if (elapsed > sla) slaOverdue++;
+    }
+  }
+
   c.innerHTML = `
-    <div class="report-toolbar">
+    <div class="dash-tabs">
+      <button class="dash-tab-btn ${dashTab==='dashboard'?'active':''}" onclick="dashTab='dashboard';renderReport();">📊 看板</button>
+      <button class="dash-tab-btn ${dashTab==='cases'?'active':''}" onclick="dashTab='cases';renderReport();">📋 案例墙</button>
+      <button class="dash-tab-btn ${dashTab==='timeline'?'active':''}" onclick="dashTab='timeline';renderReport();">📅 时间线</button>
+    </div>
+    <div class="report-toolbar" style="margin-bottom:14px;">
       <div class="range-group">
         <button class="range-btn ${reportRange==='today'?'active':''}" onclick="setReportRange('today')">今日</button>
         <button class="range-btn ${reportRange==='week'?'active':''}" onclick="setReportRange('week')">本周</button>
@@ -4376,58 +4795,71 @@ async function renderReport() {
         <span style="font-size:12px;color:var(--text-muted);">~</span>
         <input type="date" id="reportToInput" value="${reportToDate||''}" onchange="reportToDate=this.value; renderReport();">
       </div>
-      <div class="report-type-filter" style="margin-left:auto;">
-        ${types.map(t => `
-          <label style="background:${hexWithAlpha(t.color,0.15)};">
-            <input type="checkbox" ${reportSelectedTypes.has(t.id)?'checked':''} onchange="toggleReportType('${t.id}')">
-            ${escHtml(t.icon)} ${escHtml(t.name)}
-          </label>
-        `).join('')}
+    </div>
+    ${dashTab==='cases' ? renderCaseWallHTML() : ''}
+    ${dashTab==='timeline' ? renderTimelineHTML() : ''}
+    ${dashTab==='dashboard' ? `
+    <div class="dash-stat-row">
+      <div class="dash-stat-card"><div class="dash-stat-num">${totalRecords}</div><div class="dash-stat-label">📋 累计记录</div></div>
+      <div class="dash-stat-card"><div class="dash-stat-num">${closeRate}%</div><div class="dash-stat-label">✅ 关闭率</div></div>
+      <div class="dash-stat-card"><div class="dash-stat-num">${avgCloseDays}天</div><div class="dash-stat-label">⏱ 平均关闭周期</div></div>
+      <div class="dash-stat-card ${slaOverdue > 0 ? 'warn' : ''}"><div class="dash-stat-num">${slaOverdue}</div><div class="dash-stat-label">⚠️ 超时 SLA</div></div>
+    </div>
+
+    <div class="dash-charts-row">
+      <div class="report-chart-card">
+        <h3>工作分类分布</h3>
+        <div class="report-chart-canvas-wrap"><canvas id="dashCategoryPie"></canvas></div>
+      </div>
+      <div class="report-chart-card">
+        <h3>月度趋势（新增 vs 关闭）</h3>
+        <div class="report-chart-canvas-wrap"><canvas id="dashMonthlyBar"></canvas></div>
+      </div>
+    </div>
+
+    <div class="dash-charts-row">
+      <div class="report-chart-card">
+        <h3>严重程度分布</h3>
+        <div class="report-chart-canvas-wrap"><canvas id="dashSeverityDonut"></canvas></div>
+      </div>
+      <div class="report-chart-card">
+        <h3>各类型 SLA 达标率</h3>
+        <div class="report-chart-canvas-wrap"><canvas id="dashSlaBar"></canvas></div>
       </div>
     </div>
 
     <div class="report-chart-card">
-      <h3>各类型完成数量</h3>
-      <div class="report-chart-canvas-wrap"><canvas id="reportBarChart"></canvas></div>
+      <h3>⚡ 效率趋势（月均关闭周期）</h3>
+      <div class="report-chart-canvas-wrap" style="height:200px;"><canvas id="dashEfficiencyLine"></canvas></div>
     </div>
 
     <div class="report-chart-card">
-      <h3>各类型占比</h3>
-      <div class="report-chart-canvas-wrap"><canvas id="reportPieChart"></canvas></div>
+      <h3>记录明细</h3>
+      <div id="dashRecordList"></div>
     </div>
 
-    <div class="report-chart-card">
-      <h3>
-        <span>每日趋势</span>
-        <select id="reportTrendType" onchange="reportTrendTypeId=this.value; renderReportCharts();">
-          ${types.map(t => `<option value="${t.id}"${reportTrendTypeId===t.id?' selected':''}>${escHtml(t.icon)} ${escHtml(t.name)}</option>`).join('')}
-        </select>
-      </h3>
-      <div class="report-chart-canvas-wrap"><canvas id="reportLineChart"></canvas></div>
-    </div>
-
-    <div class="report-chart-card">
-      <h3>汇总表</h3>
-      <div id="reportSummaryTable"></div>
-    </div>
-
+    ` : ''}
     <div class="report-export-bar">
       <button class="btn btn-ghost btn-sm" onclick="exportReportPNG()">导出 PNG</button>
       <button class="btn btn-ghost btn-sm" onclick="exportReportCSV()">导出 CSV</button>
       <button class="btn btn-primary btn-sm" onclick="exportReportPPT()">导出 PPT 报告</button>
+      <button class="btn btn-primary btn-sm" style="background:var(--accent-hover);" onclick="exportDefensePPT()">🎓 导出答辩 PPT</button>
     </div>
   `;
 
-  const ok = await ensureChartJs();
-  if (!ok) return;
-  renderReportCharts();
-  renderReportSummaryTable();
+  if (dashTab === 'dashboard') {
+    const ok = await ensureChartJs();
+    if (!ok) return;
+    renderDashCharts();
+    renderEfficiencyChart();
+    renderDashRecordList();
+  }
 }
 
 function setReportRange(r) {
   reportRange = r;
   if (r === 'custom' && !reportFromDate) {
-    const d = new Date();
+    var d = new Date();
     reportToDate = toDateStr(d);
     d.setDate(d.getDate() - 7);
     reportFromDate = toDateStr(d);
@@ -4435,155 +4867,295 @@ function setReportRange(r) {
   renderReport();
 }
 
-function toggleReportType(id) {
-  if (reportSelectedTypes.has(id)) reportSelectedTypes.delete(id);
-  else reportSelectedTypes.add(id);
-  renderReportCharts();
-  renderReportSummaryTable();
-}
-
 function destroyReportCharts() {
-  for (const k in reportCharts) {
+  for (var k in reportCharts) {
     if (reportCharts[k]) { reportCharts[k].destroy(); reportCharts[k] = null; }
   }
 }
 
-function renderReportCharts() {
+function renderDashCharts() {
   if (typeof Chart === 'undefined') return;
   destroyReportCharts();
 
-  const types = miscTypes.filter(t => !t.archived && reportSelectedTypes.has(t.id));
-  const records = reportFilteredRecords();
-  const { from, to } = reportEffectiveRange();
+  var records = reportFilteredRecords();
+  var types = miscTypes.filter(function(t) { return !t.archived && reportSelectedTypes.has(t.id); });
 
-  // Bar chart
-  const barLabels = types.map(t => `${t.icon} ${t.name}`);
-  const barData = types.map(t => records.filter(r => r.typeId === t.id).reduce((s, r) => s + r.count, 0));
-  const barColors = types.map(t => t.color);
+  // 1. Category Pie (group by category field)
+  var categoryTotals = {};
+  for (var i = 0; i < records.length; i++) {
+    var r = records[i];
+    var tp = miscTypes.find(function(t) { return t.id === r.typeId; });
+    var cat = (tp && tp.category) ? tp.category : '未分类';
+    categoryTotals[cat] = (categoryTotals[cat] || 0) + r.count;
+  }
+  var catLabels = Object.keys(categoryTotals);
+  var catColors = { '文档':'#5b9bd5', '质量':'#e06a60', '试制':'#5cb497', '不合格品':'#e8a24a', '医院上报':'#9b7ad4', '变更':'#f0c94a', '未分类':'#98a1ac' };
+  var catData = catLabels.map(function(c) { return categoryTotals[c]; });
+  var catBg = catLabels.map(function(c) { return catColors[c] || '#98a1ac'; });
 
-  const barCanvas = document.getElementById('reportBarChart');
+  var catCanvas = document.getElementById('dashCategoryPie');
+  if (catCanvas) {
+    reportCharts.categoryPie = new Chart(catCanvas, {
+      type: 'pie',
+      data: { labels: catLabels, datasets: [{ data: catData, backgroundColor: catBg }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { font: { size: 12 } } } } }
+    });
+  }
+
+  // 2. Monthly Bar (created vs closed per month)
+  var months = [];
+  var now = new Date();
+  for (var m = 5; m >= 0; m--) {
+    var d = new Date(now.getFullYear(), now.getMonth() - m, 1);
+    months.push(toDateStr(d).substring(0, 7));
+  }
+  var monthCreated = [], monthClosed = [];
+  for (var mi = 0; mi < months.length; mi++) {
+    var prefix = months[mi];
+    monthCreated.push(records.filter(function(r) { return r.occurredAt && r.occurredAt.substring(0,7) === prefix; }).reduce(function(s,r) { return s + r.count; }, 0));
+    monthClosed.push(records.filter(function(r) { return r.status === 'closed' && r.closeDate && r.closeDate.substring(0,7) === prefix; }).reduce(function(s,r) { return s + r.count; }, 0));
+  }
+  var monthLabels = months.map(function(m) { return m.substring(5) + '月'; });
+
+  var barCanvas = document.getElementById('dashMonthlyBar');
   if (barCanvas) {
-    reportCharts.bar = new Chart(barCanvas, {
+    reportCharts.monthlyBar = new Chart(barCanvas, {
       type: 'bar',
       data: {
-        labels: barLabels,
-        datasets: [{ label: '完成数量', data: barData, backgroundColor: barColors, borderRadius: 4 }]
+        labels: monthLabels,
+        datasets: [
+          { label: '新增', data: monthCreated, backgroundColor: 'rgba(184,150,90,0.6)', borderRadius: 4 },
+          { label: '关闭', data: monthClosed, backgroundColor: 'rgba(79,157,127,0.6)', borderRadius: 4 }
+        ]
       },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
-      }
+      options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
     });
   }
 
-  // Pie chart
-  const pieFiltered = types.map((t, i) => ({ t, v: barData[i] })).filter(x => x.v > 0);
-  const pieCanvas = document.getElementById('reportPieChart');
-  if (pieCanvas) {
-    reportCharts.pie = new Chart(pieCanvas, {
-      type: 'pie',
+  // 3. Severity Donut
+  var sevMajor = 0, sevNormal = 0, sevMinor = 0;
+  for (var i2 = 0; i2 < records.length; i2++) {
+    var sv = records[i2].severity || 'normal';
+    if (sv === 'major') sevMajor += records[i2].count;
+    else if (sv === 'minor') sevMinor += records[i2].count;
+    else sevNormal += records[i2].count;
+  }
+  var sevCanvas = document.getElementById('dashSeverityDonut');
+  if (sevCanvas) {
+    reportCharts.severityDonut = new Chart(sevCanvas, {
+      type: 'doughnut',
       data: {
-        labels: pieFiltered.map(x => `${x.t.icon} ${x.t.name}`),
-        datasets: [{ data: pieFiltered.map(x => x.v), backgroundColor: pieFiltered.map(x => x.t.color) }]
+        labels: ['重大', '一般', '轻微'],
+        datasets: [{ data: [sevMajor, sevNormal, sevMinor], backgroundColor: ['#e06a60','#e8a24a','#5b9bd5'] }]
       },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: {
-          legend: { position: 'right', labels: { font: { size: 12 } } },
-          tooltip: {
-            callbacks: {
-              label: (ctx) => {
-                const total = ctx.dataset.data.reduce((a,b) => a+b, 0);
-                const v = ctx.parsed;
-                const pct = total > 0 ? ((v / total) * 100).toFixed(1) : 0;
-                return `${ctx.label}: ${v} (${pct}%)`;
-              }
-            }
-          }
-        }
-      }
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { font: { size: 12 } } } } }
     });
   }
 
-  // Line chart (trend for selected type)
-  const trendType = miscTypes.find(t => t.id === reportTrendTypeId);
-  const lineCanvas = document.getElementById('reportLineChart');
-  if (lineCanvas && trendType) {
-    const days = enumerateDays(from, to);
-    const dailyMap = {};
-    for (const r of miscRecords) {
-      if (r.typeId !== trendType.id) continue;
-      if (r.occurredAt < from || r.occurredAt > to) continue;
-      dailyMap[r.occurredAt] = (dailyMap[r.occurredAt] || 0) + r.count;
+  // 4. SLA compliance bar per type
+  var slaTypes = [], slaRates = [], slaColors = [];
+  for (var i3 = 0; i3 < types.length; i3++) {
+    var tp3 = types[i3];
+    var typeRecords = records.filter(function(r) { return r.typeId === tp3.id; });
+    if (typeRecords.length === 0) continue;
+    var slaDays = tp3.slaDays || 7;
+    var compliant = 0;
+    for (var j = 0; j < typeRecords.length; j++) {
+      var tr = typeRecords[j];
+      if (tr.status === 'closed' && tr.closeDate && tr.occurredAt) {
+        var elapsed = Math.round((new Date(tr.closeDate) - new Date(tr.occurredAt)) / 86400000);
+        if (elapsed <= slaDays) compliant++;
+      }
     }
-    reportCharts.line = new Chart(lineCanvas, {
+    slaTypes.push((tp3.icon || '') + ' ' + tp3.name);
+    var rate = typeRecords.length > 0 ? Math.round(compliant / typeRecords.length * 100) : 0;
+    slaRates.push(rate);
+    slaColors.push(rate >= 80 ? '#5cb497' : (rate >= 50 ? '#e8a24a' : '#e06a60'));
+  }
+
+  var slaCanvas = document.getElementById('dashSlaBar');
+  if (slaCanvas) {
+    reportCharts.slaBar = new Chart(slaCanvas, {
+      type: 'bar',
+      data: { labels: slaTypes, datasets: [{ label: 'SLA达标率 %', data: slaRates, backgroundColor: slaColors, borderRadius: 4 }] },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        indexAxis: 'y',
+        scales: { x: { beginAtZero: true, max: 100, ticks: { callback: function(v) { return v + '%'; } } } },
+        plugins: { legend: { display: false } }
+      }
+    });
+  }
+}
+
+function renderDashRecordList() {
+  var wrap = document.getElementById('dashRecordList');
+  if (!wrap) return;
+  var records = reportFilteredRecords();
+  if (records.length === 0) {
+    wrap.innerHTML = '<div class="report-empty">该范围内无记录。</div>';
+    return;
+  }
+  // Show most recent 50 records
+  var recent = records.slice(0, 50);
+  var typeMap = {};
+  miscTypes.forEach(function(t) { typeMap[t.id] = t; });
+
+  var html = '<table class="dash-record-table"><thead><tr><th>日期</th><th>类型</th><th>数量</th><th>严重</th><th>状态</th><th>关闭日期</th><th>备注</th></tr></thead><tbody>';
+  for (var i = 0; i < recent.length; i++) {
+    var r = recent[i];
+    var tp = typeMap[r.typeId];
+    var typeName = tp ? (tp.icon + ' ' + tp.name) : '未知';
+    var sevLabel = r.severity === 'major' ? '<span class="sev-major">重大</span>' : (r.severity === 'minor' ? '<span class="sev-minor">轻微</span>' : '一般');
+    var stLabel = r.status === 'closed' ? '<span class="dash-badge dash-badge-closed">已关闭</span>' : '<span class="dash-badge dash-badge-open">处理中</span>';
+    html += '<tr>' +
+      '<td>' + (r.occurredAt || '') + '</td>' +
+      '<td>' + typeName + '</td>' +
+      '<td>' + r.count + (tp ? ' ' + tp.unit : '') + '</td>' +
+      '<td>' + sevLabel + '</td>' +
+      '<td>' + stLabel + '</td>' +
+      '<td>' + (r.closeDate || '-') + '</td>' +
+      '<td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (r.note || '-') + '</td>' +
+      '</tr>';
+  }
+  html += '</tbody></table>';
+  if (records.length > 50) html += '<div style="text-align:center;padding:8px;color:var(--text-muted);font-size:12px;">仅显示最近 50 条，共 ' + records.length + ' 条</div>';
+  wrap.innerHTML = html;
+}
+
+// ---- Case Wall ----
+function renderCaseWallHTML() {
+  var records = reportFilteredRecords().filter(function(r) { return r.status === 'closed' && r.severity === 'major'; });
+  if (records.length === 0) return '<div class="report-empty">暂无已关闭的重大案例。<br>在杂项任务集中将记录标记为"重大"并关闭，填写根因和措施后即可在此查看。</div>';
+  
+  var typeMap = {};
+  miscTypes.forEach(function(t) { typeMap[t.id] = t; });
+  
+  var html = '';
+  for (var i = 0; i < records.length; i++) {
+    var r = records[i];
+    var tp = typeMap[r.typeId];
+    var typeName = tp ? (tp.icon + ' ' + tp.name) : '未知';
+    html += '<div class="case-card">' +
+      '<h3>' + typeName + ' <span style="font-size:13px;font-weight:400;color:var(--text-secondary);">' + (r.occurredAt||'') + '</span></h3>' +
+      '<div class="case-meta"><span>严重：重大</span><span>关闭：' + (r.closeDate||'-') + '</span>' + (tp ? '<span>分类：' + (tp.category||'未分类') + '</span>' : '') + '</div>';
+    if (r.rootCause) html += '<div class="case-section"><strong>🔍 根因分析</strong><p>' + r.rootCause + '</p></div>';
+    if (r.measures) html += '<div class="case-section"><strong>🔧 采取措施</strong><p>' + r.measures + '</p></div>';
+    if (r.effect) html += '<div class="case-section"><strong>✅ 效果</strong><p>' + r.effect + '</p></div>';
+    if (r.lossAvoided) html += '<div class="case-section"><strong class="case-loss">💎 避免的损失</strong><p>' + r.lossAvoided + '</p></div>';
+    if (r.note) html += '<div class="case-section"><strong>📝 备注</strong><p>' + r.note + '</p></div>';
+    html += '</div>';
+  }
+  return html;
+}
+
+// ---- Timeline ----
+function renderTimelineHTML() {
+  var records = reportFilteredRecords();
+  if (records.length === 0) return '<div class="report-empty">该范围内无记录。</div>';
+  
+  var typeMap = {};
+  miscTypes.forEach(function(t) { typeMap[t.id] = t; });
+  
+  // Group by month
+  var groups = {};
+  for (var i = 0; i < records.length; i++) {
+    var r = records[i];
+    var month = (r.occurredAt || '').substring(0, 7);
+    if (!groups[month]) groups[month] = [];
+    groups[month].push(r);
+  }
+  
+  var months = Object.keys(groups).sort().reverse();
+  var html = '';
+  for (var mi = 0; mi < months.length; mi++) {
+    var m = months[mi];
+    var items = groups[m];
+    html += '<div class="timeline-group"><div class="timeline-month">' + m + ' (' + items.length + '条)</div>';
+    for (var j = 0; j < items.length; j++) {
+      var r = items[j];
+      var tp = typeMap[r.typeId];
+      var typeName = tp ? (tp.icon + ' ' + tp.name) : '未知';
+      var sevClass = r.severity === 'major' ? 'tl-sev-major' : (r.severity === 'minor' ? 'tl-sev-minor' : '');
+      var stBadge = r.status === 'closed' ? '<span class="timeline-badge" style="background:var(--green-bg);color:var(--green);">已关闭</span>' : '<span class="timeline-badge" style="background:var(--accent-subtle);color:var(--accent-hover);">处理中</span>';
+      html += '<div class="timeline-item">' +
+        '<div class="timeline-date">' + (r.occurredAt||'').substring(5) + '</div>' +
+        '<div class="timeline-body"><span class="tl-type">' + typeName + '</span> x' + r.count + ' ' + (tp?tp.unit:'') + stBadge;
+      if (r.note) html += '<div class="tl-note">' + r.note + '</div>';
+      html += '</div></div>';
+    }
+    html += '</div>';
+  }
+  return html;
+}
+
+// ---- Efficiency Trend Chart (added to dashboard) ----
+function renderEfficiencyChart() {
+  if (typeof Chart === 'undefined') return;
+  if (reportCharts.efficiency) { reportCharts.efficiency.destroy(); reportCharts.efficiency = null; }
+  
+  var records = reportFilteredRecords();
+  // Compute monthly avg close days for past 6 months
+  var now = new Date();
+  var months = [];
+  for (var m = 5; m >= 0; m--) {
+    var d = new Date(now.getFullYear(), now.getMonth() - m, 1);
+    months.push(toDateStr(d).substring(0, 7));
+  }
+  
+  var avgDays = [];
+  var monthLabels = months.map(function(m) { return m.substring(5) + '月'; });
+  for (var mi = 0; mi < months.length; mi++) {
+    var prefix = months[mi];
+    var monthClosed = records.filter(function(r) {
+      return r.status === 'closed' && r.closeDate && r.closeDate.substring(0,7) === prefix && r.occurredAt;
+    });
+    var totalDays = 0, count = 0;
+    for (var j = 0; j < monthClosed.length; j++) {
+      var days = Math.max(0, Math.round((new Date(monthClosed[j].closeDate) - new Date(monthClosed[j].occurredAt)) / 86400000));
+      totalDays += days; count++;
+    }
+    avgDays.push(count > 0 ? Math.round(totalDays / count) : null);
+  }
+  
+  var canvas = document.getElementById('dashEfficiencyLine');
+  if (canvas) {
+    reportCharts.efficiency = new Chart(canvas, {
       type: 'line',
       data: {
-        labels: days.map(d => formatDateShort(d)),
+        labels: monthLabels,
         datasets: [{
-          label: `${trendType.icon} ${trendType.name}`,
-          data: days.map(d => dailyMap[d] || 0),
-          borderColor: trendType.color,
-          backgroundColor: hexWithAlpha(trendType.color, 0.15),
-          fill: true, tension: 0.3, pointRadius: 3
+          label: '平均关闭天数', data: avgDays, borderColor: '#b8965a', backgroundColor: 'rgba(184,150,90,0.1)',
+          fill: true, tension: 0.3, pointRadius: 5, pointBackgroundColor: '#b8965a'
         }]
       },
       options: {
         responsive: true, maintainAspectRatio: false,
         plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+        scales: { y: { beginAtZero: true, title: { display: true, text: '天数' } } },
+        annotation: avgDays.length > 0 ? {} : undefined
       }
     });
   }
 }
 
+
+
+function formatDateShort(d) { return d.substring(5); }
+
 function enumerateDays(fromStr, toStr) {
-  const out = [];
+  var out = [];
   if (!fromStr || !toStr || fromStr === '0000-01-01') {
-    // For 'all' range, derive from records
     if (miscRecords.length === 0) return [toDateStr(new Date())];
-    const sorted = [...miscRecords].sort((a,b) => a.occurredAt.localeCompare(b.occurredAt));
+    var sorted = miscRecords.slice().sort(function(a,b) { return a.occurredAt.localeCompare(b.occurredAt); });
     fromStr = sorted[0].occurredAt;
     toStr = toDateStr(new Date());
   }
-  const cur = new Date(fromStr);
-  const end = new Date(toStr);
-  // Cap at 90 days to avoid huge x axis
-  let count = 0;
-  while (cur <= end && count < 90) {
-    out.push(toDateStr(cur));
-    cur.setDate(cur.getDate() + 1);
-    count++;
-  }
+  var cur = new Date(fromStr);
+  var end = new Date(toStr);
+  var count = 0;
+  while (cur <= end && count < 90) { out.push(toDateStr(cur)); cur.setDate(cur.getDate() + 1); count++; }
   return out;
-}
-
-function renderReportSummaryTable() {
-  const wrap = document.getElementById('reportSummaryTable');
-  if (!wrap) return;
-  const types = miscTypes.filter(t => !t.archived && reportSelectedTypes.has(t.id));
-  const records = reportFilteredRecords();
-  const totals = types.map(t => ({
-    t,
-    total: records.filter(r => r.typeId === t.id).reduce((s, r) => s + r.count, 0),
-    count: records.filter(r => r.typeId === t.id).length
-  }));
-  const grand = totals.reduce((s, x) => s + x.total, 0);
-
-  let html = '<table class="report-summary-table"><thead><tr><th>类型</th><th class="num">总数量</th><th class="num">记录条数</th><th class="num">占比</th></tr></thead><tbody>';
-  for (const x of totals) {
-    const pct = grand > 0 ? ((x.total / grand) * 100).toFixed(1) : 0;
-    html += `<tr>
-      <td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${x.t.color};margin-right:6px;"></span>${escHtml(x.t.icon)} ${escHtml(x.t.name)}</td>
-      <td class="num">${x.total} ${escHtml(x.t.unit)}</td>
-      <td class="num">${x.count}</td>
-      <td class="num">${pct}%</td>
-    </tr>`;
-  }
-  html += `<tr style="font-weight:600;"><td>合计</td><td class="num">${grand}</td><td class="num">${records.length}</td><td class="num">100%</td></tr>`;
-  html += '</tbody></table>';
-  wrap.innerHTML = html;
 }
 
 // ============================================================
@@ -4591,16 +5163,17 @@ function renderReportSummaryTable() {
 // ============================================================
 function exportReportPNG() {
   const charts = [
-    { name: '柱状图', chart: reportCharts.bar },
-    { name: '饼图', chart: reportCharts.pie },
-    { name: '趋势图', chart: reportCharts.line }
+    { name: '分类分布', chart: reportCharts.categoryPie },
+    { name: '月度趋势', chart: reportCharts.monthlyBar },
+    { name: '严重程度', chart: reportCharts.severityDonut },
+    { name: 'SLA达标率', chart: reportCharts.slaBar }
   ];
   for (const { name, chart } of charts) {
     if (!chart) continue;
     const url = chart.toBase64Image('image/png', 1);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `工作汇报-${name}-${toDateStr(new Date())}.png`;
+    a.download = `数据看板-${name}-${toDateStr(new Date())}.png`;
     a.click();
   }
   showToast('PNG 已导出');
@@ -4610,7 +5183,7 @@ function exportReportCSV() {
   const { from, to } = reportEffectiveRange();
   const records = reportFilteredRecords();
   const lines = [];
-  lines.push(`# 工作汇报明细 (${from} ~ ${to})`);
+  lines.push(`# 数据看板明细 (${from} ~ ${to})`);
   lines.push('日期,类型,数量,单位,备注');
   for (const r of records) {
     const t = miscTypes.find(x => x.id === r.typeId);
@@ -4630,10 +5203,202 @@ function exportReportCSV() {
   const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `工作汇报-${toDateStr(new Date())}.csv`;
+  a.download = `数据看板-${toDateStr(new Date())}.csv`;
   a.click();
   showToast('CSV 已导出');
 }
+
+// ---- Defense PPT Export ----
+async function exportDefensePPT() {
+  if (typeof PptxGenJS === 'undefined') { showToast('PPT 库未加载'); return; }
+  
+  // Gather all data (all time, not filtered by current range)
+  var allRecords = miscRecords.slice();
+  var types = miscTypes.filter(function(t) { return !t.archived; });
+  var typeMap = {};
+  types.forEach(function(t) { typeMap[t.id] = t; });
+  
+  // Stats
+  var totalRecords = allRecords.length;
+  var closedRecords = allRecords.filter(function(r) { return r.status === 'closed'; });
+  var closeRate = totalRecords > 0 ? Math.round(closedRecords.length / totalRecords * 100) : 0;
+  
+  // Avg close days
+  var totalDays = 0, daysCount = 0;
+  closedRecords.forEach(function(r) {
+    if (r.closeDate && r.occurredAt) {
+      totalDays += Math.max(0, Math.round((new Date(r.closeDate) - new Date(r.occurredAt)) / 86400000));
+      daysCount++;
+    }
+  });
+  var avgDays = daysCount > 0 ? (totalDays / daysCount).toFixed(1) : '-';
+  
+  // Category breakdown
+  var catCount = {};
+  allRecords.forEach(function(r) {
+    var tp = typeMap[r.typeId];
+    var cat = (tp && tp.category) ? tp.category : '其他';
+    catCount[cat] = (catCount[cat] || 0) + r.count;
+  });
+  
+  // ---- Task (Todo) Stats ----
+  var totalTasks = todos.length;
+  var completedTasks = todos.filter(function(t) { return t.status === 'completed'; }).length;
+  var inProgressTasks = todos.filter(function(t) { return t.status === 'in-progress'; }).length;
+  var notStartedTasks = todos.filter(function(t) { return t.status === 'not-started'; }).length;
+  var p1Tasks = todos.filter(function(t) { return t.priority === 'P1'; }).length;
+  var p2Tasks = todos.filter(function(t) { return t.priority === 'P2'; }).length;
+  var p3Tasks = todos.filter(function(t) { return t.priority === 'P3'; }).length;
+  var taskCompleteRate = totalTasks > 0 ? Math.round(completedTasks / totalTasks * 100) : 0;
+  // Top tags
+  var tagCount = {};
+  todos.forEach(function(t) {
+    if (t.tags) t.tags.forEach(function(tag) { tagCount[tag] = (tagCount[tag] || 0) + 1; });
+  });
+  var topTags = Object.entries(tagCount).sort(function(a,b) { return b[1] - a[1]; }).slice(0, 5);
+
+  // Major cases
+  var majorCases = closedRecords.filter(function(r) { return r.severity === 'major' && (r.rootCause || r.measures); });
+  
+  // Monthly efficiency trend
+  var now = new Date();
+  var months = [];
+  for (var m = 5; m >= 0; m--) {
+    var d = new Date(now.getFullYear(), now.getMonth() - m, 1);
+    months.push(toDateStr(d).substring(0, 7));
+  }
+  var effData = [];
+  months.forEach(function(prefix) {
+    var mc = closedRecords.filter(function(r) {
+      return r.closeDate && r.closeDate.substring(0,7) === prefix && r.occurredAt;
+    });
+    var td = 0, c = 0;
+    mc.forEach(function(r) { td += Math.max(0, Math.round((new Date(r.closeDate) - new Date(r.occurredAt)) / 86400000)); c++; });
+    effData.push(c > 0 ? Math.round(td/c) : null);
+  });
+  
+  var pptx = new PptxGenJS();
+  pptx.layout = 'LAYOUT_WIDE';
+  
+  // ---- Slide 1: Cover ----
+  var s1 = pptx.addSlide();
+  s1.background = { color: 'FDF9F1' };
+  s1.addText('转正答辩汇报', { x: 0.5, y: 1.5, w: 12, h: 1.2, fontSize: 40, bold: true, color: '2D2417', align: 'center' });
+  s1.addText('试用期工作数据总结', { x: 0.5, y: 2.8, w: 12, h: 0.6, fontSize: 20, color: '6B5A3F', align: 'center' });
+  s1.addText('统计周期：' + (allRecords.length > 0 ? allRecords[allRecords.length-1].occurredAt : '--') + ' ~ ' + (allRecords.length > 0 ? allRecords[0].occurredAt : '--'), { x: 0.5, y: 3.6, w: 12, h: 0.5, fontSize: 14, color: '6B5A3F', align: 'center' });
+  s1.addText('任务 ' + totalTasks + ' 个 · 工艺记录 ' + allRecords.length + ' 条', { x: 0.5, y: 4.2, w: 12, h: 0.4, fontSize: 14, color: 'B8965A', align: 'center' });
+  
+  // ---- Slide 2: Workload Overview ----
+  var s2 = pptx.addSlide();
+  s2.background = { color: 'FDF9F1' };
+  s2.addText('工作量总览', { x: 0.5, y: 0.3, w: 12, h: 0.8, fontSize: 28, bold: true, color: '2D2417' });
+  // Stat cards
+  var stats = [
+    { label: '累计处理', value: totalRecords + ' 条', x: 0.5 },
+    { label: '关闭率', value: closeRate + '%', x: 3.5 },
+    { label: '平均关闭周期', value: avgDays + ' 天', x: 6.5 },
+    { label: '重大案例', value: majorCases.length + ' 个', x: 9.5 },
+    { label: '任务数', value: totalTasks + ' 个', x: 0.5 },
+    { label: '任务完成率', value: taskCompleteRate + '%', x: 3.5 },
+    { label: '进行中任务', value: inProgressTasks + ' 个', x: 6.5 },
+    { label: 'P1 高优先级', value: p1Tasks + ' 个', x: 9.5 }
+  ];
+  stats.forEach(function(st) {
+    s2.addShape(pptx.ShapeType.roundRect, { x: st.x, y: 1.0, w: 2.5, h: 1.5, fill: { color: 'FFFFFF' }, line: { color: 'D4C5A0', width: 1 }, rectRadius: 0.15 });
+    s2.addText(st.value, { x: st.x, y: 1.2, w: 2.5, h: 0.8, fontSize: 24, bold: true, color: 'B8965A', align: 'center' });
+    s2.addText(st.label, { x: st.x, y: 1.9, w: 2.5, h: 0.5, fontSize: 12, color: '6B5A3F', align: 'center' });
+  });
+  // Task priority table
+  var taskRows = [['任务状态', '数量', '占比']];
+  taskRows.push(['已完成', completedTasks + '', Math.round(completedTasks/Math.max(1,totalTasks)*100) + '%']);
+  taskRows.push(['进行中', inProgressTasks + '', Math.round(inProgressTasks/Math.max(1,totalTasks)*100) + '%']);
+  taskRows.push(['未开始', notStartedTasks + '', Math.round(notStartedTasks/Math.max(1,totalTasks)*100) + '%']);
+  taskRows.push(['合计', totalTasks + '', '100%']);
+  taskRows.push(['P1/P2/P3', p1Tasks + '/' + p2Tasks + '/' + p3Tasks, '']);
+  if (topTags.length > 0) taskRows.push(['常用标签', topTags.map(function(x){return '#'+x[0];}).join(' '), '']);
+  s2.addText('任务管理', { x: 0.5, y: 6.0, w: 5, h: 0.4, fontSize: 16, bold: true, color: '2D2417' });
+  s2.addTable(taskRows, { x: 0.5, y: 6.5, w: 5, h: 2.5, border: { type: 'solid', color: 'D4C5A0' }, fontSize: 11, color: '2D2417' });
+
+  // Category table
+  s2.addText('工艺记录分类', { x: 6.2, y: 6.0, w: 6, h: 0.4, fontSize: 16, bold: true, color: '2D2417' });
+  var catNames = Object.keys(catCount);
+  if (catNames.length > 0) {
+    var rows = [['工作分类', '处理量', '占比']];
+    var grandTotal = 0;
+    catNames.forEach(function(c) { grandTotal += catCount[c]; });
+    catNames.forEach(function(c) {
+      rows.push([c, catCount[c] + '', Math.round(catCount[c]/grandTotal*100) + '%']);
+    });
+    rows.push(['合计', grandTotal + '', '100%']);
+    s2.addTable(rows, { x: 6.2, y: 6.5, w: 6.3, h: 2.5, border: { type: 'solid', color: 'D4C5A0' }, fontSize: 12, color: '2D2417' });
+  }
+  
+  // ---- Slide 3: Efficiency Growth ----
+  var s3 = pptx.addSlide();
+  s3.background = { color: 'FDF9F1' };
+  s3.addText('效率成长曲线', { x: 0.5, y: 0.3, w: 12, h: 0.8, fontSize: 28, bold: true, color: '2D2417' });
+  s3.addText('月均关闭周期（天）', { x: 0.5, y: 1.1, w: 12, h: 0.4, fontSize: 14, color: '6B5A3F' });
+  // Build chart data
+  var chartData = [];
+  months.forEach(function(m, i) {
+    chartData.push({ name: m.substring(5) + '月', labels: [m.substring(5) + '月'], values: [effData[i] || 0] });
+  });
+  if (effData.some(function(v) { return v !== null; })) {
+    var validData = effData.filter(function(v) { return v !== null; });
+    var minVal = Math.min.apply(null, validData);
+    s3.addText(validData.length > 1 && validData[validData.length-1] < validData[0] ? '📉 关闭周期呈下降趋势，效率持续提升' : '📊 保持稳定水平，继续优化', { x: 0.5, y: 1.5, w: 12, h: 0.4, fontSize: 14, color: '5CB497', bold: true });
+    // Simple text-based trend display
+    var trendText = months.map(function(m, i) { return m.substring(5) + '月: ' + (effData[i] !== null ? effData[i] + '天' : '--'); }).join('  |  ');
+    s3.addText(trendText, { x: 0.5, y: 2.2, w: 12, h: 1.5, fontSize: 16, color: '2D2417', align: 'center', valign: 'middle' });
+  }
+  
+  // ---- Slide 4-6: Major Cases ----
+  var caseSlides = majorCases.slice(0, 3);
+  caseSlides.forEach(function(r, idx) {
+    var tp = typeMap[r.typeId];
+    var s = pptx.addSlide();
+    s.background = { color: 'FDF9F1' };
+    s.addText('典型案例 ' + (idx+1) + ': ' + (tp ? tp.name : '未知类型'), { x: 0.5, y: 0.3, w: 12, h: 0.8, fontSize: 24, bold: true, color: '2D2417' });
+    s.addText((r.occurredAt||'') + '  → 关闭: ' + (r.closeDate||'-'), { x: 0.5, y: 1.1, w: 12, h: 0.4, fontSize: 13, color: '6B5A3F' });
+    var yPos = 1.7;
+    var fields = [
+      { label: '🔍 根因分析', text: r.rootCause },
+      { label: '🔧 采取措施', text: r.measures },
+      { label: '✅ 效果', text: r.effect },
+      { label: '💎 避免的损失', text: r.lossAvoided }
+    ];
+    fields.forEach(function(f) {
+      if (f.text) {
+        s.addText(f.label, { x: 0.5, y: yPos, w: 12, h: 0.4, fontSize: 14, bold: true, color: 'B8965A' });
+        s.addText(f.text, { x: 0.8, y: yPos + 0.4, w: 11.4, h: 0.8, fontSize: 13, color: '2D2417' });
+        yPos += 1.3;
+      }
+    });
+  });
+  
+  // If no major cases, add a slide about daily work
+  if (caseSlides.length === 0) {
+    var s = pptx.addSlide();
+    s.background = { color: 'FDF9F1' };
+    s.addText('日常工作亮点', { x: 0.5, y: 0.3, w: 12, h: 0.8, fontSize: 28, bold: true, color: '2D2417' });
+    // List top types by count
+    var typeStats = types.map(function(t) {
+      return { name: t.icon + ' ' + t.name, count: allRecords.filter(function(r) { return r.typeId === t.id; }).reduce(function(s,r) { return s+r.count; }, 0) };
+    }).sort(function(a,b) { return b.count - a.count; }).slice(0, 8);
+    var bullets = typeStats.map(function(ts) { return ts.name + ': ' + ts.count + ' ' + (typeMap[types.find(function(t){return (t.icon+' '+t.name)===ts.name;})]||{}).unit || '次'; });
+    s.addText(bullets.map(function(b) { return '• ' + b; }).join('\n'), { x: 1, y: 1.5, w: 11, h: 4, fontSize: 16, color: '2D2417', lineSpacing: 28 });
+  }
+  
+  // ---- Final Slide: Summary ----
+  var sFinal = pptx.addSlide();
+  sFinal.background = { color: '2D2417' };
+  sFinal.addText('谢谢', { x: 0.5, y: 2.0, w: 12, h: 1, fontSize: 48, bold: true, color: 'FFFFFF', align: 'center' });
+  sFinal.addText('任务 ' + totalTasks + ' 个（完成率 ' + taskCompleteRate + '%） | 工艺记录 ' + totalRecords + ' 条（关闭率 ' + closeRate + '%） | 平均关闭 ' + avgDays + ' 天', { x: 0.5, y: 3.2, w: 12, h: 0.6, fontSize: 16, color: 'D4C5A0', align: 'center' });
+  
+  await pptx.writeFile({ fileName: '转正答辩汇报-' + toDateStr(new Date()) + '.pptx' });
+  showToast('答辩 PPT 已导出');
+}
+
 
 async function exportReportPPT() {
   if (typeof PptxGenJS === 'undefined') { showToast('PPT 库未加载'); return; }
@@ -4647,15 +5412,36 @@ async function exportReportPPT() {
   // Cover
   let slide = pptx.addSlide();
   slide.background = { color: 'FDF9F1' };
-  slide.addText('工作汇报', { x: 0.5, y: 2.5, w: 12, h: 1, fontSize: 44, bold: true, color: '2D2417', align: 'center' });
+  slide.addText('📊 数据看板', { x: 0.5, y: 2.5, w: 12, h: 1, fontSize: 44, bold: true, color: '2D2417', align: 'center' });
   slide.addText(`${from}  ~  ${to}`, { x: 0.5, y: 3.7, w: 12, h: 0.6, fontSize: 18, color: '6B5A3F', align: 'center' });
-  slide.addText(`总记录 ${records.length} 条 · ${types.length} 个任务集类型`, { x: 0.5, y: 4.4, w: 12, h: 0.5, fontSize: 14, color: '6B5A3F', align: 'center' });
+  slide.addText(`总记录 ${records.length} 条 · ${types.length} 个任务集类型 · 任务 ${todos.length} 个`, { x: 0.5, y: 4.4, w: 12, h: 0.5, fontSize: 14, color: '6B5A3F', align: 'center' });
+
+  // ---- Task Summary Slide ----
+  slide = pptx.addSlide();
+  slide.background = { color: 'FDF9F1' };
+  slide.addText('📋 任务总览', { x: 0.5, y: 0.3, w: 12, h: 0.6, fontSize: 24, bold: true, color: '2D2417' });
+  var tCompleted = todos.filter(function(t) { return t.status === 'completed'; }).length;
+  var tInProgress = todos.filter(function(t) { return t.status === 'in-progress'; }).length;
+  var tNotStarted = todos.filter(function(t) { return t.status === 'not-started'; }).length;
+  var tP1 = todos.filter(function(t) { return t.priority === 'P1'; }).length;
+  var tP2 = todos.filter(function(t) { return t.priority === 'P2'; }).length;
+  var tP3 = todos.filter(function(t) { return t.priority === 'P3'; }).length;
+  var tCompleteRate = todos.length > 0 ? Math.round(tCompleted / todos.length * 100) : 0;
+  var tRows = [];
+  tRows.push([{ text: '指标', options: { bold: true, fill: 'F4E4C3' } }, { text: '数值', options: { bold: true, fill: 'F4E4C3' } }]);
+  tRows.push(['总任务数', todos.length + '']);
+  tRows.push(['已完成', tCompleted + ' (' + tCompleteRate + '%)']);
+  tRows.push(['进行中', tInProgress + '']);
+  tRows.push(['未开始', tNotStarted + '']);
+  tRows.push(['P1/P2/P3', tP1 + ' / ' + tP2 + ' / ' + tP3]);
+  slide.addTable(tRows, { x: 2, y: 1.2, w: 9, fontSize: 14, color: '2D2417', border: { type: 'solid', pt: 0.5, color: 'EDE4CF' } });
 
   // Chart slides
   const chartSlides = [
-    { title: '各类型完成数量', chart: reportCharts.bar },
-    { title: '各类型占比', chart: reportCharts.pie },
-    { title: '每日趋势', chart: reportCharts.line }
+    { title: '工作分类分布', chart: reportCharts.categoryPie },
+    { title: '月度趋势', chart: reportCharts.monthlyBar },
+    { title: '严重程度分布', chart: reportCharts.severityDonut },
+    { title: 'SLA 达标率', chart: reportCharts.slaBar }
   ];
   for (const cs of chartSlides) {
     if (!cs.chart) continue;
@@ -4682,7 +5468,7 @@ async function exportReportPPT() {
   }
   slide.addTable(rows, { x: 1, y: 1.2, w: 11, fontSize: 13, color: '2D2417', border: { type: 'solid', pt: 0.5, color: 'EDE4CF' } });
 
-  await pptx.writeFile({ fileName: `工作汇报-${toDateStr(new Date())}.pptx` });
+  await pptx.writeFile({ fileName: `数据看板-${toDateStr(new Date())}.pptx` });
   showToast('PPT 已导出');
 }
 
@@ -5029,6 +5815,8 @@ const AI_TOOLS = [
   ,{ type:'function', function:{ name:'add_computed_column', description:'给已加载表新增一个计算列。expr 用现有列名做算术（+ - * / 括号），如 "销售额 * 0.1"。newColumn 为新列名。', parameters:{ type:'object', properties:{ sheetIndex:{type:'integer'}, newColumn:{type:'string'}, expr:{type:'string'} }, required:['newColumn','expr'] } } }
   ,{ type:'function', function:{ name:'generate_chart', description:'用 labels 和 data 生成一张图表 PNG 下载。type 取 bar/line/pie。可配合 query_excel 的结果。', parameters:{ type:'object', properties:{ type:{type:'string', enum:['bar','line','pie']}, labels:{type:'array', items:{type:'string'}}, data:{type:'array', items:{type:'number'}}, title:{type:'string'}, filename:{type:'string'} }, required:['labels','data'] } } }
   ,{ type:'function', function:{ name:'run_python', description:'在浏览器内置 Python(Pyodide) 里跑 pandas 代码做任意复杂分析。已注入：df=第一个已加载表的 DataFrame，sheets=所有表的 DataFrame 列表。要让用户下载文件就写到 /output/，用 CSV：df.to_csv("/output/result.csv", index=False)（不支持 .xlsx——要 Excel 文件请改用 export_processed_xlsx/generate_xlsx 工具）。print 的内容会返回。仅在用户已启用高级分析时可用。', parameters:{ type:'object', properties:{ code:{type:'string', description:'要执行的 Python 代码'} }, required:['code'] } } }
+  ,{ type:'function', function:{ name:'generate_defense_report', description:'基于杂项任务集的真实工作数据，生成转正答辩汇报大纲。包含：工作量总览、效率趋势、典型案例、总结建议。', parameters:{ type:'object', properties:{ period:{type:'string', description:'统计时间段，如"2026年1月-6月"'} }, required:[] } } }
+  ,{ type:'function', function:{ name:'summarize_case', description:'对指定的一条工作记录(通过id)生成案例总结，包含问题、根因、措施、效果。需提供记录id。先通过query_misc_records获取记录列表找到目标id。', parameters:{ type:'object', properties:{ recordId:{type:'integer', description:'杂项记录的id'} }, required:['recordId'] } } }
 ];
 
 function isWriteTool(name) {
@@ -5036,7 +5824,7 @@ function isWriteTool(name) {
 }
 
 function isDocTool(name){
-  return ['generate_pptx','generate_xlsx','generate_docx','export_processed_xlsx','generate_chart'].includes(name);
+  return ['generate_pptx','generate_xlsx','generate_docx','export_processed_xlsx','generate_chart','generate_defense_report','summarize_case'].includes(name);
 }
 
 function buildAISystem() {
@@ -5051,6 +5839,7 @@ function buildAISystem() {
 - 记录杂项用 add_misc_record，typeName 要对上现有类型名。
 - 写操作（增/改/删/记录）会由界面再次向用户确认，你照常调用即可，不用自己问"要不要执行"。
 - 可生成文档：generate_pptx / generate_xlsx / generate_docx。把内容组织成结构化参数。要"导出我的任务/杂项"时，先用查询工具拿真实数据，再组织成文档结构调用生成工具。生成会弹确认卡，照常调用即可。
+- 🎓 转正答辩：generate_defense_report（基于杂项数据生成答辩大纲）和 summarize_case（总结单条案例）。用户提到"答辩/转正/汇报"时主动使用。数据看板也有"导出答辩PPT"按钮生成结构化PPT。
 - 用户上传/粘贴表格后：先 inspect_excel 看结构，再 query_excel 做筛选/分组聚合/排序得到结果并解读；需要落地文件时 export_processed_xlsx 导出（会弹确认卡）。绝不臆造数据。
 - 复杂/任意分析，或需要透视、多表关联、复杂计算时，可用 run_python（浏览器内置 pandas，已注入 df 和 sheets）。简单的筛选/汇总仍优先用 query_excel（快、免加载）。run_python 仅在用户启用高级分析后可用；若返回未启用提示，请转告用户点对话框里的「⚡ 启用高级分析」按钮。要生成下载文件就写到 /output/，用 CSV（to_csv）；run_python 不支持生成 .xlsx，要 Excel 文件请改用 generate_xlsx/export_processed_xlsx。用了 run_python 后，回复里简述「我运行了这段代码…」并解读结果。
 - 回复用中文，简洁明了。`;
@@ -5248,6 +6037,12 @@ async function executeAITool(name, args) {
         if(typeof Chart==='undefined') return { ok:false, message:'图表库未加载' };
         await docGenChart(args);
         return { ok:true, message:'已生成图表 PNG' };
+      }
+      case 'generate_defense_report': {
+        return await handleDefenseReport(args);
+      }
+      case 'summarize_case': {
+        return await handleSummarizeCase(args);
       }
       case 'run_python': {
         if(!_pyodide) return { ok:false, message:'高级分析未启用。请用户点对话框里的「⚡ 启用高级分析」按钮（首次约下载 35MB）。' };
@@ -5484,6 +6279,7 @@ function renderView(view) {
     case 'gantt': renderGantt(); break;
     case 'misc': renderMisc(); break;
     case 'report': renderReport(); break;
+    case 'issues': renderIssues(); break;
     case 'mindmap': renderMindmap(); break;
   }
 }
@@ -5506,6 +6302,12 @@ function updateNavBadges() {
     return true;
   }).length;
   document.getElementById('navCountDaily').textContent = activeToday;
+  var issueBadge = document.getElementById('navCountIssues');
+  if (issueBadge) {
+    var openIssues = issues ? issues.filter(function(x) { return x.status === 'open'; }).length : 0;
+    issueBadge.textContent = openIssues;
+    issueBadge.style.display = openIssues > 0 ? '' : 'none';
+  }
   const miscBadge = document.getElementById('navCountMisc');
   if (miscBadge) {
     const todayMisc = miscRecords.filter(r => r.occurredAt === todayStr).reduce((s, r) => s + r.count, 0);
@@ -5670,7 +6472,7 @@ const cmdK = {
       { name: '日历表', view: 'calendar', icon: '◷' },
       { name: '甘特图', view: 'gantt', icon: '▦' },
       { name: '杂项任务集', view: 'misc', icon: '☑' },
-      { name: '工作汇报', view: 'report', icon: '📊' },
+      { name: '📊 数据看板', view: 'report', icon: '📊' },
     ]) {
       if (!q || v.name.includes(q)) {
         items.push({ label: v.name, hint: '跳转', action: () => { switchView(v.view); this.close(); }, icon: v.icon });
@@ -5825,6 +6627,7 @@ document.addEventListener('keydown', function(e) {
       else if (ev.key === 'o') switchView('list');
       else if (ev.key === 'c') switchView('calendar');
       else if (ev.key === 'g') switchView('gantt');
+      else if (ev.key === 'i') switchView('issues');
       else if (ev.key === 'm') switchView('mindmap');
       else if (ev.key === 'x') switchView('misc');
       else if (ev.key === 'r') switchView('report');
@@ -5970,6 +6773,33 @@ async function initApp() {
 
   // Wait so any error surfaces
   await miscLoadPromise;
+
+  // ONE-TIME CLEANUP: delete records before 2026-06-26
+  try {
+    if (!localStorage.getItem('cleanup_20260626_done')) {
+      var cutoff = '2026-06-26';
+      // Clean miscRecords
+      var miscBefore = miscRecords.length;
+      miscRecords = miscRecords.filter(function(r) { return r.occurredAt >= cutoff; });
+      saveMiscLocal('todo_misc_records', miscRecords);
+      console.log('CLEANUP: miscRecords ' + miscBefore + ' -> ' + miscRecords.length);
+      // Clean issues
+      var issueBefore = (typeof issues !== 'undefined' && issues) ? issues.length : 0;
+      if (typeof issues !== 'undefined' && issues) {
+        issues = issues.filter(function(r) { return (r.createdAt || '').substring(0,10) >= cutoff; });
+        saveIssuesLocal();
+        console.log('CLEANUP: issues ' + issueBefore + ' -> ' + issues.length);
+      }
+      // Try to delete from Supabase
+      if (supabaseClient) {
+        try { await supabaseClient.from('misc_task_records').delete().lt('occurred_at', cutoff); } catch(e) {}
+        try { await supabaseClient.from('issue_collections').delete().lt('created_at', cutoff + 'T00:00:00Z'); } catch(e) {}
+      }
+      localStorage.setItem('cleanup_20260626_done', '1');
+      console.log('CLEANUP: Done. Reloading...');
+      location.reload();
+    }
+  } catch(e) { console.warn('Cleanup error:', e); }
 }
 
 initApp().catch(e => {
@@ -6005,14 +6835,209 @@ initApp().catch(e => {
   })();
 </script>
 <script>
-// --- Mind Map Data Layer ---
+// ---- Issue Collection Data Layer ----
+const ISSUES_KEY = 'issue_collections';
+let issues = [];
+let issuePendingImages = [];
+
+function loadIssuesLocal() {
+  try { return JSON.parse(localStorage.getItem(ISSUES_KEY)) || []; }
+  catch { return []; }
+}
+function saveIssuesLocal() {
+  localStorage.setItem(ISSUES_KEY, JSON.stringify(issues));
+}
+async function loadIssuesCloud() {
+  if (!supabaseClient) return;
+  try {
+    var { data, error } = await supabaseClient.from('issue_collections').select('*').order('created_at', { ascending: false });
+    if (!error && data && data.length > 0) {
+      var cloudIssues = data.map(function(r) {
+        return { id: r.id, title: r.title, description: r.description || '', images: r.images || [], createdAt: r.created_at, status: r.status || 'open' };
+      });
+      var localMap = {};
+      issues.forEach(function(x) { localMap[x.id] = x; });
+      cloudIssues.forEach(function(ci) {
+        if (localMap[ci.id]) { ci.description = localMap[ci.id].description || ci.description; ci.status = localMap[ci.id].status || ci.status; }
+      });
+      issues = cloudIssues;
+      saveIssuesLocal();
+    } else if (issues.length > 0) {
+      for (var i2 = 0; i2 < issues.length; i2++) {
+        await supabaseClient.from('issue_collections').upsert({
+          id: issues[i2].id, title: issues[i2].title, description: issues[i2].description,
+          images: issues[i2].images || [], created_at: issues[i2].createdAt, status: issues[i2].status
+        }, { onConflict: 'id' });
+      }
+    }
+  } catch(e) { console.warn('Issues cloud load failed:', e); }
+}
+
+async function saveIssue() {
+  var title = document.getElementById('issueTitle').value.trim();
+  var desc = document.getElementById('issueDesc').value.trim();
+  if (!title) { showToast('请输入问题标题'); return; }
+  var now = new Date().toISOString();
+  var issue = { id: crypto.randomUUID ? crypto.randomUUID() : 'i' + Date.now(), title: title, description: desc, images: issuePendingImages.slice(), createdAt: now, status: 'open' };
+  issues.unshift(issue);
+  issuePendingImages = [];
+  saveIssuesLocal();
+  if (supabaseClient) {
+    try { await supabaseClient.from('issue_collections').upsert({ id: issue.id, title: issue.title, description: issue.description, images: issue.images, created_at: issue.createdAt, status: issue.status }, { onConflict: 'id' }); }
+    catch(e) { console.warn('saveIssue cloud failed:', e); }
+  }
+  document.getElementById('issueTitle').value = '';
+  document.getElementById('issueDesc').value = '';
+  renderIssueImages();
+  renderIssues();
+  updateNavBadges();
+  showToast('问题已保存');
+}
+
+async function toggleIssueStatus(id) {
+  var issue = issues.find(function(x) { return x.id === id; });
+  if (!issue) return;
+  issue.status = issue.status === 'closed' ? 'open' : 'closed';
+  saveIssuesLocal();
+  if (supabaseClient) {
+    try { await supabaseClient.from('issue_collections').update({ status: issue.status }).eq('id', id); }
+    catch(e) { console.warn('toggleIssue cloud failed:', e); }
+  }
+  renderIssues();
+}
+
+async function deleteIssue(id) {
+  if (!confirm('确定删除这个问题？')) return;
+  issues = issues.filter(function(x) { return x.id !== id; });
+  saveIssuesLocal();
+  if (supabaseClient) {
+    try { await supabaseClient.from('issue_collections').delete().eq('id', id); }
+    catch(e) { console.warn('deleteIssue cloud failed:', e); }
+  }
+  renderIssues();
+}
+
+function renderIssueImages() {
+  var list = document.getElementById('issueImageList');
+  var hint = document.querySelector('#issueImageZone .issue-image-hint');
+  var count = document.getElementById('issueImgCount');
+  if (list) {
+    list.innerHTML = issuePendingImages.map(function(img, i) {
+      return '<div class="issue-thumb"><img src="' + img + '"><button class="issue-thumb-del" onclick="event.stopPropagation(); issuePendingImages.splice(' + i + ',1); renderIssueImages();">x</button></div>';
+    }).join('');
+  }
+  if (hint) hint.style.display = issuePendingImages.length > 0 ? 'none' : '';
+  if (count) count.textContent = issuePendingImages.length > 0 ? issuePendingImages.length + ' 张图片待添加' : '';
+}
+
+// Image paste handler for issue module
+(function() {
+  var zone = document.getElementById('issueImageZone');
+  if (!zone) return;
+  zone.addEventListener('click', function() { zone.focus(); });
+  zone.addEventListener('paste', function(e) {
+    var items = e.clipboardData && e.clipboardData.items;
+    if (!items) return;
+    for (var i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf('image') === 0) {
+        e.preventDefault();
+        var blob = items[i].getAsFile();
+        // Limit image size to ~500KB
+        var reader = new FileReader();
+        reader.onload = function(ev) {
+          var dataUrl = ev.target.result;
+          if (dataUrl.length > 600000) {
+            // Resize large images
+            var img = new Image();
+            img.onload = function() {
+              var canvas = document.createElement('canvas');
+              var scale = Math.min(1, 600000 / dataUrl.length);
+              canvas.width = img.width * scale;
+              canvas.height = img.height * scale;
+              var ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+              issuePendingImages.push(canvas.toDataURL('image/jpeg', 0.7));
+              renderIssueImages();
+            };
+            img.src = dataUrl;
+          } else {
+            issuePendingImages.push(dataUrl);
+            renderIssueImages();
+          }
+        };
+        reader.readAsDataURL(blob);
+        return;
+      }
+    }
+  });
+  // Drag and drop
+  zone.addEventListener('dragover', function(e) { e.preventDefault(); zone.classList.add('drag-over'); });
+  zone.addEventListener('dragleave', function() { zone.classList.remove('drag-over'); });
+  zone.addEventListener('drop', function(e) {
+    e.preventDefault(); zone.classList.remove('drag-over');
+    var files = e.dataTransfer.files;
+    for (var j = 0; j < files.length; j++) {
+      if (files[j].type.indexOf('image') === 0) {
+        var reader2 = new FileReader();
+        reader2.onload = function(ev2) { issuePendingImages.push(ev2.target.result); renderIssueImages(); };
+        reader2.readAsDataURL(files[j]);
+      }
+    }
+  });
+})();
+
+function renderIssues() {
+  var panel = document.getElementById('view-issues');
+  if (!panel || panel.style.display === 'none') return;
+  var filter = document.getElementById('issueFilter') ? document.getElementById('issueFilter').value : 'all';
+  var filtered = filter === 'all' ? issues : issues.filter(function(x) { return x.status === filter; });
+  var c = document.getElementById('issuesContent');
+  if (!c) return;
+  if (filtered.length === 0) {
+    c.innerHTML = '<div class="report-empty">暂无问题记录。<br>在上方输入问题标题和描述，可粘贴图片。</div>';
+    return;
+  }
+  var html = '';
+  for (var i3 = 0; i3 < filtered.length; i3++) {
+    var issue = filtered[i3];
+    var dateStr = issue.createdAt ? issue.createdAt.substring(0, 10) : '';
+    html += '<div class="issue-card">' +
+      '<div class="issue-head">' +
+        '<span class="issue-title">' + escHtml(issue.title) + '</span>' +
+        '<span class="issue-date">' + dateStr + '</span>' +
+      '</div>';
+    if (issue.description) html += '<div class="issue-desc">' + escHtml(issue.description).replace(/\n/g, '<br>') + '</div>';
+    if (issue.images && issue.images.length > 0) {
+      html += '<div class="issue-thumbs">';
+      issue.images.forEach(function(img) {
+        html += '<img src="' + img + '" onclick="window.open(this.src)">';
+      });
+      html += '</div>';
+    }
+    html += '<div class="issue-actions">' +
+      '<span class="issue-badge ' + (issue.status === 'closed' ? 'issue-badge-closed' : 'issue-badge-open') + '">' + (issue.status === 'closed' ? '已解决' : '未解决') + '</span>' +
+      '<button class="btn btn-ghost btn-sm" onclick="toggleIssueStatus(\'' + issue.id + '\')">' + (issue.status === 'closed' ? '重开' : '解决') + '</button>' +
+      '<button class="btn btn-ghost btn-sm" style="color:var(--red);" onclick="deleteIssue(\'' + issue.id + '\')">删除</button>' +
+      '</div></div>';
+  }
+  c.innerHTML = html;
+}
+
+// Init issues on load
+function initIssues() {
+  try {
+    issues = loadIssuesLocal();
+    loadIssuesCloud();
+  } catch(e) { console.warn('initIssues error:', e); }
+}
+// Defer to avoid blocking other init
+setTimeout(function() { initIssues(); }, 100);
+
+// ---- Mind Map Data Layer ----
 const MINDMAPS_KEY = 'mindmaps';
 let mindmaps = [];
 let currentMapId = null;
-let mindmapLayout = 'tree';
-let mmScale = 1;
-let mmOffsetX = 0, mmOffsetY = 0;
-let mmContextNodeId = null;
+let mindElixirInstance = null;
 
 function nextMapId() { return mindmaps.length > 0 ? Math.max(...mindmaps.map(m => m.id)) + 1 : 1; }
 function nextNodeId() { return 'n' + Date.now() + '_' + Math.random().toString(36).slice(2, 6); }
@@ -6069,7 +7094,10 @@ async function syncAllMapsUp() {
 
 function createMap(name) {
   const now = Date.now();
-  const map = { id: nextMapId(), name, createdAt: now, updatedAt: now, nodes: [] };
+  const rootId = nextNodeId();
+  const map = { id: nextMapId(), name, createdAt: now, updatedAt: now, nodes: [
+    { id: rootId, label: name, parentId: null, x: 0, y: 0, taskId: null, color: null, collapsed: false }
+  ]};
   mindmaps.push(map);
   saveMapsLocal();
   saveMapCloud(map);
@@ -6129,399 +7157,396 @@ document.getElementById('mmProjectSelect')?.addEventListener('change', (e) => {
   const id = parseInt(e.target.value);
   if (id) switchMap(id);
 });
-document.getElementById('mmBtnTree')?.addEventListener('click', () => { mindmapLayout = 'tree'; updateLayoutButtons(); relayoutAll(); renderMindmap(); });
-document.getElementById('mmBtnRadial')?.addEventListener('click', () => { mindmapLayout = 'radial'; updateLayoutButtons(); relayoutAll(); renderMindmap(); });
-function updateLayoutButtons() {
-  document.getElementById('mmBtnTree')?.classList.toggle('active', mindmapLayout === 'tree');
-  document.getElementById('mmBtnRadial')?.classList.toggle('active', mindmapLayout === 'radial');
-}
 
-// --- Mind Map Layout (XMind two-pass: bottom-up dims, top-down pos) ---
-const MM_NODE_W = 140, MM_NODE_H = 44, MM_GAP_X = 24, MM_GAP_Y = 96;
-// Per-node computed layout data (cached during layout, not persisted)
-let _mmLayout = {}; // nodeId -> {w, h, cleft, ctop}
-
-function _computeLayout(node, map) {
-  if (_mmLayout[node.id]) return _mmLayout[node.id];
-  const children = map.nodes.filter(n => n.parentId === node.id && !n.collapsed);
-  let w = MM_NODE_W, h = MM_NODE_H;
-  if (children.length > 0) {
-    let totalChildW = 0, maxChildH = 0;
-    for (const c of children) { const d = _computeLayout(c, map); totalChildW += d.w; maxChildH = Math.max(maxChildH, d.h); }
-    w = Math.max(MM_NODE_W, totalChildW + (children.length - 1) * MM_GAP_X);
-    h = MM_NODE_H + MM_GAP_Y + maxChildH;
-  }
-  const cleft = w / 2;
-  return (_mmLayout[node.id] = { w, h, cleft, ctop: MM_NODE_H / 2 });
-}
-
-function _assignPositions(node, x, y, map) {
-  const d = _mmLayout[node.id] || { w: MM_NODE_W, h: MM_NODE_H, cleft: MM_NODE_W / 2, ctop: MM_NODE_H / 2 };
-  node.x = x; node.y = y;
-  const children = map.nodes.filter(n => n.parentId === node.id && !n.collapsed);
-  if (children.length === 0) return;
-  let cx = x - d.cleft;
-  for (const child of children) {
-    const cd = _mmLayout[child.id] || { w: MM_NODE_W, cleft: MM_NODE_W / 2 };
-    _assignPositions(child, cx + cd.cleft, y + MM_GAP_Y + MM_NODE_H, map);
-    cx += cd.w + MM_GAP_X;
-  }
-}
-
-function layoutTree(map) {
-  _mmLayout = {};
-  const roots = map.nodes.filter(n => !n.parentId);
-  let rx = 200;
-  for (const root of roots) {
-    const d = _computeLayout(root, map);
-    _assignPositions(root, rx + d.cleft, 60, map);
-    rx += d.w + 80;
-  }
-}
-
-// ---- Radial Layout ----
-function layoutRadial(map) {
-  _mmLayout = {};
-  const roots = map.nodes.filter(n => !n.parentId);
-  const CX = 500, CY = 350, R = 180;
-  let angleOffset = -Math.PI / 2;
-  for (const root of roots) {
-    root.x = CX; root.y = CY;
-    const children = map.nodes.filter(n => n.parentId === root.id && !n.collapsed);
-    if (children.length > 0) {
-      _radialPosition(children, CX, CY, R, angleOffset, 2 * Math.PI / roots.length, map, R * 0.85);
+// ---- Flat ↔ Nested Conversion ----
+function flatToMindElixir(nodes) {
+  if (!nodes || nodes.length === 0) return null;
+  const lookup = {};
+  for (const n of nodes) {
+    lookup[n.id] = {
+      id: n.id,
+      topic: n.label || '未命名',
+      children: [],
+      expanded: n.collapsed === true ? false : true,
+      direction: 2,
+    };
+    lookup[n.id].style = {};
+    if (n.color) { lookup[n.id].style.background = n.color; lookup[n.id].style.color = '#fff'; }
+    // Restore font formatting from persisted _style
+    if (n._style) {
+      if (n._style.fontWeight) lookup[n.id].style.fontWeight = n._style.fontWeight;
+      if (n._style.fontStyle) lookup[n.id].style.fontStyle = n._style.fontStyle;
+      if (n._style.fontSize) lookup[n.id].style.fontSize = n._style.fontSize;
+      if (n._style.color) lookup[n.id].style.color = n._style.color;
     }
-    angleOffset += 2 * Math.PI / Math.max(roots.length, 1);
+    if (n.taskId) { lookup[n.id]._taskId = n.taskId; lookup[n.id].tags = ['🔗']; }
   }
-}
-function _radialPosition(children, px, py, r, startAngle, arcSpan, map, rStep) {
-  const n = children.length;
-  for (let i = 0; i < n; i++) {
-    const a = startAngle + (n > 1 ? (i / (n - 1)) * arcSpan : startAngle + arcSpan / 2);
-    children[i].x = px + r * Math.cos(a); children[i].y = py + r * Math.sin(a);
-    const grand = map.nodes.filter(c => c.parentId === children[i].id && !c.collapsed);
-    if (grand.length > 0) {
-      _radialPosition(grand, children[i].x, children[i].y, rStep * 0.8, a - arcSpan / 3, arcSpan * 2 / 3, map, rStep * 0.7);
+  const roots = [];
+  for (const n of nodes) {
+    if (n.parentId && lookup[n.parentId]) {
+      lookup[n.parentId].children.push(lookup[n.id]);
+    } else {
+      roots.push(lookup[n.id]);
     }
   }
+  if (roots.length === 0) return null;
+  if (roots.length === 1) return roots[0];
+  // Multiple roots → virtual wrapper
+  return {
+    id: 'virtual-root',
+    topic: '思维导图',
+    children: roots,
+    expanded: true,
+    direction: 2,
+  };
 }
 
-// --- Mind Map Rendering ---
+function mindElixirToFlat(nodeData) {
+  const nodes = [];
+  function walk(node, parentId) {
+    if (node.id !== 'virtual-root') {
+      nodes.push({
+        id: node.id,
+        label: node.topic || '未命名',
+        parentId: parentId || null,
+        x: 0, y: 0,
+        color: node.style && node.style.background ? node.style.background : (node.style && node.style.color ? node.style.color : null),
+        taskId: node._taskId || null,
+        collapsed: node.expanded === false,
+      });
+      // Persist font formatting for round-trip
+      if (node.style) {
+        var s = {};
+        if (node.style.fontWeight && node.style.fontWeight !== 'normal') s.fontWeight = node.style.fontWeight;
+        if (node.style.fontStyle && node.style.fontStyle !== 'normal') s.fontStyle = node.style.fontStyle;
+        if (node.style.fontSize) s.fontSize = node.style.fontSize;
+        if (node.style.color && node.style.color !== '#1f2630') s.color = node.style.color;
+        if (Object.keys(s).length > 0) nodes[nodes.length-1]._style = s;
+      }
+    }
+    const pid = node.id === 'virtual-root' ? null : node.id;
+    if (node.children) {
+      for (const child of node.children) walk(child, pid);
+    }
+  }
+  if (nodeData) walk(nodeData, null);
+  return nodes;
+}
+
+// ---- Mind Elixir Rendering ----
+function destroyMindElixir() {
+  if (mindElixirInstance) {
+    mindElixirInstance = null;
+  }
+}
+
 function renderMindmap() {
   const panel = document.getElementById('view-mindmap');
   if (!panel || panel.style.display === 'none') return;
+
   const map = getCurrentMap();
-  const inner = document.getElementById('mmCanvasInner');
-  const svg = document.getElementById('mmSvg');
+  const container = document.getElementById('mmMapContainer');
   const hint = document.getElementById('mmEmptyHint');
+
+  // Clear previous instance
+  if (container) container.innerHTML = '';
+  destroyMindElixir();
+
   if (!map || map.nodes.length === 0) {
-    if (inner) inner.innerHTML = '';
-    if (svg) svg.innerHTML = '';
     if (hint) hint.style.display = 'flex';
-    document.getElementById('mmNodeCount').textContent = '0 节点';
+    const nc = document.getElementById('mmNodeCount'); if (nc) nc.textContent = '0 节点';
     return;
   }
+
   if (hint) hint.style.display = 'none';
-  // NOTE: layout is only applied on mode toggle, not every render
-  // so manual node positions are preserved across drags
-  document.getElementById('mmNodeCount').textContent = map.nodes.length + ' 节点';
-  renderMindmapNodes(map);
-  renderMindmapConnections(map);
-  applyCanvasTransform();
-}
+  const nc = document.getElementById('mmNodeCount'); if (nc) nc.textContent = map.nodes.length + ' 节点';
 
-function renderMindmapNodes(map) {
-  const inner = document.getElementById('mmCanvasInner');
-  let html = '';
-  for (const n of map.nodes) {
-    const hasTask = n.taskId && todos.some(t => t.id === n.taskId);
-    const colorStyle = n.color ? 'border-left: 3px solid ' + n.color + ';' : '';
-    const childCount = map.nodes.filter(c => c.parentId === n.id).length;
-    html += '<div class="mm-node' + (hasTask ? ' has-task' : '') + '" data-id="' + n.id + '" style="transform:translate(' + n.x + 'px,' + n.y + 'px);" data-nx="' + n.x + '" data-ny="' + n.y + '">'
-      + '<div class="mm-node-body" style="' + colorStyle + '">'
-      + (childCount > 0 ? '<span class="mm-collapse' + (n.collapsed ? ' collapsed' : '') + '" data-action="toggleCollapse">▾</span>' : '<span style="width:16px;flex-shrink:0;"></span>')
-      + '<span class="mm-label">' + escapeHtml(n.label || '未命名') + '</span>'
-      + (hasTask ? '<span class="mm-task-badge" data-action="gotoTask" data-taskid="' + n.taskId + '">\u{1f517}</span>' : '')
-      + '</div>'
-      + '<div class="mm-connector-out" data-action="connector"></div>'
-      + '</div>';
-  }
-  inner.innerHTML = html;
-}
-
-function renderMindmapConnections(map) {
-  const svg = document.getElementById('mmSvg');
-  const canvas = document.getElementById('mmCanvas');
-  if (!svg || !canvas) return;
-  // Set SVG viewport to match canvas area so coordinates map 1:1
-  svg.setAttribute('viewBox', '0 0 ' + canvas.clientWidth + ' ' + canvas.clientHeight);
-  svg.setAttribute('width', canvas.clientWidth);
-  svg.setAttribute('height', canvas.clientHeight);
-  // clear all existing connection lines (keep temp line if any)
-  svg.querySelectorAll('.mm-conn-line').forEach(l => l.remove());
-  const NS = 'http://www.w3.org/2000/svg';
-  for (const n of map.nodes) {
-    if (!n.parentId) continue;
-    const parent = map.nodes.find(p => p.id === n.parentId);
-    if (!parent || parent.collapsed) continue;
-    // SVG coords match canvas-inner coords (both at top:52px, viewBox aligned)
-    // Apply current zoom/pan transform to match node visual position
-    const px = parent.x * mmScale + mmOffsetX, py = parent.y * mmScale + mmOffsetY;
-    const cx = n.x * mmScale + mmOffsetX, cy = n.y * mmScale + mmOffsetY;
-    // Parent bottom-center → child top-center
-    const x1 = px + MM_NODE_W / 2, y1 = py + MM_NODE_H;
-    const x2 = cx + MM_NODE_W / 2, y2 = cy;
-    const el = document.createElementNS(NS, 'path');
-    const my = (y1 + y2) / 2;
-    el.setAttribute('d', 'M' + x1 + ',' + y1 + ' C' + x1 + ',' + my + ' ' + x2 + ',' + my + ' ' + x2 + ',' + y2);
-    el.setAttribute('class', 'mm-conn-line');
-    el.setAttribute('stroke', '#c8a86c');
-    el.setAttribute('stroke-width', '2.5');
-    el.setAttribute('stroke-opacity', '0.7');
-    el.setAttribute('fill', 'none');
-    el.setAttribute('stroke-linecap', 'round');
-    svg.appendChild(el);
-    drawnCount++;
-  }
-}
-
-// --- Mind Map Interactions ---
-document.getElementById('mmCanvas')?.addEventListener('contextmenu', (e) => {
-  e.preventDefault();
-  const nodeEl = e.target.closest('.mm-node');
-  if (!nodeEl) return;
-  mmContextNodeId = nodeEl.dataset.id;
-  const menu = document.getElementById('mmContextMenu');
-  menu.style.display = 'block';
-  menu.style.left = e.clientX + 'px';
-  menu.style.top = e.clientY + 'px';
-});
-document.addEventListener('click', () => {
-  const m = document.getElementById('mmContextMenu'); if (m) m.style.display = 'none';
-  const cp = document.getElementById('mmColorPanel'); if (cp) cp.style.display = 'none';
-});
-document.getElementById('mmContextMenu')?.addEventListener('click', (e) => {
-  e.stopPropagation();
-  const action = e.target.closest('[data-action]')?.dataset.action;
-  const map = getCurrentMap();
-  const nodeId = mmContextNodeId;
-  if (!map || !nodeId || !action) return;
-  const node = map.nodes.find(n => n.id === nodeId);
-  if (!node && action !== 'delete') return;
-  switch (action) {
-    case 'addChild': {
-      const newNode = { id: nextNodeId(), label: '新节点', parentId: nodeId, x: (node?.x || 400), y: (node?.y || 300), taskId: null, color: null, collapsed: false };
-      map.nodes.push(newNode); map.updatedAt = Date.now();
-      relayoutAll(); // auto-arrange after adding
-      saveMapsLocal(); saveMapCloud(map); renderMindmap(); break;
-    }
-    case 'edit': startInlineEdit(nodeId); break;
-    case 'color': {
-      // show custom color panel near context menu
-      const menu = document.getElementById('mmContextMenu');
-      const panel = document.getElementById('mmColorPanel');
-      panel.style.display = 'block';
-      panel.style.left = (parseInt(menu.style.left) + 170) + 'px';
-      panel.style.top = menu.style.top;
-      window._mmColorTargetId = nodeId;
-      break;
-    }
-    case 'collapse': node.collapsed = !node.collapsed; map.updatedAt = Date.now(); saveMapsLocal(); saveMapCloud(map); renderMindmap(); break;
-    case 'delete': {
-      const delRecursive = (nid) => { map.nodes = map.nodes.filter(n => n.id !== nid); map.nodes.filter(n => n.parentId === nid).forEach(c => delRecursive(c.id)); };
-      delRecursive(nodeId); map.updatedAt = Date.now();
-      saveMapsLocal(); saveMapCloud(map); renderMindmap(); break;
-    }
-  }
-  document.getElementById('mmContextMenu').style.display = 'none';
-});
-
-function startInlineEdit(nodeId) {
-  const el = document.querySelector('.mm-node[data-id="' + nodeId + '"] .mm-label');
-  if (!el) return;
-  const oldText = el.textContent;
-  el.innerHTML = '<input class="mm-label-input" value="' + escapeHtml(oldText) + '" id="mmInlineInput">';
-  const inp = document.getElementById('mmInlineInput');
-  inp.focus(); inp.select();
-  inp.addEventListener('blur', () => finishInlineEdit(nodeId, inp.value, oldText));
-  inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); finishInlineEdit(nodeId, inp.value, oldText); } if (e.key === 'Escape') finishInlineEdit(nodeId, oldText, oldText); });
-}
-function finishInlineEdit(nodeId, newLabel, fallback) {
-  const map = getCurrentMap();
-  if (!map) return;
-  const text = newLabel.trim() || fallback;
-  const node = map.nodes.find(n => n.id === nodeId);
-  if (node) { node.label = text; map.updatedAt = Date.now(); saveMapsLocal(); saveMapCloud(map); }
-  renderMindmap();
-}
-
-document.getElementById('mmCanvas')?.addEventListener('dblclick', (e) => {
-  const map = getCurrentMap();
-  if (!map) return;
-  const nodeEl = e.target.closest('.mm-node');
-  const collapseEl = e.target.closest('.mm-collapse');
-  const taskBadge = e.target.closest('.mm-task-badge');
-  if (collapseEl) {
-    const nid = nodeEl?.dataset.id;
-    if (nid) { const n = map.nodes.find(nd => nd.id === nid); if (n) { n.collapsed = !n.collapsed; map.updatedAt = Date.now(); saveMapsLocal(); saveMapCloud(map); renderMindmap(); } }
+  const data = flatToMindElixir(map.nodes);
+  if (!data) {
+    if (hint) hint.style.display = 'flex';
     return;
   }
-  if (taskBadge) {
-    const tid = parseInt(taskBadge.dataset.taskid);
-    if (tid) { switchView('list'); setTimeout(() => { openDetail(tid); }, 100); }
+
+  if (typeof MindElixir === 'undefined') {
+    console.warn('MindElixir not loaded yet, retrying in 200ms');
+    setTimeout(renderMindmap, 200);
     return;
   }
-  if (nodeEl) {
-    startInlineEdit(nodeEl.dataset.id);
-  } else {
-    const canvas = document.getElementById('mmCanvas');
-    const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left - mmOffsetX) / mmScale - 60;
-    const y = (e.clientY - rect.top - mmOffsetY) / mmScale - 19;
-    const newNode = { id: nextNodeId(), label: '新节点', parentId: null, x, y, taskId: null, color: null, collapsed: false };
-    map.nodes.push(newNode); map.updatedAt = Date.now();
-    saveMapsLocal(); saveMapCloud(map); renderMindmap();
+
+  // MindElixir IIFE exports as { default: Constructor, ... }, not a bare constructor
+  var ME = MindElixir.default || MindElixir;
+  var ME_DIR = ME.RIGHT || (MindElixir.RIGHT) || 2;
+
+  try {
+    mindElixirInstance = new ME({
+      el: '#mmMapContainer',
+      direction: ME_DIR,
+      toolBar: false,
+      keypress: true,
+      overflowHidden: false,
+      contextMenu: { focus: true, link: true },
+      theme: {
+        name: 'WarmCream',
+        palette: ['#b8965a','#c8a679','#d9c9a8','#5cb497','#5b9bd5','#9b7ad4','#e8a24a','#e89ab8','#e06a60','#f0c94a'],
+        cssVar: {
+          '--main-color': '#1f2630',
+          '--main-bgcolor': 'rgba(255,255,255,0.85)',
+          '--main-bgcolor-transparent': 'rgba(255,255,255,0.6)',
+          '--main-radius': '12px',
+          '--root-color': '#ffffff',
+          '--root-bgcolor': '#b8965a',
+          '--root-radius': '16px',
+          '--color': '#565f6b',
+          '--bgcolor': 'transparent',
+          '--panel-color': '#1f2630',
+          '--panel-bgcolor': 'transparent',
+          '--panel-border-color': '#e5e8ec',
+          '--accent-color': '#b8965a',
+          '--map-padding': '30px 40px',
+        }
+      }
+    });
+
+    mindElixirInstance.init({ nodeData: data });
+
+    // Sync changes back to flat data on every operation
+    mindElixirInstance.bus.addListener('operation', function() {
+      const curMap = getCurrentMap();
+      if (!curMap || !mindElixirInstance) return;
+      try {
+        var nd = mindElixirInstance.getData();
+        curMap.nodes = mindElixirToFlat(nd && nd.nodeData ? nd.nodeData : nd);
+        curMap.updatedAt = Date.now();
+        var nc2 = document.getElementById('mmNodeCount'); if (nc2) nc2.textContent = curMap.nodes.length + ' 节点';
+        saveMapsLocal();
+        saveMapCloud(curMap);
+      } catch(e) { console.warn('mindmap op sync failed:', e); }
+    });
+
+    // ---- Node color selection ----
+    var _mmSelNodeId = null;
+    var mmColorBar = document.getElementById('mmColorBar');
+
+    function _mmFindNode(root, id) {
+      if (!root) return null;
+      if (root.id === id) return root;
+      if (root.children) {
+        for (var i = 0; i < root.children.length; i++) {
+          var f = _mmFindNode(root.children[i], id);
+          if (f) return f;
+        }
+      }
+      return null;
+    }
+
+    mindElixirInstance.bus.addListener('selectNodes', function(nodes) {
+      _mmSelNodeId = (nodes && nodes.length > 0) ? nodes[0].id : null;
+      if (mmColorBar) mmColorBar.style.display = _mmSelNodeId ? 'flex' : 'none';
+      _mmUpdateFormatBar();
+    });
+
+    function _mmGetSelectedNode() {
+      if (!_mmSelNodeId || !mindElixirInstance) return null;
+      var nd = mindElixirInstance.getData();
+      var root = nd && nd.nodeData ? nd.nodeData : nd;
+      return _mmFindNode(root, _mmSelNodeId);
+    }
+
+    function _mmApplyAndRefresh(root, target, fn) {
+      if (!target.style) target.style = {};
+      fn(target.style);
+      var nd = mindElixirInstance.getData();
+      mindElixirInstance.refresh(nd);
+      var curMap = getCurrentMap();
+      if (curMap) {
+        curMap.nodes = mindElixirToFlat(root);
+        curMap.updatedAt = Date.now();
+        saveMapsLocal(); saveMapCloud(curMap);
+      }
+    }
+
+    function _mmUpdateFormatBar() {
+      if (!mmColorBar || !_mmSelNodeId || !mindElixirInstance) return;
+      var target = _mmGetSelectedNode();
+      var s = (target && target.style) ? target.style : {};
+      // Update color dots
+      var curBg = s.background || '';
+      mmColorBar.querySelectorAll('.mm-color-dot').forEach(function(d) {
+        d.classList.toggle('active', (d.dataset.bg || '') === curBg);
+      });
+      // Update bold/italic buttons
+      var boldBtn = mmColorBar.querySelector('[data-fmt="bold"]');
+      var italicBtn = mmColorBar.querySelector('[data-fmt="italic"]');
+      if (boldBtn) boldBtn.classList.toggle('active', s.fontWeight === 'bold');
+      if (italicBtn) italicBtn.classList.toggle('active', s.fontStyle === 'italic');
+      // Update font color input
+      var tcInput = document.getElementById('mmTextColor');
+      if (tcInput) {
+        var currentColor = s.color || '#1f2630';
+        if (currentColor !== tcInput.value) tcInput.value = currentColor;
+      }
+    }
+
+    if (mmColorBar) {
+      mmColorBar.addEventListener('click', function(e) {
+        if (!_mmSelNodeId || !mindElixirInstance) return;
+
+        // Color dot click
+        var dot = e.target.closest('.mm-color-dot');
+        if (dot) {
+          var bg = dot.dataset.bg || undefined;
+          var nd = mindElixirInstance.getData();
+          var root = nd && nd.nodeData ? nd.nodeData : nd;
+          var target = _mmFindNode(root, _mmSelNodeId);
+          if (target) {
+            if (!target.style) target.style = {};
+            if (bg) { target.style.background = bg; target.style.color = '#fff'; }
+            else { delete target.style.background; delete target.style.color; }
+            mindElixirInstance.refresh(nd);
+            var curMap = getCurrentMap();
+            if (curMap) {
+              curMap.nodes = mindElixirToFlat(root);
+              curMap.updatedAt = Date.now();
+              saveMapsLocal(); saveMapCloud(curMap);
+            }
+            _mmUpdateFormatBar();
+          }
+          return;
+        }
+
+        // Format button click
+        var btn = e.target.closest('.mm-fmt-btn');
+        if (!btn) return;
+        var fmt = btn.dataset.fmt;
+        var nd = mindElixirInstance.getData();
+        var root = nd && nd.nodeData ? nd.nodeData : nd;
+        var target = _mmFindNode(root, _mmSelNodeId);
+        if (!target) return;
+        if (!target.style) target.style = {};
+
+        switch (fmt) {
+          case 'bold':
+            target.style.fontWeight = target.style.fontWeight === 'bold' ? 'normal' : 'bold';
+            break;
+          case 'italic':
+            target.style.fontStyle = target.style.fontStyle === 'italic' ? 'normal' : 'italic';
+            break;
+          case 'fontSizeUp': {
+            var cur = parseInt(target.style.fontSize) || 14;
+            target.style.fontSize = Math.min(32, cur + 2) + 'px';
+            break;
+          }
+          case 'fontSizeDown': {
+            var cur2 = parseInt(target.style.fontSize) || 14;
+            target.style.fontSize = Math.max(10, cur2 - 2) + 'px';
+            break;
+          }
+        }
+        mindElixirInstance.refresh(nd);
+        var curMap2 = getCurrentMap();
+        if (curMap2) {
+          curMap2.nodes = mindElixirToFlat(root);
+          curMap2.updatedAt = Date.now();
+          saveMapsLocal(); saveMapCloud(curMap2);
+        }
+        _mmUpdateFormatBar();
+      });
+
+      // Text color input
+      var tcInput = document.getElementById('mmTextColor');
+      if (tcInput) {
+        tcInput.addEventListener('input', function() {
+          if (!_mmSelNodeId || !mindElixirInstance) return;
+          var nd = mindElixirInstance.getData();
+          var root = nd && nd.nodeData ? nd.nodeData : nd;
+          var target = _mmFindNode(root, _mmSelNodeId);
+          if (target) {
+            if (!target.style) target.style = {};
+            target.style.color = tcInput.value;
+            mindElixirInstance.refresh(nd);
+            var curMap = getCurrentMap();
+            if (curMap) {
+              curMap.nodes = mindElixirToFlat(root);
+              curMap.updatedAt = Date.now();
+              saveMapsLocal(); saveMapCloud(curMap);
+            }
+          }
+        });
+      }
+    }
+
+    // ---- Image paste on mind map container ----
+    var mmContainerEl = document.getElementById('mmMapContainer');
+    if (mmContainerEl) {
+      mmContainerEl.addEventListener('paste', function(e) {
+        if (!_mmSelNodeId || !mindElixirInstance) return;
+        var items = e.clipboardData && e.clipboardData.items;
+        if (!items) return;
+        for (var i = 0; i < items.length; i++) {
+          if (items[i].type.indexOf('image') === 0) {
+            e.preventDefault();
+            var blob = items[i].getAsFile();
+            var reader = new FileReader();
+            reader.onload = function(ev) {
+              var dataUrl = ev.target.result;
+              var nd = mindElixirInstance.getData();
+              var root = nd && nd.nodeData ? nd.nodeData : nd;
+              var target = _mmFindNode(root, _mmSelNodeId);
+              if (target) {
+                target.image = { url: dataUrl, height: 120, width: 120 };
+                mindElixirInstance.refresh(nd);
+                var curMap = getCurrentMap();
+                if (curMap) {
+                  curMap.nodes = mindElixirToFlat(root);
+                  curMap.updatedAt = Date.now();
+                  saveMapsLocal(); saveMapCloud(curMap);
+                }
+              }
+            };
+            reader.readAsDataURL(blob);
+            return;
+          }
+        }
+      });
+    }
+  } catch(e) {
+    console.error('MindElixir init failed:', e);
   }
+}
+
+// ---- Zoom toolbar (best-effort via Mind Elixir internals) ----
+var _mmZoomLevel = 1;
+document.getElementById('mmBtnZoomIn')?.addEventListener('click', function() {
+  _mmZoomLevel = Math.min(3, _mmZoomLevel + 0.15);
+  if (mindElixirInstance && mindElixirInstance.map && mindElixirInstance.map.setScale) {
+    mindElixirInstance.map.setScale(_mmZoomLevel);
+  }
+  var lbl = document.getElementById('mmZoomLabel'); if (lbl) lbl.textContent = Math.round(_mmZoomLevel * 100) + '%';
+});
+document.getElementById('mmBtnZoomOut')?.addEventListener('click', function() {
+  _mmZoomLevel = Math.max(0.3, _mmZoomLevel - 0.15);
+  if (mindElixirInstance && mindElixirInstance.map && mindElixirInstance.map.setScale) {
+    mindElixirInstance.map.setScale(_mmZoomLevel);
+  }
+  var lbl = document.getElementById('mmZoomLabel'); if (lbl) lbl.textContent = Math.round(_mmZoomLevel * 100) + '%';
+});
+document.getElementById('mmBtnFit')?.addEventListener('click', function() {
+  _mmZoomLevel = 1;
+  if (mindElixirInstance && mindElixirInstance.toCenter) {
+    mindElixirInstance.toCenter();
+  }
+  if (mindElixirInstance && mindElixirInstance.map && mindElixirInstance.map.setScale) {
+    mindElixirInstance.map.setScale(1);
+  }
+  var lbl = document.getElementById('mmZoomLabel'); if (lbl) lbl.textContent = '100%';
 });
 
-// --- Mind Map Drag & Zoom ---
+// ---- Task Drag into Mindmap ----
 (function(){
-  const canvas = document.getElementById('mmCanvas');
-  if (!canvas) return;
-  let dragType = null;
-  let dragNodeId = null;
-  let dragStartX = 0, dragStartY = 0;
-  let dragOrigX = 0, dragOrigY = 0;
-
-  canvas.addEventListener('mousedown', (e) => {
-    if (e.button !== 0) return;
-    const nodeEl = e.target.closest('.mm-node');
-    const connector = e.target.closest('.mm-connector-out');
-    const collapseBtn = e.target.closest('.mm-collapse');
-    const taskBadge = e.target.closest('.mm-task-badge');
-    if (collapseBtn || taskBadge) return;
-    // connector mode: click on the connector dot OR bottom ~35% of node body
-    let isConnector = !!connector;
-    if (nodeEl && !connector) {
-      const body = nodeEl.querySelector('.mm-node-body');
-      if (body) {
-        const br = body.getBoundingClientRect();
-        const relY = (e.clientY - br.top) / br.height;
-        if (relY > 0.65) isConnector = true;
-      }
-    }
-    if (isConnector) {
-      dragType = 'connector'; dragNodeId = nodeEl?.dataset.id; dragStartX = e.clientX; dragStartY = e.clientY;
-      if (nodeEl) { nodeEl.style.opacity = '0.8'; nodeEl.style.zIndex = '50'; }
-      e.preventDefault(); return;
-    }
-    if (nodeEl) {
-      dragType = 'node-move'; dragNodeId = nodeEl.dataset.id;
-      const map = getCurrentMap(); const n = map?.nodes.find(nd => nd.id === dragNodeId);
-      dragOrigX = n?.x || 0; dragOrigY = n?.y || 0; dragStartX = e.clientX; dragStartY = e.clientY;
-      nodeEl.classList.add('dragging'); e.preventDefault(); return;
-    }
-    dragType = 'pan'; dragStartX = e.clientX - mmOffsetX; dragStartY = e.clientY - mmOffsetY;
-    canvas.classList.add('grabbing');
-  });
-
-  window.addEventListener('mousemove', (e) => {
-    if (!dragType) return;
-    if (dragType === 'pan') { mmOffsetX = e.clientX - dragStartX; mmOffsetY = e.clientY - dragStartY; applyCanvasTransform(); return; }
-    if (dragType === 'node-move') {
-      const dx = (e.clientX - dragStartX) / mmScale; const dy = (e.clientY - dragStartY) / mmScale;
-      const map = getCurrentMap(); const n = map?.nodes.find(nd => nd.id === dragNodeId);
-      if (n) { n.x = dragOrigX + dx; n.y = dragOrigY + dy; }
-      updateNodePosition(dragNodeId, n?.x || dragOrigX, n?.y || dragOrigY);
-      renderMindmapConnections(getCurrentMap());
-      const target = findDropTarget(e.clientX, e.clientY, dragNodeId);
-      document.querySelectorAll('.mm-node.reparent-target').forEach(el => el.classList.remove('reparent-target'));
-      if (target) document.querySelector('.mm-node[data-id="' + target.id + '"]')?.classList.add('reparent-target');
-      return;
-    }
-    if (dragType === 'connector') { drawTempConnector(e.clientX, e.clientY); }
-  });
-
-  window.addEventListener('mouseup', (e) => {
-    if (dragType === 'node-move') {
-      const map = getCurrentMap();
-      const target = findDropTarget(e.clientX, e.clientY, dragNodeId);
-      const node = map?.nodes.find(n => n.id === dragNodeId);
-      if (target && node && !isDescendant(map, dragNodeId, target.id)) {
-        node.parentId = target.id;
-      }
-      document.querySelectorAll('.mm-node.reparent-target').forEach(el => el.classList.remove('reparent-target'));
-      document.querySelectorAll('.mm-node.dragging').forEach(el => el.classList.remove('dragging'));
-      if (map) { map.updatedAt = Date.now(); saveMapsLocal(); saveMapCloud(map); renderMindmap(); }
-    }
-    if (dragType === 'connector') {
-      const target = findDropTarget(e.clientX, e.clientY, dragNodeId);
-      const map = getCurrentMap();
-      const node = map?.nodes.find(n => n.id === dragNodeId);
-      if (target && node && !isDescendant(map, dragNodeId, target.id)) {
-        node.parentId = target.id; map.updatedAt = Date.now();
-        saveMapsLocal(); saveMapCloud(map); renderMindmap();
-      }
-      clearTempConnector();
-    }
-    // cleanup connector drag visual state
-    if (dragNodeId) {
-      const el = document.querySelector('.mm-node[data-id="' + dragNodeId + '"]');
-      if (el) { el.style.opacity = ''; el.style.zIndex = ''; }
-    }
-    if (dragType === 'pan') canvas.classList.remove('grabbing');
-    dragType = null; dragNodeId = null;
-  });
-
-  // wheel zoom disabled — use toolbar buttons instead
-  // canvas.addEventListener('wheel', ...);
-
-  function setZoom(s) { mmScale = Math.max(0.3, Math.min(3, s)); applyCanvasTransform(); const lbl = document.getElementById('mmZoomLabel'); if (lbl) lbl.textContent = Math.round(mmScale * 100) + '%'; }
-  function findDropTarget(cx, cy, excludeId) { const map = getCurrentMap(); if (!map) return null; for (const n of map.nodes) { if (n.id === excludeId) continue; const el = document.querySelector('.mm-node[data-id="' + n.id + '"]'); if (!el) continue; const r = el.getBoundingClientRect(); if (cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom) return n; } return null; }
-  function isDescendant(map, ancestorId, childId) { const visited = new Set(); let cur = childId; while (cur) { if (cur === ancestorId) return true; if (visited.has(cur)) return false; visited.add(cur); const n = map.nodes.find(nd => nd.id === cur); cur = n?.parentId || null; } return false; }
-  function updateNodePosition(id, x, y) { const el = document.querySelector('.mm-node[data-id="' + id + '"]'); if (el) { el.style.transform = 'translate(' + x + 'px,' + y + 'px)'; el.dataset.nx = x; el.dataset.ny = y; } }
-  let _tempLine = null;
-  function drawTempConnector(cx, cy) {
-    const map = getCurrentMap(); const node = map?.nodes.find(n => n.id === dragNodeId);
-    if (!node) return;
-    if (!_tempLine) {
-      _tempLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-      _tempLine.id = 'mmTempLine';
-      _tempLine.setAttribute('stroke', '#c8a86c');
-      _tempLine.setAttribute('stroke-width', '2.5');
-      _tempLine.setAttribute('stroke-dasharray', '8,4');
-      document.getElementById('mmSvg').appendChild(_tempLine);
-    }
-    const svg = document.getElementById('mmSvg');
-    const svgRect = svg.getBoundingClientRect();
-    _tempLine.setAttribute('x1', node.x * mmScale + mmOffsetX + MM_NODE_W / 2);
-    _tempLine.setAttribute('y1', node.y * mmScale + mmOffsetY + MM_NODE_H);
-    _tempLine.setAttribute('x2', cx - svgRect.left);
-    _tempLine.setAttribute('y2', cy - svgRect.top);
-    // highlight target on hover
-    const target = findDropTarget(cx, cy, dragNodeId);
-    document.querySelectorAll('.mm-node.reparent-target').forEach(el => el.classList.remove('reparent-target'));
-    if (target) document.querySelector('.mm-node[data-id="' + target.id + '"]')?.classList.add('reparent-target');
-  }
-  function clearTempConnector() {
-    if (_tempLine) { _tempLine.remove(); _tempLine = null; }
-    document.querySelectorAll('.mm-node.reparent-target').forEach(el => el.classList.remove('reparent-target'));
-  }
-})();
-
-function applyCanvasTransform() { const el = document.getElementById('mmCanvasInner'); if (el) el.style.transform = 'translate(' + mmOffsetX + 'px, ' + mmOffsetY + 'px) scale(' + mmScale + ')'; }
-function fitToScreen() { mmScale = 1; mmOffsetX = 40; mmOffsetY = 20; applyCanvasTransform(); const lbl = document.getElementById('mmZoomLabel'); if (lbl) lbl.textContent = '100%'; }
-
-document.getElementById('mmBtnZoomIn')?.addEventListener('click', () => { mmScale = Math.min(3, mmScale + 0.1); applyCanvasTransform(); const lbl = document.getElementById('mmZoomLabel'); if (lbl) lbl.textContent = Math.round(mmScale * 100) + '%'; });
-document.getElementById('mmBtnZoomOut')?.addEventListener('click', () => { mmScale = Math.max(0.3, mmScale - 0.1); applyCanvasTransform(); const lbl = document.getElementById('mmZoomLabel'); if (lbl) lbl.textContent = Math.round(mmScale * 100) + '%'; });
-document.getElementById('mmBtnFit')?.addEventListener('click', fitToScreen);
-
-// --- Task Drag into Mindmap ---
-(function(){
-  const _origRenderList = renderList;
+  var _origRenderList = renderList;
   renderList = function() {
     _origRenderList();
-    document.querySelectorAll('.task-row').forEach(row => {
+    document.querySelectorAll('.task-row').forEach(function(row) {
       row.setAttribute('draggable', 'true');
       row.addEventListener('dragstart', function(e) {
         e.dataTransfer.setData('text/plain', this.dataset.id);
@@ -6532,51 +7557,98 @@ document.getElementById('mmBtnFit')?.addEventListener('click', fitToScreen);
     });
   };
 
-  const mmCanvas = document.getElementById('mmCanvas');
-  mmCanvas?.addEventListener('dragover', (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; });
-  mmCanvas?.addEventListener('drop', (e) => {
+  var mmContainer = document.getElementById('mmMapContainer');
+  mmContainer?.addEventListener('dragover', function(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; });
+  mmContainer?.addEventListener('drop', function(e) {
     e.preventDefault();
-    const taskId = parseInt(e.dataTransfer.getData('text/plain'));
+    var taskId = parseInt(e.dataTransfer.getData('text/plain'));
     if (!taskId) return;
-    const task = getTask(taskId);
+    var task = getTask(taskId);
     if (!task) return;
-    let map = getCurrentMap();
+    var map = getCurrentMap();
     if (!map) { createMap('默认导图'); map = getCurrentMap(); }
     if (!map) return;
-    const rect = mmCanvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left - mmOffsetX) / mmScale - 60;
-    const y = (e.clientY - rect.top - mmOffsetY) / mmScale - 19;
-    const newNode = { id: nextNodeId(), label: task.title, parentId: null, x, y, taskId, color: null, collapsed: false };
-    map.nodes.push(newNode); map.updatedAt = Date.now();
-    saveMapsLocal(); saveMapCloud(map); renderMindmap();
+
+    var newId = nextNodeId();
+
+    // If MindElixir is active, add node to the tree and refresh
+    if (mindElixirInstance) {
+      try {
+        var nd = mindElixirInstance.getData();
+        var rootData = nd && nd.nodeData ? nd.nodeData : nd;
+        if (rootData) {
+          // Prefer the currently selected node, fallback to root
+          var sel = (mindElixirInstance.currentNode) || rootData;
+          if (!sel.children) sel.children = [];
+          sel.children.push({
+            id: newId,
+            topic: task.title,
+            children: [],
+            expanded: true,
+            direction: 2,
+            _taskId: taskId,
+            tags: ['🔗'],
+          });
+          // refresh triggers 'operation' listener which syncs flat data
+          mindElixirInstance.refresh(nd);
+        }
+      } catch(e) { console.warn('mindmap drop add failed:', e); }
+    } else {
+      // No MindElixir instance yet — add directly to flat data
+      map.nodes.push({ id: newId, label: task.title, parentId: null, x: 0, y: 0, taskId: taskId, color: null, collapsed: false });
+      map.updatedAt = Date.now();
+      saveMapsLocal(); saveMapCloud(map);
+      var nc3 = document.getElementById('mmNodeCount'); if (nc3) nc3.textContent = map.nodes.length + ' 节点';
+    }
   });
 })();
 
-// --- Color panel click ---
-document.getElementById('mmColorPanel')?.addEventListener('click', (e) => {
-  e.stopPropagation();
-  const swatch = e.target.closest('.mm-color-swatch');
-  if (!swatch) return;
-  const color = swatch.dataset.color || null;
-  const nodeId = window._mmColorTargetId;
-  const map = getCurrentMap();
-  if (map && nodeId) {
-    const node = map.nodes.find(n => n.id === nodeId);
-    if (node) { node.color = color; map.updatedAt = Date.now(); saveMapsLocal(); saveMapCloud(map); renderMindmap(); }
-  }
-  document.getElementById('mmColorPanel').style.display = 'none';
-  document.getElementById('mmContextMenu').style.display = 'none';
-});
-
-// --- Re-layout (only on mode toggle or explicit request) ---
-function relayoutAll() {
-  const map = getCurrentMap();
-  if (!map || map.nodes.length === 0) return;
-  if (mindmapLayout === 'tree') layoutTree(map);
-  else layoutRadial(map);
-}
-
 </script>
+
+<!-- PWA Install + Service Worker -->
+<script>
+(function(){
+  // Service Worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/Todo/sw.js').catch(function(){});
+  }
+
+  // Install prompt
+  var deferredPrompt;
+  window.addEventListener('beforeinstallprompt', function(e) {
+    e.preventDefault();
+    deferredPrompt = e;
+    // Show install bar
+    var bar = document.getElementById('pwaInstallBar');
+    if (bar) bar.style.display = 'flex';
+  });
+
+  window.pwaInstall = function() {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(function(r) {
+        var bar = document.getElementById('pwaInstallBar');
+        if (bar) bar.style.display = 'none';
+        deferredPrompt = null;
+      });
+    } else {
+      showToast && showToast('点击浏览器地址栏的 ⊕ 安装按钮即可');
+    }
+  };
+
+  window.addEventListener('appinstalled', function() {
+    var bar = document.getElementById('pwaInstallBar');
+    if (bar) bar.style.display = 'none';
+    deferredPrompt = null;
+  });
+})();
+</script>
+
+<div id="pwaInstallBar" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;background:var(--accent);color:#fff;padding:10px 16px;align-items:center;justify-content:center;gap:12px;font-size:14px;font-weight:600;">
+  💻 将此应用安装到桌面
+  <button onclick="pwaInstall()" style="background:#fff;color:var(--accent);border:none;padding:6px 16px;border-radius:6px;font-weight:700;cursor:pointer;font-family:inherit;">安装</button>
+  <button onclick="this.parentElement.style.display='none'" style="background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.4);padding:6px 10px;border-radius:6px;cursor:pointer;font-family:inherit;">✕</button>
+</div>
 
 </body>
 </html>
