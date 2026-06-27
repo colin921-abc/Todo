@@ -1684,10 +1684,10 @@ textarea { resize: vertical; min-height: 60px; }
    AI ASSISTANT — 浮动科比人偶
    ============================================================ */
 .kobe-bot {
-  position: fixed; right: 30px; top: 10px; left: auto;
+  position: fixed; right: 30px; bottom: 100px; left: auto;
   width: 76px; height: 92px;
-  background: red; border: 2px solid black; cursor: pointer; padding: 0;
-  z-index: 99999;
+  background: transparent; border: none; cursor: pointer; padding: 0;
+  z-index: 999;
   filter: drop-shadow(0 6px 10px rgba(0,0,0,0.25));
   animation: kobeBob 3s ease-in-out infinite;
   transition: transform .2s;
@@ -6773,33 +6773,6 @@ async function initApp() {
 
   // Wait so any error surfaces
   await miscLoadPromise;
-
-  // ONE-TIME CLEANUP: delete records before 2026-06-26
-  try {
-    if (!localStorage.getItem('cleanup_20260626_done')) {
-      var cutoff = '2026-06-26';
-      // Clean miscRecords
-      var miscBefore = miscRecords.length;
-      miscRecords = miscRecords.filter(function(r) { return r.occurredAt >= cutoff; });
-      saveMiscLocal('todo_misc_records', miscRecords);
-      console.log('CLEANUP: miscRecords ' + miscBefore + ' -> ' + miscRecords.length);
-      // Clean issues
-      var issueBefore = (typeof issues !== 'undefined' && issues) ? issues.length : 0;
-      if (typeof issues !== 'undefined' && issues) {
-        issues = issues.filter(function(r) { return (r.createdAt || '').substring(0,10) >= cutoff; });
-        saveIssuesLocal();
-        console.log('CLEANUP: issues ' + issueBefore + ' -> ' + issues.length);
-      }
-      // Try to delete from Supabase
-      if (supabaseClient) {
-        try { await supabaseClient.from('misc_task_records').delete().lt('occurred_at', cutoff); } catch(e) {}
-        try { await supabaseClient.from('issue_collections').delete().lt('created_at', cutoff + 'T00:00:00Z'); } catch(e) {}
-      }
-      localStorage.setItem('cleanup_20260626_done', '1');
-      console.log('CLEANUP: Done. Reloading...');
-      location.reload();
-    }
-  } catch(e) { console.warn('Cleanup error:', e); }
 }
 
 initApp().catch(e => {
