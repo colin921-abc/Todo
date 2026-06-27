@@ -1,18 +1,22 @@
 {
-  "name": "工作待办 - AI 工作台",
-  "short_name": "工作待办",
-  "description": "任务管理、工艺记录、问题收集、AI 助手",
+  "name": "\u5de5\u4f5c\u5f85\u529e - AI \u5de5\u4f5c\u53f0",
+  "short_name": "\u5de5\u4f5c\u5f85\u529e",
+  "description": "\u4efb\u52a1\u7ba1\u7406\u3001\u5de5\u827a\u8bb0\u5f55\u3001\u95ee\u9898\u6536\u96c6\u3001AI \u52a9\u624b",
   "start_url": "/Todo/",
   "scope": "/Todo/",
   "display": "standalone",
   "background_color": "#f6f7f9",
   "theme_color": "#b8965a",
-  "orientation": "any",
   "icons": [
     {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23b8965a'/><text x='50' y='68' text-anchor='middle' font-size='50' fill='white'>✅</text></svg>",
-      "sizes": "100x100",
-      "type": "image/svg+xml",
+      "src": "/Todo/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/Todo/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ]
