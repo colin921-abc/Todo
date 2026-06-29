@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#b8965a">
+<meta name="theme-color" content="#5e6ad2">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="工作待办">
 <link rel="manifest" href="/Todo/manifest.json">
@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/mind-elixir@5.13.0/dist/MindElixir.css" rel="stylesheet">
-<title>工作待办</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<title>Helix</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js"></script>
@@ -21,89 +21,86 @@
 <script src="https://cdn.jsdelivr.net/npm/mind-elixir@5.13.0/dist/MindElixir.iife.js" defer></script>
 <style>
 /* ============================================================
-   DESIGN SYSTEM — 暖奶油 · 高密度
+   DESIGN SYSTEM — Linear Style
    ============================================================ */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
   color-scheme: light;
-  /* ---- 中性灰白亮色 ---- */
-  --bg: #f6f7f9;
-  --card-bg: #ffffff;
-  --sidebar-bg: #ffffff;
-  --surface-2: #f0f2f5;
-  --text: #1f2630;
-  --text-secondary: #565f6b;
-  --text-muted: #98a1ac;
-  --border: #e5e8ec;
-  --border-light: #eef0f3;
-  --accent: #b8965a;          /* 金色品牌色，亮暗通用 */
-  --accent-hover: #a37a3d;
-  --accent-subtle: #f3ecdd;
-  --green: #4f9d7f;
-  --green-bg: #eaf4ef;
-  --red: #d2564d;
-  --priority-p1: #b8965a;
-  --priority-p2: #c8a679;
-  --priority-p3: #d9c9a8;
-  --focus-bg: rgba(20,24,31,0.94);
-  /* 语义叠加 / 状态色 */
+  --bg: #ffffff;
+  --card-bg: #f5f6f6;
+  --sidebar-bg: #f9fafa;
+  --surface-2: #f0f1f2;
+  --text: #1a1c1e;
+  --text-secondary: #5c5e62;
+  --text-muted: #8a8d93;
+  --border: #e0e1e3;
+  --border-light: #edeef0;
+  --accent: #5e6ad2;
+  --accent-hover: #828fff;
+  --accent-subtle: rgba(94,106,210,0.08);
+  --green: #27a644;
+  --green-bg: rgba(39,166,68,0.10);
+  --red: #d94a3a;
+  --priority-p1: #d94a3a;
+  --priority-p2: #d9983a;
+  --priority-p3: #8a8d93;
+  --focus-bg: rgba(0,0,0,0.92);
   --on-accent: #ffffff;
-  --hover: rgba(0,0,0,0.05);
-  --hover-strong: rgba(0,0,0,0.09);
-  --done-bg: #f4f6f8;
-  /* 玻璃拟态 */
+  --hover: rgba(0,0,0,0.04);
+  --hover-strong: rgba(0,0,0,0.08);
+  --done-bg: #f5f6f6;
   --glass-bg: rgba(255,255,255,0.45);
   --glass-border: rgba(255,255,255,0.7);
-  --glass-blur: 10px;
+  --glass-blur: 0px;
 
-  --shadow-sm: 0 1px 2px rgba(20,30,50,0.06);
-  --shadow-md: 0 2px 8px rgba(20,30,50,0.10);
-  --shadow-lg: 0 8px 24px rgba(20,30,50,0.14);
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
 
   --sidebar-w: 240px;
   --detail-w: 440px;
   --radius-xs: 4px;
-  --radius-sm: 7px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --transition: 0.2s cubic-bezier(0.22, 0.11, 0.12, 1);
-  --transition-slow: 0.35s cubic-bezier(0.22, 0.11, 0.12, 1);
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --transition: 0.15s cubic-bezier(0.2, 0, 0, 1);
+  --transition-slow: 0.2s cubic-bezier(0.2, 0, 0, 1);
 
   --font-stack: 'Inter', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', '微软雅黑', 'Helvetica Neue', sans-serif;
 }
 
-/* ---- 暗色主题 ---- */
+/* ---- Dark Theme · Linear Dark ---- */
 [data-theme="dark"] {
   color-scheme: dark;
-  --bg: #13171e;
-  --card-bg: #1a1f29;
-  --sidebar-bg: #161b22;
-  --surface-2: #232a36;
-  --text: #e7eaef;
-  --text-secondary: #aab2bf;
-  --text-muted: #6b7480;
-  --border: #2a313d;
-  --border-light: #222833;
-  --accent: #c8a86c;
-  --accent-hover: #d9bd83;
-  --accent-subtle: #2c2719;
-  --green: #5cb497;
-  --green-bg: #18271f;
-  --red: #e06a60;
-  --priority-p1: #c8a86c;
-  --priority-p2: #b89a6a;
-  --priority-p3: #6f6750;
-  --focus-bg: rgba(8,10,14,0.96);
-  --on-accent: #1a1408;
-  --hover: rgba(255,255,255,0.06);
-  --hover-strong: rgba(255,255,255,0.11);
-  --done-bg: #1b212b;
-  --glass-bg: rgba(24,29,38,0.40);
-  --glass-border: rgba(255,255,255,0.09);
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.40);
-  --shadow-md: 0 2px 10px rgba(0,0,0,0.45);
-  --shadow-lg: 0 8px 28px rgba(0,0,0,0.55);
+  --bg: #080a0a;
+  --card-bg: #0f1011;
+  --sidebar-bg: #0b0c0d;
+  --surface-2: #141516;
+  --text: #f7f8f8;
+  --text-secondary: #d0d6e0;
+  --text-muted: #8a8f98;
+  --border: #23252a;
+  --border-light: #1a1c1f;
+  --accent: #5e6ad2;
+  --accent-hover: #828fff;
+  --accent-subtle: rgba(94,106,210,0.12);
+  --green: #27a644;
+  --green-bg: rgba(39,166,68,0.12);
+  --red: #e05548;
+  --priority-p1: #e05548;
+  --priority-p2: #d9983a;
+  --priority-p3: #6b6f78;
+  --focus-bg: rgba(0,0,0,0.94);
+  --on-accent: #ffffff;
+  --hover: rgba(255,255,255,0.04);
+  --hover-strong: rgba(255,255,255,0.08);
+  --done-bg: #0d0e0f;
+  --glass-bg: rgba(255,255,255,0.04);
+  --glass-border: rgba(255,255,255,0.07);
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
 }
 
 /* 主题切换平滑过渡 */
