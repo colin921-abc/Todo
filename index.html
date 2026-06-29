@@ -2457,6 +2457,10 @@ body::before {
         <option value="closed">已关闭</option>
       </select>
     </div>
+    <div class="field">
+      <label>计划关闭时间（可选）</label>
+      <input type="date" id="miscRecordPlannedClose">
+    </div>
     <div class="field" id="miscRecordCloseDateField" style="display:none;">
       <label>关闭日期</label>
       <input type="date" id="miscRecordCloseDate">
@@ -2669,7 +2673,8 @@ function miscTypeToDB(t) {
 function miscRecordFromDB(r) {
   return {
     id: r.id, typeId: r.type_id, count: r.count, note: r.note || '',
-    occurredAt: r.occurred_at, createdAt: r.created_at,
+    occurredAt: r.occurred_at, plannedCloseDate: r.planned_close_date || null,
+    createdAt: r.created_at,
     severity: r.severity || 'normal', status: r.status || 'open',
     closeDate: r.close_date || null,
     rootCause: r.root_cause || '', measures: r.measures || '',
@@ -2680,6 +2685,7 @@ function miscRecordToDB(r) {
   return {
     type_id: r.typeId, count: r.count,
     note: r.note || null, occurred_at: r.occurredAt,
+    planned_close_date: r.plannedCloseDate || null,
     severity: r.severity || 'normal', status: r.status || 'open',
     close_date: r.closeDate || null,
     root_cause: r.rootCause || '', measures: r.measures || '',
@@ -4655,6 +4661,7 @@ function openMiscRecordModal(recordId, presetTypeId) {
     document.getElementById('miscRecordSeverity').value = r.severity || 'normal';
     document.getElementById('miscRecordStatus').value = r.status || 'open';
     document.getElementById('miscRecordCloseDate').value = r.closeDate || '';
+    document.getElementById('miscRecordPlannedClose').value = r.plannedCloseDate || '';
     document.getElementById('miscRecordRootCause').value = r.rootCause || '';
     document.getElementById('miscRecordMeasures').value = r.measures || '';
     document.getElementById('miscRecordEffect').value = r.effect || '';
@@ -4666,6 +4673,7 @@ function openMiscRecordModal(recordId, presetTypeId) {
     if (presetTypeId) sel.value = presetTypeId;
     document.getElementById('miscRecordCount').value = 1;
     document.getElementById('miscRecordDate').value = toDateStr(new Date());
+    document.getElementById('miscRecordPlannedClose').value = '';
     document.getElementById('miscRecordNote').value = '';
     document.getElementById('miscRecordSeverity').value = 'normal';
     document.getElementById('miscRecordStatus').value = 'open';
@@ -4706,15 +4714,16 @@ async function saveMiscRecord() {
   const severity = document.getElementById('miscRecordSeverity').value;
   const status = document.getElementById('miscRecordStatus').value;
   const closeDate = status === 'closed' ? (document.getElementById('miscRecordCloseDate').value || toDateStr(new Date())) : null;
+  const plannedCloseDate = document.getElementById('miscRecordPlannedClose').value || null;
   const rootCause = document.getElementById('miscRecordRootCause').value.trim();
   const measures = document.getElementById('miscRecordMeasures').value.trim();
   const effect = document.getElementById('miscRecordEffect').value.trim();
   const lossAvoided = document.getElementById('miscRecordLossAvoided').value.trim();
 
   if (editingMiscRecordId) {
-    await updateMiscRecord(editingMiscRecordId, { typeId, count, occurredAt, note, severity, status, closeDate, rootCause, measures, effect, lossAvoided });
+    await updateMiscRecord(editingMiscRecordId, { typeId, count, occurredAt, note, severity, status, closeDate, plannedCloseDate, rootCause, measures, effect, lossAvoided });
   } else {
-    const r = await addMiscRecord({ typeId, count, occurredAt, note, severity, status, closeDate, rootCause, measures, effect, lossAvoided });
+    const r = await addMiscRecord({ typeId, count, occurredAt, note, severity, status, closeDate, plannedCloseDate, rootCause, measures, effect, lossAvoided });
     if (!r) return;
   }
   closeMiscRecordModal();
