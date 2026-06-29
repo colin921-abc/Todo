@@ -1965,7 +1965,6 @@ function miscRecordToDB(r) {
   return {
     type_id: r.typeId, count: r.count,
     note: r.note || null, occurred_at: r.occurredAt,
-    planned_close_date: r.plannedCloseDate || null,
     severity: r.severity || 'normal', status: r.status || 'open',
     close_date: r.closeDate || null,
     root_cause: r.rootCause || '', measures: r.measures || '',
@@ -3032,7 +3031,7 @@ function renderTreeNode(task, depth) {
   const html = `
     <div class="task-row ${rowClass.trim()}" data-id="${task.id}" style="padding-left:${8 + indent}px;">
       ${expandBtn}
-      <span class="task-id">#${task.id}</span>
+      <span class="task-id">#${String(task.id).slice(-4)}</span>
       <span class="prio-dot">${prioIcon}</span>
       <span class="task-row-title">${escHtml(task.title)}</span>
       ${tagChips ? '<span class="tag-chips">'+tagChips+'</span>' : ''}
