@@ -73,37 +73,86 @@
   --font-stack: 'Inter', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', '微软雅黑', 'Helvetica Neue', sans-serif;
 }
 
-/* ---- 暗色主题 ---- */
+/* ---- 暗色主题 · Deep Ink Glass ---- */
 [data-theme="dark"] {
   color-scheme: dark;
-  --bg: #13171e;
-  --card-bg: #1a1f29;
-  --sidebar-bg: #161b22;
-  --surface-2: #232a36;
-  --text: #e7eaef;
-  --text-secondary: #aab2bf;
-  --text-muted: #6b7480;
-  --border: #2a313d;
-  --border-light: #222833;
-  --accent: #c8a86c;
-  --accent-hover: #d9bd83;
-  --accent-subtle: #2c2719;
-  --green: #5cb497;
-  --green-bg: #18271f;
-  --red: #e06a60;
-  --priority-p1: #c8a86c;
-  --priority-p2: #b89a6a;
-  --priority-p3: #6f6750;
-  --focus-bg: rgba(8,10,14,0.96);
-  --on-accent: #1a1408;
+  --bg: #080a14;
+  --card-bg: rgba(255,255,255,0.05);
+  --sidebar-bg: rgba(255,255,255,0.03);
+  --surface-2: rgba(255,255,255,0.04);
+  --text: #e6eaf2;
+  --text-secondary: #8899bb;
+  --text-muted: #556688;
+  --border: rgba(255,255,255,0.07);
+  --border-light: rgba(255,255,255,0.05);
+  --accent: #D97757;
+  --accent-hover: #e68a6b;
+  --accent-subtle: rgba(217,119,87,0.12);
+  --accent-ring: rgba(217,119,87,0.30);
+  --green: #5f9e7a;
+  --green-bg: rgba(95,158,122,0.15);
+  --red: #d4695e;
+  --priority-p1: #D97757;
+  --priority-p2: #d9a85a;
+  --priority-p3: #8899bb;
+  --focus-bg: rgba(8,10,20,0.96);
+  --on-accent: #fff;
   --hover: rgba(255,255,255,0.06);
-  --hover-strong: rgba(255,255,255,0.11);
-  --done-bg: #1b212b;
-  --glass-bg: rgba(24,29,38,0.40);
-  --glass-border: rgba(255,255,255,0.09);
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.40);
-  --shadow-md: 0 2px 10px rgba(0,0,0,0.45);
-  --shadow-lg: 0 8px 28px rgba(0,0,0,0.55);
+  --hover-strong: rgba(255,255,255,0.12);
+  --done-bg: rgba(255,255,255,0.02);
+  --glass-bg: rgba(255,255,255,0.04);
+  --glass-border: rgba(255,255,255,0.07);
+  --glass-hover: rgba(255,255,255,0.08);
+  --glass-blur: 16px;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.20);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.35);
+  --shadow-lg: 0 12px 36px rgba(0,0,0,0.50);
+  --shadow-pop: 0 20px 56px rgba(0,0,0,0.60);
+  --shadow-glow: 0 0 24px rgba(217,119,87,0.18);
+  --radius-pill: 999px;
+}
+
+/* Dark mode ambient aurora */
+[data-theme="dark"] body::before {
+  content: ""; position: fixed; inset: 0; z-index: -3; pointer-events: none;
+  background:
+    radial-gradient(55% 42% at 82% 8%, rgba(155,135,245,0.06), transparent 68%),
+    radial-gradient(50% 40% at 15% 45%, rgba(90,245,210,0.04), transparent 70%),
+    radial-gradient(54% 44% at 88% 80%, rgba(138,160,255,0.05), transparent 70%),
+    radial-gradient(48% 40% at 24% 94%, rgba(199,125,255,0.04), transparent 68%);
+}
+
+/* Dark mode glass surfaces */
+[data-theme="dark"] .sidebar {
+  backdrop-filter: blur(20px) saturate(1.5);
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+}
+[data-theme="dark"] .task-row,
+[data-theme="dark"] .daily-item,
+[data-theme="dark"] .misc-card,
+[data-theme="dark"] .report-chart-card,
+[data-theme="dark"] .misc-summary-line,
+[data-theme="dark"] .misc-history-list {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+[data-theme="dark"] .detail-panel,
+[data-theme="dark"] .quick-add-modal,
+[data-theme="dark"] .cmdk-modal,
+[data-theme="dark"] .misc-modal,
+[data-theme="dark"] .kobe-popup,
+[data-theme="dark"] .polish-panel {
+  backdrop-filter: blur(24px) saturate(1.5);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
+}
+[data-theme="dark"] .fab {
+  box-shadow: 0 0 28px rgba(217,119,87,0.30);
+}
+[data-theme="dark"] .btn-primary {
+  box-shadow: 0 0 18px rgba(217,119,87,0.18);
+}
+[data-theme="dark"] .btn-primary:hover {
+  box-shadow: 0 0 28px rgba(217,119,87,0.28);
 }
 
 /* 主题切换平滑过渡 */
@@ -2499,9 +2548,11 @@ function toDB(task) {
     status: task.status,
     start_date: task.startDate,
     due_date: task.dueDate,
+    planned_close_date: task.plannedCloseDate || null,
     parent_id: task.parentId,
     sort_order: task.order,
     created_at: task.createdAt,
+    completed_at: task.completedAt || null,
     tags: (task.tags || []).join(','),
     priority: task.priority || null
   };
@@ -2515,9 +2566,11 @@ function fromDB(row) {
     status: row.status,
     startDate: row.start_date,
     dueDate: row.due_date,
+    plannedCloseDate: row.planned_close_date || null,
     parentId: row.parent_id,
     order: row.sort_order,
     createdAt: row.created_at,
+    completedAt: row.completed_at || null,
     tags: row.tags ? row.tags.split(',').filter(Boolean) : [],
     priority: row.priority || null
   };
@@ -2813,6 +2866,8 @@ function migrateTask(task) {
   if (!('tags' in task)) task.tags = [];
   if (!('priority' in task)) task.priority = null;
   if (!('archivedAt' in task)) task.archivedAt = null;
+  if (!('plannedCloseDate' in task)) task.plannedCloseDate = null;
+  if (!('completedAt' in task)) task.completedAt = null;
   return task;
 }
 
@@ -2948,9 +3003,11 @@ async function addTask(title, parentId = null, extra = {}) {
     status: 'not-started',
     startDate: null,
     dueDate: null,
+    plannedCloseDate: null,
     parentId,
     order: Date.now(),
     createdAt: Date.now(),
+    completedAt: null,
     tags: [],
     priority: null,
     archivedAt: null,
@@ -2976,6 +3033,13 @@ async function updateTask(id, changes) {
   if (!task) return;
   const oldStatus = task.status;
   Object.assign(task, changes);
+  // Track completion time
+  if (changes.status === 'completed' && !task.completedAt) {
+    task.completedAt = Date.now();
+  }
+  if (changes.status && changes.status !== 'completed') {
+    task.completedAt = null;
+  }
   // Auto-archive when completed
   if (changes.status === 'completed' && !task.archivedAt) {
     task.archivedAt = Date.now();
@@ -4130,7 +4194,17 @@ function renderDetail() {
         <input type="date" value="${task.dueDate || ''}" onchange="updateTask(${task.id}, {dueDate: this.value || null})">
       </div>
     </div>
-    <button class="btn btn-ghost btn-sm" style="align-self:flex-start;" onclick="updateTask(${task.id}, {startDate: null, dueDate: null}); renderDetail();">设为待定</button>
+    <div style="display:flex; gap:12px;">
+      <div class="detail-field" style="flex:1;">
+        <label>计划关闭时间</label>
+        <input type="date" value="${task.plannedCloseDate || ''}" onchange="updateTask(${task.id}, {plannedCloseDate: this.value || null})">
+      </div>
+      <div class="detail-field" style="flex:1;${!task.completedAt?'opacity:0.5':''}">
+        <label>实际完成时间</label>
+        <input type="text" readonly value="${task.completedAt ? toDateStr(new Date(task.completedAt)) : '未完成'}" style="cursor:default;">
+      </div>
+    </div>
+    <button class="btn btn-ghost btn-sm" style="align-self:flex-start;" onclick="updateTask(${task.id}, {startDate: null, dueDate: null, plannedCloseDate: null}); renderDetail();">清除日期</button>
     <div class="detail-field">
       <label>描述</label>
       <textarea placeholder="添加描述..." onchange="updateTask(${task.id}, {description: this.value})">${escHtml(task.description || '')}</textarea>
@@ -4798,8 +4872,8 @@ async function renderReport() {
     ${dashTab==='dashboard' ? `
     <div class="dash-stat-row">
       <div class="dash-stat-card"><div class="dash-stat-num">${totalRecords}</div><div class="dash-stat-label">📋 累计记录</div></div>
-      <div class="dash-stat-card"><div class="dash-stat-num">${closeRate}%</div><div class="dash-stat-label">✅ 关闭率</div></div>
-      <div class="dash-stat-card"><div class="dash-stat-num">${avgCloseDays}天</div><div class="dash-stat-label">⏱ 平均关闭周期</div></div>
+      <div class="dash-stat-card"><div class="dash-stat-num">${closeRate}%</div><div class="dash-stat-label">✅ 关闭率 CR</div></div>
+      <div class="dash-stat-card"><div class="dash-stat-num">${avgCloseDays}天</div><div class="dash-stat-label">⏱ 平均关闭周期 TAT</div></div>
       <div class="dash-stat-card ${slaOverdue > 0 ? 'warn' : ''}"><div class="dash-stat-num">${slaOverdue}</div><div class="dash-stat-label">⚠️ 超时 SLA</div></div>
     </div>
 
@@ -4820,13 +4894,13 @@ async function renderReport() {
         <div class="report-chart-canvas-wrap"><canvas id="dashSeverityDonut"></canvas></div>
       </div>
       <div class="report-chart-card">
-        <h3>各类型 SLA 达标率</h3>
+        <h3>各类型 SLA 达标率 CR</h3>
         <div class="report-chart-canvas-wrap"><canvas id="dashSlaBar"></canvas></div>
       </div>
     </div>
 
     <div class="report-chart-card">
-      <h3>⚡ 效率趋势（月均关闭周期）</h3>
+      <h3>⚡ 效率趋势 TAT（月均关闭周期）</h3>
       <div class="report-chart-canvas-wrap" style="height:200px;"><canvas id="dashEfficiencyLine"></canvas></div>
     </div>
 
