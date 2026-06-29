@@ -4711,6 +4711,7 @@ async function quickAddMiscRecord(typeId) {
 // ============================================================
 let reportRange = 'month';
 let dashTab = 'dashboard'; // 'dashboard' | 'cases' | 'timeline'
+let dashMonthType = ''; // '' = all types, otherwise typeId for new vs closed filter
 let reportFromDate = null;
 let reportToDate = null;
 let reportSelectedTypes = new Set();
@@ -4842,7 +4843,13 @@ async function renderReport() {
         <div class="report-chart-canvas-wrap"><canvas id="dashCategoryPie"></canvas></div>
       </div>
       <div class="report-chart-card">
-        <h3>月度趋势（新增 vs 关闭）</h3>
+        <h3>
+          <span>月度趋势 · 新增 vs 关闭</span>
+          <select id="dashMonthTypeSel" onchange="dashMonthType=this.value; renderDashCharts();">
+            <option value="">全部类型</option>
+            ${types.map(t => `<option value="${t.id}"${dashMonthType===t.id?' selected':''}>${escHtml(t.icon)} ${escHtml(t.name)}</option>`).join('')}
+          </select>
+        </h3>
         <div class="report-chart-canvas-wrap"><canvas id="dashMonthlyBar"></canvas></div>
       </div>
     </div>
@@ -4940,22 +4947,25 @@ function renderDashCharts() {
     months.push(toDateStr(d).substring(0, 7));
   }
   var monthCreated = [], monthClosed = [];
+  var filterType = dashMonthType;
   for (var mi = 0; mi < months.length; mi++) {
     var prefix = months[mi];
-    monthCreated.push(records.filter(function(r) { return r.occurredAt && r.occurredAt.substring(0,7) === prefix; }).reduce(function(s,r) { return s + r.count; }, 0));
-    monthClosed.push(records.filter(function(r) { return r.status === 'closed' && r.closeDate && r.closeDate.substring(0,7) === prefix; }).reduce(function(s,r) { return s + r.count; }, 0));
+    monthCreated.push(records.filter(function(r) { return r.occurredAt && r.occurredAt.substring(0,7) === prefix && (!filterType || r.typeId === filterType); }).reduce(function(s,r) { return s + r.count; }, 0));
+    monthClosed.push(records.filter(function(r) { return r.status === 'closed' && r.closeDate && r.closeDate.substring(0,7) === prefix && (!filterType || r.typeId === filterType); }).reduce(function(s,r) { return s + r.count; }, 0));
   }
   var monthLabels = months.map(function(m) { return m.substring(5) + '月'; });
 
   var barCanvas = document.getElementById('dashMonthlyBar');
   if (barCanvas) {
+    var selType = filterType ? miscTypes.find(function(t){return t.id===filterType;}) : null;
+    var typeName = selType ? (selType.icon+' '+selType.name) : '';
     reportCharts.monthlyBar = new Chart(barCanvas, {
       type: 'bar',
       data: {
         labels: monthLabels,
         datasets: [
-          { label: '新增', data: monthCreated, backgroundColor: 'rgba(184,150,90,0.6)', borderRadius: 4 },
-          { label: '关闭', data: monthClosed, backgroundColor: 'rgba(79,157,127,0.6)', borderRadius: 4 }
+          { label: '新增'+(typeName?' · '+typeName:''), data: monthCreated, backgroundColor: selType ? selType.color : '#ff6930', borderRadius: 4 },
+          { label: '关闭'+(typeName?' · '+typeName:''), data: monthClosed, backgroundColor: '#2da44e', borderRadius: 4 }
         ]
       },
       options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
