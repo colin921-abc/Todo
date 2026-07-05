@@ -215,6 +215,19 @@ body {
 }
 .nav-item.active .nav-badge { background: rgba(255,255,255,0.2); color: #fff; }
 
+/* Nav section headers */
+.nav-section-header {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 16px 14px 6px;
+  cursor: default;
+  user-select: none;
+}
+.nav-section-header:first-child { padding-top: 4px; }
+
 /* Tag filter in sidebar */
 .sidebar-tags {
   margin-top: 20px;
@@ -604,6 +617,42 @@ textarea { resize: vertical; min-height: 60px; }
 .daily-item-body { flex: 1; min-width: 0; }
 .daily-item-title { font-size: 15px; font-weight: 550; }
 .daily-item-parent { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+/* Daily mood & highlights */
+.daily-mood-row {
+  display: flex; align-items: center; gap: 6px;
+  margin-bottom: 12px; flex-wrap: wrap;
+}
+.daily-mood-label {
+  font-size: 11px; font-weight: 600; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.05em; margin-right: 4px;
+}
+.mood-btn {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: var(--radius-pill); cursor: pointer;
+  font-size: 18px; padding: 4px 10px; transition: all var(--transition);
+}
+.mood-btn:hover { background: var(--hover-strong); transform: scale(1.1); }
+.mood-btn.active { background: var(--accent-subtle); border-color: var(--accent); transform: scale(1.15); }
+.daily-highlights-row { margin-bottom: 12px; }
+.daily-highlight-input {
+  width: 100%; padding: 8px 14px; border: 1px dashed var(--border);
+  border-radius: var(--radius-sm); font-size: 12px; background: transparent;
+  color: var(--text); font-family: inherit;
+}
+.daily-highlight-input:focus { border-color: var(--accent); border-style: solid; }
+.daily-highlight-input::placeholder { color: var(--text-muted); }
+.daily-highlights { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.highlight-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: var(--accent-subtle); color: var(--accent-hover);
+  padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 500;
+}
+.highlight-remove {
+  background: none; border: none; cursor: pointer; color: var(--text-muted);
+  font-size: 13px; line-height: 1; padding: 0;
+}
+.highlight-remove:hover { color: var(--red); }
 
 /* Daily Note */
 .daily-note-card {
@@ -2003,6 +2052,8 @@ body::before {
     </div>
     <div class="sidebar-scroll">
       <ul class="nav-list">
+        <!-- Section: 工作台 -->
+        <li class="nav-section-header">工作台</li>
         <li class="nav-item active" data-view="list">
           <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="8.25" y1="6.75" x2="20.25" y2="6.75"/><line x1="8.25" y1="12" x2="20.25" y2="12"/><line x1="8.25" y1="17.25" x2="20.25" y2="17.25"/><circle cx="4" cy="6.75" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="17.25" r="1"/></svg></span>
           <span class="nav-label">总任务列表</span>
@@ -2021,19 +2072,34 @@ body::before {
           <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="9" height="3.2" rx="1"/><rect x="7" y="10.4" width="10" height="3.2" rx="1"/><rect x="11" y="15.8" width="8" height="3.2" rx="1"/></svg></span>
           <span class="nav-label">甘特图</span>
         </li>
+        <li class="nav-item" data-view="projects">
+          <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6v13a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-1-2H5a2 2 0 00-2 2z"/><line x1="12" y1="13" x2="12" y2="18"/><line x1="9" y1="15.5" x2="15" y2="15.5"/></svg></span>
+          <span class="nav-label">项目</span>
+          <span class="nav-badge" id="navCountProjects">0</span>
+        </li>
+
+        <!-- Section: 记录 -->
+        <li class="nav-section-header">记录</li>
         <li class="nav-item" data-view="issues">
           <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
           <span class="nav-label">问题收集</span>
           <span class="nav-badge" id="navCountIssues" style="display:none;">0</span>
         </li>
-<li class="nav-item" data-view="mindmap">
-          <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 22v-7M12 9V2M4.93 17.07l4.95-4.95M14.12 5.88l4.95-4.95M2 12h7M15 12h7"/></svg></span>
-          <span class="nav-label">思维导图</span>
-        </li>
         <li class="nav-item" data-view="misc">
           <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="4" width="15" height="16" rx="2"/><path d="M9 3v2.5h6V3M8 11l2 2 3.5-3.5"/><path d="M8 16h6"/></svg></span>
           <span class="nav-label">杂项任务集</span>
           <span class="nav-badge" id="navCountMisc">0</span>
+        </li>
+        <li class="nav-item" data-view="mindmap">
+          <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 22v-7M12 9V2M4.93 17.07l4.95-4.95M14.12 5.88l4.95-4.95M2 12h7M15 12h7"/></svg></span>
+          <span class="nav-label">思维导图</span>
+        </li>
+
+        <!-- Section: 分析 -->
+        <li class="nav-section-header">分析</li>
+        <li class="nav-item" data-view="knowledge">
+          <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="14" y2="11"/></svg></span>
+          <span class="nav-label">知识库</span>
         </li>
         <li class="nav-item" data-view="report">
           <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3.75 3v11.25A2.25 2.25 0 006 16.5h12a2.25 2.25 0 002.25-2.25V3M3 21h18"/><path d="M8.5 12.5l2.5-2.75 2 1.75 2.75-3.25"/></svg></span>
@@ -2113,12 +2179,27 @@ body::before {
         <span style="font-size:13px; color:var(--text-muted);" id="dailyDate"></span>
       </div>
       <div class="view-content" id="dailyContent">
+        <!-- Mood & Metrics Row -->
+        <div class="daily-mood-row">
+          <span class="daily-mood-label">今日状态</span>
+          <button class="mood-btn" data-mood="great" onclick="setDailyMood('great')" title="很棒">😄</button>
+          <button class="mood-btn" data-mood="productive" onclick="setDailyMood('productive')" title="高效">💪</button>
+          <button class="mood-btn" data-mood="neutral" onclick="setDailyMood('neutral')" title="一般">😐</button>
+          <button class="mood-btn" data-mood="tired" onclick="setDailyMood('tired')" title="疲惫">😫</button>
+          <button class="mood-btn" data-mood="stressed" onclick="setDailyMood('stressed')" title="紧张">😰</button>
+          <span style="margin-left:12px;font-size:12px;color:var(--text-muted);" id="dailyMetrics"></span>
+        </div>
+        <!-- Highlights -->
+        <div class="daily-highlights-row">
+          <input type="text" class="daily-highlight-input" id="dailyHighlightInput" placeholder="+ 添加今日亮点..." onkeydown="if(event.key==='Enter')addDailyHighlight()">
+          <div class="daily-highlights" id="dailyHighlights"></div>
+        </div>
         <div class="daily-note-card">
           <div class="daily-note-header">
             <span class="daily-note-label">便签</span>
             <span class="daily-note-saved" id="dailyNoteSaved">已保存</span>
           </div>
-          <textarea class="daily-note-input" id="dailyNoteInput" placeholder="记录今天的小任务或备忘..."></textarea>
+          <textarea class="daily-note-input" id="dailyNoteInput" placeholder="记录今天的工作内容、遇到的问题、想法..."></textarea>
         </div>
         <div id="dailyTasksContainer"></div>
       </div>
@@ -2228,6 +2309,43 @@ body::before {
         </select>
       </div>
       <div class="view-content" id="issuesContent"></div>
+    </div>
+
+    <!-- View: Projects -->
+    <div class="view-panel" id="view-projects" style="display:none;">
+      <div class="view-header">
+        <h2>项目管理</h2>
+        <div class="view-actions">
+          <button class="btn btn-primary btn-sm" onclick="openProjectModal(null)">+ 新建项目</button>
+        </div>
+      </div>
+      <div class="toolbar-row">
+        <div class="filter-group" id="projectStatusFilter">
+          <button class="filter-btn active" data-status="all">全部</button>
+          <button class="filter-btn" data-status="active">进行中</button>
+          <button class="filter-btn" data-status="completed">已完成</button>
+          <button class="filter-btn" data-status="archived">已归档</button>
+        </div>
+      </div>
+      <div class="view-content" id="projectsContent"></div>
+    </div>
+
+    <!-- View: Knowledge Base -->
+    <div class="view-panel" id="view-knowledge" style="display:none;">
+      <div class="view-header">
+        <h2>知识库</h2>
+        <div class="view-actions" id="knowledgeActions">
+          <button class="btn btn-primary btn-sm" id="kbBtnAdd" onclick="openDecisionModal(null)">+ 新决策</button>
+        </div>
+      </div>
+      <div class="view-content" id="knowledgeContent">
+        <div class="dash-tabs">
+          <button class="dash-tab-btn active" data-kb-tab="decisions" onclick="switchKbTab('decisions')">📋 决策记录</button>
+          <button class="dash-tab-btn" data-kb-tab="knowledge" onclick="switchKbTab('knowledge')">📇 知识卡片</button>
+        </div>
+        <div id="kbDecisionsList"></div>
+        <div id="kbCardsList" style="display:none;"></div>
+      </div>
     </div>
 
   </main>
@@ -2837,6 +2955,370 @@ async function deleteMiscRecord(id) {
       showToast('删除失败：' + e.message);
     }
   }
+}
+
+// ============================================================
+// PROJECTS DATA LAYER
+// ============================================================
+const PROJECTS_KEY = 'helix_projects';
+const PROJECT_LINKS_KEY = 'helix_project_links';
+
+let projects = [];
+let projectLinks = [];
+
+function newProjectId() { return 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6); }
+function newLinkId() { return 'pl_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6); }
+
+function loadProjectsLocal() {
+  try { return JSON.parse(localStorage.getItem(PROJECTS_KEY)) || []; } catch { return []; }
+}
+function saveProjectsLocal() {
+  const prev = localStorage.getItem(PROJECTS_KEY);
+  if (prev && prev !== '[]') localStorage.setItem(PROJECTS_KEY + '_backup', prev);
+  localStorage.setItem(PROJECTS_KEY, JSON.stringify(projects));
+}
+function loadLinksLocal() {
+  try { return JSON.parse(localStorage.getItem(PROJECT_LINKS_KEY)) || []; } catch { return []; }
+}
+function saveLinksLocal() {
+  const prev = localStorage.getItem(PROJECT_LINKS_KEY);
+  if (prev && prev !== '[]') localStorage.setItem(PROJECT_LINKS_KEY + '_backup', prev);
+  localStorage.setItem(PROJECT_LINKS_KEY, JSON.stringify(projectLinks));
+}
+
+async function loadProjectsCloud() {
+  projects = loadProjectsLocal();
+  projectLinks = loadLinksLocal();
+  if (!supabaseClient) return;
+  try {
+    const [projRes, linkRes] = await Promise.all([
+      supabaseClient.from('helix_projects').select('*'),
+      supabaseClient.from('helix_project_links').select('*')
+    ]);
+    if (!projRes.error && projRes.data && projRes.data.length > 0) {
+      const cloudProjects = projRes.data.map(r => ({
+        id: r.id, name: r.name, description: r.description || '', color: r.color || MISC_COLOR_PALETTE[0],
+        icon: r.icon || '📁', status: r.status || 'active',
+        startDate: r.start_date || null, endDate: r.end_date || null,
+        createdAt: r.created_at, updatedAt: r.updated_at
+      }));
+      const localMap = {}; projects.forEach(p => { localMap[p.id] = p; });
+      cloudProjects.forEach(cp => { if (localMap[cp.id]) Object.assign(cp, localMap[cp.id]); });
+      cloudProjects.forEach(cp => { delete localMap[cp.id]; });
+      Object.values(localMap).forEach(p => cloudProjects.push(p));
+      projects = cloudProjects;
+      saveProjectsLocal();
+    }
+    if (!linkRes.error && linkRes.data && linkRes.data.length > 0) {
+      const cloudLinks = linkRes.data.map(r => ({
+        id: r.id, projectId: r.project_id, contentType: r.content_type, contentId: r.content_id
+      }));
+      const localLM = {}; projectLinks.forEach(l => { localLM[l.id] = l; });
+      cloudLinks.forEach(cl => { if (localLM[cl.id]) Object.assign(cl, localLM[cl.id]); });
+      cloudLinks.forEach(cl => { delete localLM[cl.id]; });
+      Object.values(localLM).forEach(l => cloudLinks.push(l));
+      projectLinks = cloudLinks;
+      saveLinksLocal();
+    }
+  } catch (e) { console.warn('Projects cloud load failed:', e); }
+}
+
+function getProjectLinks(projectId) {
+  const links = projectLinks.filter(l => l.projectId === projectId);
+  return {
+    tasks: links.filter(l => l.contentType === 'task').map(l => l.contentId),
+    miscTypes: links.filter(l => l.contentType === 'misc_type').map(l => l.contentId),
+    issues: links.filter(l => l.contentType === 'issue').map(l => l.contentId),
+    mindmaps: links.filter(l => l.contentType === 'mindmap').map(l => l.contentId)
+  };
+}
+
+function getContentProjects(contentType, contentId) {
+  const linkIds = projectLinks.filter(l => l.contentType === contentType && String(l.contentId) === String(contentId)).map(l => l.projectId);
+  return projects.filter(p => linkIds.includes(p.id));
+}
+
+async function addProject(data) {
+  const p = {
+    id: newProjectId(), name: data.name, description: data.description || '',
+    color: data.color || MISC_COLOR_PALETTE[0], icon: data.icon || '📁',
+    status: data.status || 'active', startDate: data.startDate || null, endDate: data.endDate || null,
+    createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
+  };
+  projects.push(p);
+  saveProjectsLocal();
+  if (supabaseClient) {
+    try {
+      const { error } = await supabaseClient.from('helix_projects').insert({
+        id: p.id, name: p.name, description: p.description, color: p.color, icon: p.icon,
+        status: p.status, start_date: p.startDate, end_date: p.endDate,
+        created_at: p.createdAt, updated_at: p.updatedAt
+      });
+      if (error) console.warn('addProject cloud failed:', error);
+    } catch (e) { console.warn('addProject cloud failed:', e); }
+  }
+  return p;
+}
+
+async function updateProject(id, changes) {
+  const p = projects.find(x => x.id === id);
+  if (!p) return;
+  Object.assign(p, changes, { updatedAt: new Date().toISOString() });
+  saveProjectsLocal();
+  if (supabaseClient) {
+    try {
+      await supabaseClient.from('helix_projects').update({
+        name: p.name, description: p.description, color: p.color, icon: p.icon,
+        status: p.status, start_date: p.startDate, end_date: p.endDate, updated_at: p.updatedAt
+      }).eq('id', id);
+    } catch (e) { console.warn('updateProject cloud failed:', e); }
+  }
+}
+
+async function deleteProject(id) {
+  projects = projects.filter(p => p.id !== id);
+  projectLinks = projectLinks.filter(l => l.projectId !== id);
+  saveProjectsLocal();
+  saveLinksLocal();
+  if (supabaseClient) {
+    try {
+      await Promise.all([
+        supabaseClient.from('helix_projects').delete().eq('id', id),
+        supabaseClient.from('helix_project_links').delete().eq('project_id', id)
+      ]);
+    } catch (e) { console.warn('deleteProject cloud failed:', e); }
+  }
+}
+
+async function linkToProject(projectId, contentType, contentId) {
+  const exists = projectLinks.find(l => l.projectId === projectId && l.contentType === contentType && l.contentId === contentId);
+  if (exists) return;
+  const link = { id: newLinkId(), projectId, contentType, contentId: String(contentId) };
+  projectLinks.push(link);
+  saveLinksLocal();
+  if (supabaseClient) {
+    try {
+      await supabaseClient.from('helix_project_links').insert({ id: link.id, project_id: projectId, content_type: contentType, content_id: String(contentId) });
+    } catch (e) { console.warn('linkToProject cloud failed:', e); }
+  }
+}
+
+async function unlinkFromProject(linkId) {
+  projectLinks = projectLinks.filter(l => l.id !== linkId);
+  saveLinksLocal();
+  if (supabaseClient) {
+    try { await supabaseClient.from('helix_project_links').delete().eq('id', linkId); } catch (e) {}
+  }
+}
+
+// ============================================================
+// DECISIONS DATA LAYER
+// ============================================================
+const DECISIONS_KEY = 'helix_decisions';
+let decisions = [];
+
+function newDecisionId() { return 'dec_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6); }
+
+function loadDecisionsLocal() {
+  try { return JSON.parse(localStorage.getItem(DECISIONS_KEY)) || []; } catch { return []; }
+}
+function saveDecisionsLocal() {
+  const prev = localStorage.getItem(DECISIONS_KEY);
+  if (prev && prev !== '[]') localStorage.setItem(DECISIONS_KEY + '_backup', prev);
+  localStorage.setItem(DECISIONS_KEY, JSON.stringify(decisions));
+}
+
+async function loadDecisionsCloud() {
+  decisions = loadDecisionsLocal();
+  if (!supabaseClient) return;
+  try {
+    const { data, error } = await supabaseClient.from('helix_decisions').select('*');
+    if (!error && data && data.length > 0) {
+      const cloudDecs = data.map(r => ({
+        id: r.id, title: r.title, date: r.date, context: r.context || '', problem: r.problem || '',
+        options: r.options || [], decision: r.decision || '', rationale: r.rationale || '',
+        stakeholders: r.stakeholders || [], consequences: r.consequences || '',
+        status: r.status || 'decided', tags: r.tags || [], projectId: r.project_id || null,
+        relatedDecisions: r.related_decisions || [], createdAt: r.created_at, updatedAt: r.updated_at
+      }));
+      const localMap = {}; decisions.forEach(d => { localMap[d.id] = d; });
+      cloudDecs.forEach(cd => { if (localMap[cd.id]) Object.assign(cd, localMap[cd.id]); });
+      cloudDecs.forEach(cd => { delete localMap[cd.id]; });
+      Object.values(localMap).forEach(d => cloudDecs.push(d));
+      decisions = cloudDecs;
+      saveDecisionsLocal();
+    }
+  } catch (e) { console.warn('Decisions cloud load failed:', e); }
+}
+
+async function addDecision(data) {
+  const d = {
+    id: newDecisionId(), title: data.title, date: data.date || toDateStr(new Date()),
+    context: data.context || '', problem: data.problem || '',
+    options: data.options || [], decision: data.decision || '', rationale: data.rationale || '',
+    stakeholders: data.stakeholders || [], consequences: data.consequences || '',
+    status: data.status || 'decided', tags: data.tags || [], projectId: data.projectId || null,
+    relatedDecisions: data.relatedDecisions || [],
+    createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
+  };
+  decisions.push(d);
+  saveDecisionsLocal();
+  if (supabaseClient) {
+    try {
+      await supabaseClient.from('helix_decisions').insert({
+        id: d.id, title: d.title, date: d.date, context: d.context, problem: d.problem,
+        options: d.options, decision: d.decision, rationale: d.rationale,
+        stakeholders: d.stakeholders, consequences: d.consequences,
+        status: d.status, tags: d.tags, project_id: d.projectId,
+        related_decisions: d.relatedDecisions, created_at: d.createdAt, updated_at: d.updatedAt
+      });
+    } catch (e) { console.warn('addDecision cloud failed:', e); }
+  }
+  return d;
+}
+
+async function updateDecision(id, changes) {
+  const d = decisions.find(x => x.id === id);
+  if (!d) return;
+  Object.assign(d, changes, { updatedAt: new Date().toISOString() });
+  saveDecisionsLocal();
+  if (supabaseClient) {
+    try {
+      await supabaseClient.from('helix_decisions').update({
+        title: d.title, date: d.date, context: d.context, problem: d.problem,
+        options: d.options, decision: d.decision, rationale: d.rationale,
+        stakeholders: d.stakeholders, consequences: d.consequences,
+        status: d.status, tags: d.tags, project_id: d.projectId,
+        related_decisions: d.relatedDecisions, updated_at: d.updatedAt
+      }).eq('id', id);
+    } catch (e) { console.warn('updateDecision cloud failed:', e); }
+  }
+}
+
+async function deleteDecision(id) {
+  decisions = decisions.filter(d => d.id !== id);
+  saveDecisionsLocal();
+  if (supabaseClient) {
+    try { await supabaseClient.from('helix_decisions').delete().eq('id', id); } catch (e) {}
+  }
+}
+
+// ============================================================
+// KNOWLEDGE CARDS DATA LAYER
+// ============================================================
+const KNOWLEDGE_KEY = 'helix_knowledge';
+let knowledgeCards = [];
+
+function newKnowledgeId() { return 'kn_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6); }
+
+function loadKnowledgeLocal() {
+  try { return JSON.parse(localStorage.getItem(KNOWLEDGE_KEY)) || []; } catch { return []; }
+}
+function saveKnowledgeLocal() {
+  const prev = localStorage.getItem(KNOWLEDGE_KEY);
+  if (prev && prev !== '[]') localStorage.setItem(KNOWLEDGE_KEY + '_backup', prev);
+  localStorage.setItem(KNOWLEDGE_KEY, JSON.stringify(knowledgeCards));
+}
+
+async function loadKnowledgeCloud() {
+  knowledgeCards = loadKnowledgeLocal();
+  if (!supabaseClient) return;
+  try {
+    const { data, error } = await supabaseClient.from('helix_knowledge_cards').select('*');
+    if (!error && data && data.length > 0) {
+      const cloudCards = data.map(r => ({
+        id: r.id, title: r.title, content: r.content || '', category: r.category || '',
+        tags: r.tags || [], source: r.source || '', relatedDecisions: r.related_decisions || [],
+        createdAt: r.created_at, updatedAt: r.updated_at
+      }));
+      const localMap = {}; knowledgeCards.forEach(k => { localMap[k.id] = k; });
+      cloudCards.forEach(ck => { if (localMap[ck.id]) Object.assign(ck, localMap[ck.id]); });
+      cloudCards.forEach(ck => { delete localMap[ck.id]; });
+      Object.values(localMap).forEach(k => cloudCards.push(k));
+      knowledgeCards = cloudCards;
+      saveKnowledgeLocal();
+    }
+  } catch (e) { console.warn('Knowledge cloud load failed:', e); }
+}
+
+async function addKnowledgeCard(data) {
+  const k = {
+    id: newKnowledgeId(), title: data.title, content: data.content || '',
+    category: data.category || '', tags: data.tags || [], source: data.source || '',
+    relatedDecisions: data.relatedDecisions || [],
+    createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
+  };
+  knowledgeCards.push(k);
+  saveKnowledgeLocal();
+  if (supabaseClient) {
+    try {
+      await supabaseClient.from('helix_knowledge_cards').insert({
+        id: k.id, title: k.title, content: k.content, category: k.category,
+        tags: k.tags, source: k.source, related_decisions: k.relatedDecisions,
+        created_at: k.createdAt, updated_at: k.updatedAt
+      });
+    } catch (e) { console.warn('addKnowledgeCard cloud failed:', e); }
+  }
+  return k;
+}
+
+async function updateKnowledgeCard(id, changes) {
+  const k = knowledgeCards.find(x => x.id === id);
+  if (!k) return;
+  Object.assign(k, changes, { updatedAt: new Date().toISOString() });
+  saveKnowledgeLocal();
+  if (supabaseClient) {
+    try {
+      await supabaseClient.from('helix_knowledge_cards').update({
+        title: k.title, content: k.content, category: k.category,
+        tags: k.tags, source: k.source, related_decisions: k.relatedDecisions,
+        updated_at: k.updatedAt
+      }).eq('id', id);
+    } catch (e) { console.warn('updateKnowledgeCard cloud failed:', e); }
+  }
+}
+
+async function deleteKnowledgeCard(id) {
+  knowledgeCards = knowledgeCards.filter(k => k.id !== id);
+  saveKnowledgeLocal();
+  if (supabaseClient) {
+    try { await supabaseClient.from('helix_knowledge_cards').delete().eq('id', id); } catch (e) {}
+  }
+}
+
+// ============================================================
+// ENHANCED DAILY JOURNAL DATA LAYER
+// ============================================================
+let dailyJournal = null; // current day's journal object
+
+function dailyJournalKey(dateStr) {
+  return 'helix_daily_journal_' + (dateStr || toDateStr(today));
+}
+
+function loadDailyJournal(dateStr) {
+  const key = dailyJournalKey(dateStr);
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  // Migration: try old plain-text key
+  const oldKey = 'todo_daily_note_' + (dateStr || toDateStr(today));
+  const oldText = localStorage.getItem(oldKey);
+  if (oldText) {
+    const j = { date: dateStr || toDateStr(today), content: oldText, mood: 'neutral', highlights: [], decisions: [], metrics: {}, updatedAt: new Date().toISOString() };
+    localStorage.setItem(key, JSON.stringify(j));
+    return j;
+  }
+  return { date: dateStr || toDateStr(today), content: '', mood: 'neutral', highlights: [], decisions: [], metrics: {}, updatedAt: new Date().toISOString() };
+}
+
+function saveDailyJournal(j) {
+  if (!j) return;
+  j.updatedAt = new Date().toISOString();
+  const key = dailyJournalKey(j.date);
+  const prev = localStorage.getItem(key);
+  if (prev) localStorage.setItem(key + '_backup', prev);
+  localStorage.setItem(key, JSON.stringify(j));
 }
 
 let todos = [];
@@ -3831,6 +4313,17 @@ function renderDaily() {
     item.addEventListener('click', () => openDetail(Number(item.dataset.id)));
   });
   loadDailyNote();
+  // Compute & display daily metrics
+  const completedToday = todos.filter(t => t.status === 'completed' && t.createdAt && t.createdAt >= todayStr).length;
+  const newToday = todos.filter(t => t.createdAt && t.createdAt >= todayStr).length;
+  const metricsEl = document.getElementById('dailyMetrics');
+  if (metricsEl) {
+    const parts = [];
+    if (completedToday > 0) parts.push('✅ 完成 ' + completedToday);
+    if (newToday > 0) parts.push('🆕 新建 ' + newToday);
+    parts.push('📋 活跃 ' + activeTasks.length);
+    metricsEl.textContent = parts.join(' · ');
+  }
 }
 
 function renderDailyItem(task) {
@@ -3855,16 +4348,57 @@ function loadDailyNote() {
   const textarea = document.getElementById('dailyNoteInput');
   const saved = document.getElementById('dailyNoteSaved');
   if (!textarea) return;
-  textarea.value = localStorage.getItem(dailyNoteKey()) || '';
+  // Load enhanced journal (auto-migrates from old key)
+  const todayStr = toDateStr(today);
+  dailyJournal = loadDailyJournal(todayStr);
+  textarea.value = dailyJournal.content || '';
+  // Update mood buttons if present
+  if (dailyJournal.mood) {
+    const moodBtns = document.querySelectorAll('.mood-btn');
+    moodBtns.forEach(b => b.classList.toggle('active', b.dataset.mood === dailyJournal.mood));
+  }
+  // Update highlights if present
+  renderDailyHighlights();
   saved.classList.remove('visible');
 }
 function saveDailyNote() {
   const textarea = document.getElementById('dailyNoteInput');
   const saved = document.getElementById('dailyNoteSaved');
   if (!textarea) return;
-  localStorage.setItem(dailyNoteKey(), textarea.value);
+  if (!dailyJournal) dailyJournal = loadDailyJournal(toDateStr(today));
+  dailyJournal.content = textarea.value;
+  saveDailyJournal(dailyJournal);
   saved.classList.add('visible');
   setTimeout(() => saved.classList.remove('visible'), 1500);
+}
+function setDailyMood(mood) {
+  if (!dailyJournal) dailyJournal = loadDailyJournal(toDateStr(today));
+  dailyJournal.mood = mood;
+  saveDailyJournal(dailyJournal);
+  document.querySelectorAll('.mood-btn').forEach(b => b.classList.toggle('active', b.dataset.mood === mood));
+}
+function addDailyHighlight() {
+  const input = document.getElementById('dailyHighlightInput');
+  if (!input || !input.value.trim()) return;
+  if (!dailyJournal) dailyJournal = loadDailyJournal(toDateStr(today));
+  dailyJournal.highlights.push(input.value.trim());
+  saveDailyJournal(dailyJournal);
+  input.value = '';
+  renderDailyHighlights();
+}
+function removeDailyHighlight(idx) {
+  if (!dailyJournal) return;
+  dailyJournal.highlights.splice(idx, 1);
+  saveDailyJournal(dailyJournal);
+  renderDailyHighlights();
+}
+function renderDailyHighlights() {
+  const container = document.getElementById('dailyHighlights');
+  if (!container) return;
+  const hl = dailyJournal ? (dailyJournal.highlights || []) : [];
+  container.innerHTML = hl.map((h, i) =>
+    '<span class="tag-chip highlight-chip">' + escHtml(h) + '<button class="highlight-remove" onclick="removeDailyHighlight(' + i + ')">×</button></span>'
+  ).join('');
 }
 
 // ============================================================
@@ -4811,6 +5345,7 @@ async function renderReport() {
       <button class="dash-tab-btn ${dashTab==='dashboard'?'active':''}" onclick="dashTab='dashboard';renderReport();">📊 看板</button>
       <button class="dash-tab-btn ${dashTab==='cases'?'active':''}" onclick="dashTab='cases';renderReport();">📋 案例墙</button>
       <button class="dash-tab-btn ${dashTab==='timeline'?'active':''}" onclick="dashTab='timeline';renderReport();">📅 时间线</button>
+      <button class="dash-tab-btn ${dashTab==='unified'?'active':''}" onclick="dashTab='unified';renderReport();">📊 综合报告</button>
     </div>
     <div class="report-toolbar" style="margin-bottom:14px;">
       <div class="range-group">
@@ -4829,6 +5364,7 @@ async function renderReport() {
     </div>
     ${dashTab==='cases' ? renderCaseWallHTML() : ''}
     ${dashTab==='timeline' ? renderTimelineHTML() : ''}
+    ${dashTab==='unified' ? renderUnifiedHTML() : ''}
     ${dashTab==='dashboard' ? `
     <div class="dash-stat-row">
       <div class="dash-stat-card"><div class="dash-stat-num">${totalRecords}</div><div class="dash-stat-label">📋 累计记录</div></div>
@@ -4920,6 +5456,8 @@ async function renderReport() {
       <button class="btn btn-ghost btn-sm" onclick="exportReportCSV()">导出 CSV</button>
       <button class="btn btn-primary btn-sm" onclick="exportReportPPT()">导出 PPT 报告</button>
       <button class="btn btn-primary btn-sm" style="background:var(--accent-hover);" onclick="exportDefensePPT()">🎓 导出答辩 PPT</button>
+      <button class="btn btn-primary btn-sm" onclick="exportWeeklyReport()">📅 周报</button>
+      <button class="btn btn-primary btn-sm" onclick="exportMonthlyReport()">📆 月报</button>
     </div>
   `;
 
@@ -5747,6 +6285,286 @@ async function exportReportPPT() {
 }
 
 // ============================================================
+// UNIFIED REPORT + AI NARRATIVE + EXPORTS
+// ============================================================
+function renderUnifiedHTML() {
+  const todayStr = toDateStr(new Date());
+  // Task stats
+  const totalTasks = todos.length;
+  const completedTasks = todos.filter(t => t.status === 'completed').length;
+  const inProgressTasks = todos.filter(t => t.status === 'in-progress').length;
+  const taskRate = totalTasks > 0 ? Math.round(completedTasks / totalTasks * 100) : 0;
+  // Issue stats
+  const totalIssues = issues ? issues.length : 0;
+  const openIssues = issues ? issues.filter(x => x.status === 'open').length : 0;
+  // Decision stats
+  const totalDecs = decisions.length;
+  const activeDecs = decisions.filter(d => d.status === 'decided' || d.status === 'implemented').length;
+  // Misc stats
+  const totalMiscRecs = miscRecords.length;
+  const closedMisc = miscRecords.filter(r => r.status === 'closed').length;
+  const miscRate = totalMiscRecs > 0 ? Math.round(closedMisc / totalMiscRecs * 100) : 0;
+  // Project stats
+  const activeProjects = projects.filter(p => p.status === 'active').length;
+  const completedProjects = projects.filter(p => p.status === 'completed').length;
+
+  let html = '';
+
+  // Summary stat cards row
+  html += '<div class="dash-stat-row">';
+  html += '<div class="dash-stat-card"><div class="dash-stat-num">' + totalTasks + '</div><div class="dash-stat-label">📋 总任务 (完成' + taskRate + '%)</div></div>';
+  html += '<div class="dash-stat-card"><div class="dash-stat-num">' + totalMiscRecs + '</div><div class="dash-stat-label">📊 杂项记录 (关闭' + miscRate + '%)</div></div>';
+  html += '<div class="dash-stat-card"><div class="dash-stat-num">' + totalIssues + '</div><div class="dash-stat-label">🐛 问题 (' + openIssues + ' 未解决)</div></div>';
+  html += '<div class="dash-stat-card"><div class="dash-stat-num">' + totalDecs + '</div><div class="dash-stat-label">📋 决策 (' + activeDecs + ' 活跃)</div></div>';
+  html += '</div>';
+
+  // Project overview
+  html += '<div class="dash-stat-row" style="margin-top:12px;">';
+  html += '<div class="dash-stat-card"><div class="dash-stat-num">' + activeProjects + '</div><div class="dash-stat-label">📁 活跃项目</div></div>';
+  html += '<div class="dash-stat-card"><div class="dash-stat-num">' + completedProjects + '</div><div class="dash-stat-label">✅ 已完成项目</div></div>';
+  html += '<div class="dash-stat-card"><div class="dash-stat-num">' + inProgressTasks + '</div><div class="dash-stat-label">🔄 进行中任务</div></div>';
+  html += '<div class="dash-stat-card"><div class="dash-stat-num">' + completedTasks + '</div><div class="dash-stat-label">✅ 已完成任务</div></div>';
+  html += '</div>';
+
+  // Active projects with detail
+  if (activeProjects > 0) {
+    html += '<div class="report-chart-card"><h3>📁 活跃项目概览</h3><div class="dash-stat-row">';
+    for (const p of projects.filter(p => p.status === 'active').slice(0, 4)) {
+      const links = getProjectLinks(p.id);
+      const decCount = decisions.filter(d => d.projectId === p.id).length;
+      html += '<div class="dash-stat-card"><div style="font-size:13px;font-weight:600;">' + escHtml(p.icon) + ' ' + escHtml(p.name) + '</div>';
+      html += '<div style="font-size:11px;color:var(--text-muted);margin-top:4px;">';
+      html += (links.tasks.length || 0) + ' 任务 · ' + (links.miscTypes.length || 0) + ' 类型 · ' + decCount + ' 决策';
+      html += '</div></div>';
+    }
+    html += '</div></div>';
+  }
+
+  // Recent decisions
+  if (decisions.length > 0) {
+    html += '<div class="report-chart-card"><h3>📋 最近决策</h3>';
+    const recentDecs = decisions.slice().sort((a, b) => (b.date || '').localeCompare(a.date || '')).slice(0, 5);
+    for (const d of recentDecs) {
+      const proj = d.projectId ? projects.find(p => p.id === d.projectId) : null;
+      html += '<div class="case-card"><strong>' + escHtml(d.title) + '</strong>';
+      html += '<div style="font-size:12px;color:var(--text-muted);">' + d.date + (proj ? ' · 📁 ' + escHtml(proj.name) : '') + '</div>';
+      html += '<div style="font-size:12px;color:var(--text-secondary);">' + escHtml((d.decision || '').substring(0, 120)) + '</div></div>';
+    }
+    html += '</div>';
+  }
+
+  // AI Narrative Panel
+  html += '<div class="report-chart-card" id="aiNarrativeCard">';
+  html += '<h3>🤖 AI 数据洞察 <button class="btn btn-ghost btn-sm" onclick="generateAINarrative()" id="aiNarrativeBtn">生成 AI 分析</button></h3>';
+  html += '<div id="aiNarrativeContent" class="ai-narrative"></div>';
+  html += '</div>';
+
+  return html;
+}
+
+async function generateAINarrative() {
+  const btn = document.getElementById('aiNarrativeBtn');
+  const content = document.getElementById('aiNarrativeContent');
+  if (!btn || !content) return;
+  btn.disabled = true; btn.textContent = '生成中…';
+  content.innerHTML = '<span style="color:var(--text-muted);">⏳ AI 正在分析你的工作数据…</span>';
+
+  // Gather comprehensive stats
+  const totalTasks = todos.length;
+  const completedTasks = todos.filter(t => t.status === 'completed').length;
+  const inProgressTasks = todos.filter(t => t.status === 'in-progress').length;
+  const p1Tasks = todos.filter(t => t.priority === 1 || t.priority === '1').length;
+  const totalMiscRecs = miscRecords.length;
+  const closedMisc = miscRecords.filter(r => r.status === 'closed').length;
+  const majorCases = miscRecords.filter(r => r.severity === 'major').length;
+  const totalIssues = issues ? issues.length : 0;
+  const openIssuesNum = issues ? issues.filter(x => x.status === 'open').length : 0;
+  const totalDecs = decisions.length;
+  const activeProjects = projects.filter(p => p.status === 'active').length;
+
+  // Type distribution
+  const typeAgg = {};
+  for (const r of miscRecords) { typeAgg[r.typeId] = (typeAgg[r.typeId] || 0) + r.count; }
+  const typeSummary = Object.entries(typeAgg).map(([tid, total]) => {
+    const ty = miscTypes.find(t => t.id === tid);
+    return (ty ? ty.name : '未知') + '：' + total + (ty ? ty.unit : '');
+  }).slice(0, 10);
+
+  const statsPrompt = `你是用户的个人 AI 助手，请基于以下真实工作数据，生成一段 150-250 字的中文工作总结/洞察。
+格式：自然段落，不要列表形式。语气：专业、建设性。
+
+数据：
+- 任务：共 ${totalTasks} 个，完成 ${completedTasks} 个（${totalTasks>0?Math.round(completedTasks/totalTasks*100):0}%），进行中 ${inProgressTasks} 个，P1 高优先级 ${p1Tasks} 个
+- 杂项工作记录：共 ${totalMiscRecs} 条，已关闭 ${closedMisc} 条（${totalMiscRecs>0?Math.round(closedMisc/totalMiscRecs*100):0}%），重大案例 ${majorCases} 个
+- 问题：共 ${totalIssues} 个，未解决 ${openIssuesNum} 个
+- 决策：共 ${totalDecs} 条
+- 活跃项目：${activeProjects} 个
+- 工作类型分布：${typeSummary.join('、') || '暂无'}
+
+请分析工作重点、亮点和需要注意的地方。直接输出文案即可，不用解释。`;
+
+  try {
+    const msgs = [{ role: 'system', content: '你是用户的个人 AI 助手，根据真实工作数据给出洞察。直接输出文案，不要解释。' }, { role: 'user', content: statsPrompt }];
+    const res = await fetch(AI_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY },
+      body: JSON.stringify({ model: AI_MODEL, messages: msgs })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+    const text = data.choices && data.choices[0] ? (data.choices[0].message.content || '') : '';
+    content.innerHTML = text ? text.replace(/\n/g, '<br>') : '（AI 未返回内容，请重试）';
+  } catch (e) {
+    content.innerHTML = '<span style="color:var(--red);">生成失败：' + escHtml(String(e.message || e)) + '</span>';
+  }
+  btn.disabled = false; btn.textContent = '重新生成';
+}
+
+// ---- CSS for AI narrative ----
+(function() {
+  const style = document.createElement('style');
+  style.textContent = '.ai-narrative { font-size: 13.5px; line-height: 1.8; color: var(--text-secondary); white-space: normal; }';
+  document.head.appendChild(style);
+})();
+
+// ---- New export: Weekly Report ----
+async function exportWeeklyReport() {
+  if (typeof PptxGenJS === 'undefined') { showToast('PPT 库未加载'); return; }
+  const pptx = new PptxGenJS();
+  const todayStr = toDateStr(new Date());
+  // Compute week range (Mon to Sun)
+  const now = new Date();
+  const dayOfWeek = now.getDay();
+  const monOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  const mon = new Date(now); mon.setDate(now.getDate() + monOffset);
+  const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+  const weekLabel = toDateStr(mon) + ' ~ ' + toDateStr(sun);
+
+  // Filter data for this week
+  const from = toDateStr(mon), to = toDateStr(sun);
+  const weekTasks = todos.filter(t => t.createdAt && t.createdAt >= from && t.createdAt <= to);
+  const weekCompleted = todos.filter(t => t.status === 'completed' && t.updatedAt && t.updatedAt >= from && t.updatedAt <= to);
+  const weekMisc = miscRecords.filter(r => r.occurredAt >= from && r.occurredAt <= to);
+  const weekDecs = decisions.filter(d => d.date >= from && d.date <= to);
+
+  // Slide 1: Cover
+  var slide = pptx.addSlide();
+  slide.background = { fill: 'FDF9F1' };
+  slide.addText('📅 工作周报', { x: 1, y: 1.3, w: 11, fontSize: 30, bold: true, color: '2D2417' });
+  slide.addText(weekLabel, { x: 1, y: 2.2, w: 11, fontSize: 16, color: 'B8965A' });
+  slide.addText(todayStr + ' 生成', { x: 1, y: 2.8, w: 11, fontSize: 11, color: '999488' });
+
+  // Slide 2: Task Summary
+  slide = pptx.addSlide();
+  slide.addText('任务概览', { x: 0.6, y: 0.4, w: 11, fontSize: 18, bold: true, color: '2D2417' });
+  slide.addTable([
+    ['指标', '数值'],
+    ['本周新建任务', String(weekTasks.length)],
+    ['本周完成任务', String(weekCompleted.length)],
+    ['当前进行中', String(todos.filter(t => t.status === 'in-progress').length)],
+    ['任务总数', String(todos.length)]
+  ], { x: 0.7, y: 1.2, w: 11, fontSize: 13, border: { type: 'solid', pt: 0.5, color: 'EDE4CF' } });
+
+  // Slide 3: Misc + Decisions
+  slide = pptx.addSlide();
+  slide.addText('工作记录 & 决策', { x: 0.6, y: 0.4, w: 11, fontSize: 18, bold: true, color: '2D2417' });
+  const miscRows = [['类型', '数量', '单位']];
+  const typeAggW = {};
+  for (const r of weekMisc) { typeAggW[r.typeId] = (typeAggW[r.typeId] || 0) + r.count; }
+  for (const [tid, total] of Object.entries(typeAggW)) {
+    const ty = miscTypes.find(t => t.id === tid);
+    miscRows.push([ty ? ty.name : '未知', String(total), ty ? ty.unit : '']);
+  }
+  if (miscRows.length === 1) miscRows.push(['（无）', '0', '']);
+  slide.addTable(miscRows, { x: 0.7, y: 1.2, w: 5, fontSize: 12, border: { type: 'solid', pt: 0.5, color: 'EDE4CF' } });
+  const decRows = [['本周决策', '日期']];
+  for (const d of weekDecs) { decRows.push([d.title, d.date]); }
+  if (decRows.length === 1) decRows.push(['（无）', '']);
+  slide.addTable(decRows, { x: 6.5, y: 1.2, w: 6, fontSize: 12, border: { type: 'solid', pt: 0.5, color: 'EDE4CF' } });
+
+  // Slide 4: Thank you
+  slide = pptx.addSlide();
+  slide.background = { fill: '2D2417' };
+  slide.addText('谢谢', { x: 1, y: 1.8, w: 11, fontSize: 36, bold: true, color: 'FDF9F1', align: 'center' });
+  slide.addText('新的一周，继续加油', { x: 1, y: 2.7, w: 11, fontSize: 16, color: 'B8965A', align: 'center' });
+
+  await pptx.writeFile({ fileName: '周报-' + toDateStr(mon) + '-' + toDateStr(sun) + '.pptx' });
+  showToast('周报已导出');
+}
+
+// ---- New export: Monthly Report ----
+async function exportMonthlyReport() {
+  if (typeof PptxGenJS === 'undefined') { showToast('PPT 库未加载'); return; }
+  const pptx = new PptxGenJS();
+  const now = new Date();
+  const monthLabel = now.getFullYear() + '年' + (now.getMonth() + 1) + '月';
+  const todayStr = toDateStr(now);
+  const from = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-01';
+  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const to = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(lastDay).padStart(2, '0');
+
+  const monthTasks = todos.filter(t => t.createdAt && t.createdAt >= from && t.createdAt <= to);
+  const monthCompleted = todos.filter(t => t.status === 'completed');
+  const monthMisc = miscRecords.filter(r => r.occurredAt >= from && r.occurredAt <= to);
+  const monthDecs = decisions.filter(d => d.date >= from && d.date <= to);
+  const totalMiscCount = monthMisc.reduce((s, r) => s + r.count, 0);
+
+  // Slide 1: Cover
+  var slide = pptx.addSlide();
+  slide.background = { fill: 'FDF9F1' };
+  slide.addText('📆 ' + monthLabel + ' 工作月报', { x: 1, y: 1.3, w: 11, fontSize: 30, bold: true, color: '2D2417' });
+  slide.addText(todayStr + ' 生成', { x: 1, y: 2.2, w: 11, fontSize: 13, color: '999488' });
+
+  // Slide 2: Key Stats
+  slide = pptx.addSlide();
+  slide.addText('月度关键数据', { x: 0.6, y: 0.4, w: 11, fontSize: 18, bold: true, color: '2D2417' });
+  slide.addTable([
+    ['指标', '本月', '累计'],
+    ['新建任务', String(monthTasks.length), String(todos.length)],
+    ['完成任务', String(monthCompleted.length), String(todos.filter(t => t.status === 'completed').length)],
+    ['进行中任务', String(todos.filter(t => t.status === 'in-progress').length), '-'],
+    ['杂项记录', String(monthMisc.length) + '条 / ' + totalMiscCount + '次', String(miscRecords.length) + '条'],
+    ['决策', String(monthDecs.length), String(decisions.length)],
+    ['活跃项目', String(projects.filter(p => p.status === 'active').length), '-']
+  ], { x: 0.7, y: 1.2, w: 11, fontSize: 13, border: { type: 'solid', pt: 0.5, color: 'EDE4CF' } });
+
+  // Slide 3: Misc type distribution
+  slide = pptx.addSlide();
+  slide.addText('工作类型分布', { x: 0.6, y: 0.4, w: 11, fontSize: 18, bold: true, color: '2D2417' });
+  const typeAggM = {};
+  for (const r of monthMisc) { typeAggM[r.typeId] = (typeAggM[r.typeId] || 0) + r.count; }
+  const sortedTypes = Object.entries(typeAggM).sort((a, b) => b[1] - a[1]);
+  const typeRows = [['类型', '数量', '占比']];
+  for (const [tid, total] of sortedTypes) {
+    const ty = miscTypes.find(t => t.id === tid);
+    typeRows.push([ty ? ty.name : '未知', String(total) + (ty ? ty.unit : ''), Math.round(total / Math.max(1, totalMiscCount) * 100) + '%']);
+  }
+  if (typeRows.length === 1) typeRows.push(['（无）', '0', '0%']);
+  slide.addTable(typeRows, { x: 0.7, y: 1.2, w: 11, fontSize: 13, border: { type: 'solid', pt: 0.5, color: 'EDE4CF' } });
+
+  // Slide 4: Decisions
+  if (monthDecs.length > 0) {
+    slide = pptx.addSlide();
+    slide.addText('本月决策', { x: 0.6, y: 0.4, w: 11, fontSize: 18, bold: true, color: '2D2417' });
+    const decRows = [['日期', '决策', '状态']];
+    for (const d of monthDecs) {
+      const stMap = { proposed: '提议', decided: '已决定', implemented: '已实施', deprecated: '已废弃' };
+      decRows.push([d.date, d.title, stMap[d.status] || d.status]);
+    }
+    slide.addTable(decRows, { x: 0.7, y: 1.2, w: 11, fontSize: 12, border: { type: 'solid', pt: 0.5, color: 'EDE4CF' } });
+  }
+
+  // Final Slide
+  slide = pptx.addSlide();
+  slide.background = { fill: '2D2417' };
+  slide.addText('谢谢', { x: 1, y: 1.8, w: 11, fontSize: 36, bold: true, color: 'FDF9F1', align: 'center' });
+  slide.addText('下个月继续加油', { x: 1, y: 2.7, w: 11, fontSize: 16, color: 'B8965A', align: 'center' });
+
+  await pptx.writeFile({ fileName: '月报-' + monthLabel + '.pptx' });
+  showToast('月报已导出');
+}
+
+// ============================================================
 // AI ASSISTANT (DeepSeek agent)
 // ============================================================
 const AI_ENDPOINT = SUPABASE_URL + '/functions/v1/ask';
@@ -6091,31 +6909,43 @@ const AI_TOOLS = [
   ,{ type:'function', function:{ name:'run_python', description:'在浏览器内置 Python(Pyodide) 里跑 pandas 代码做任意复杂分析。已注入：df=第一个已加载表的 DataFrame，sheets=所有表的 DataFrame 列表。要让用户下载文件就写到 /output/，用 CSV：df.to_csv("/output/result.csv", index=False)（不支持 .xlsx——要 Excel 文件请改用 export_processed_xlsx/generate_xlsx 工具）。print 的内容会返回。仅在用户已启用高级分析时可用。', parameters:{ type:'object', properties:{ code:{type:'string', description:'要执行的 Python 代码'} }, required:['code'] } } }
   ,{ type:'function', function:{ name:'generate_defense_report', description:'基于杂项任务集的真实工作数据，生成转正答辩汇报大纲。包含：工作量总览、效率趋势、典型案例、总结建议。', parameters:{ type:'object', properties:{ period:{type:'string', description:'统计时间段，如"2026年1月-6月"'} }, required:[] } } }
   ,{ type:'function', function:{ name:'summarize_case', description:'对指定的一条工作记录(通过id)生成案例总结，包含问题、根因、措施、效果。需提供记录id。先通过query_misc_records获取记录列表找到目标id。', parameters:{ type:'object', properties:{ recordId:{type:'integer', description:'杂项记录的id'} }, required:['recordId'] } } }
+  ,{ type:'function', function:{ name:'list_projects', description:'获取所有项目列表，可按状态筛选', parameters:{ type:'object', properties:{ status:{type:'string', enum:['active','completed','archived','all']} } } } }
+  ,{ type:'function', function:{ name:'get_project_detail', description:'获取项目详情，包含关联的任务/杂项/问题数量和决策列表', parameters:{ type:'object', properties:{ projectId:{type:'string'} }, required:['projectId'] } } }
+  ,{ type:'function', function:{ name:'list_decisions', description:'查询决策记录', parameters:{ type:'object', properties:{ status:{type:'string'}, search:{type:'string'}, projectId:{type:'string'} } } } }
+  ,{ type:'function', function:{ name:'add_decision', description:'记录一条决策', parameters:{ type:'object', properties:{ title:{type:'string'}, context:{type:'string'}, problem:{type:'string'}, decision:{type:'string'}, rationale:{type:'string'}, date:{type:'string'}, status:{type:'string', enum:['proposed','decided','implemented','deprecated']}, tags:{type:'array',items:{type:'string'}}, projectId:{type:'string'} }, required:['title','decision'] } } }
+  ,{ type:'function', function:{ name:'list_knowledge', description:'查询知识卡片，可按分类/tag/搜索过滤', parameters:{ type:'object', properties:{ category:{type:'string'}, search:{type:'string'} } } } }
+  ,{ type:'function', function:{ name:'add_knowledge', description:'新建一条知识卡片', parameters:{ type:'object', properties:{ title:{type:'string'}, content:{type:'string'}, category:{type:'string'}, tags:{type:'array',items:{type:'string'}} }, required:['title','content'] } } }
+  ,{ type:'function', function:{ name:'get_daily_journal', description:'读取指定日期的工作日志/日报，包含心情、亮点、决策和指标', parameters:{ type:'object', properties:{ date:{type:'string', description:'YYYY-MM-DD，默认今天'} } } } }
+  ,{ type:'function', function:{ name:'generate_report_narrative', description:'基于指定时间段的整体工作数据生成 AI 工作总结文案', parameters:{ type:'object', properties:{ period:{type:'string', description:'如"本月"/"2026年7月"'} } } } }
 ];
 
 function isWriteTool(name) {
-  return ['create_task','update_task','complete_task','delete_task','add_misc_record'].includes(name);
+  return ['create_task','update_task','complete_task','delete_task','add_misc_record','add_decision','add_knowledge'].includes(name);
 }
 
 function isDocTool(name){
-  return ['generate_pptx','generate_xlsx','generate_docx','export_processed_xlsx','generate_chart','generate_defense_report','summarize_case'].includes(name);
+  return ['generate_pptx','generate_xlsx','generate_docx','export_processed_xlsx','generate_chart','generate_defense_report','summarize_case','generate_report_narrative'].includes(name);
 }
 
 function buildAISystem() {
   const todayStr = toDateStr(new Date());
   const types = activeMiscTypes().map(t => `${t.name}(单位:${t.unit})`).join('、') || '（暂无）';
-  return `你是用户的个人待办助手，嵌在一个"待办任务 + 杂项计数记录"的应用里。今天是 ${todayStr}（周${['日','一','二','三','四','五','六'][new Date().getDay()]}）。
-你能调用工具查询和修改用户的任务与杂项记录。需要数据时主动调用工具，绝不编造 id 或数字。
-当前杂项任务集类型：${types}。
+  const projCount = projects ? projects.filter(p=>p.status==='active').length : 0;
+  const decCount = decisions ? decisions.length : 0;
+  return `你是用户的个人待办助手，嵌在一个多维工作记录系统里。今天是 ${todayStr}（周${['日','一','二','三','四','五','六'][new Date().getDay()]}）。
+你能调用工具查询和修改用户的任务、杂项记录、项目、决策、知识卡片和日报。需要数据时主动调用工具，绝不编造 id 或数字。
+当前杂项任务集类型：${types}。活跃项目：${projCount} 个。决策记录：${decCount} 条。
 规则：
 - 所有日期用 YYYY-MM-DD 格式；"今天/明天/本周"等先自行换算成具体日期。
 - 要修改、完成或删除某个任务前，必须先用 list_tasks 拿到它真实的 id。
 - 记录杂项用 add_misc_record，typeName 要对上现有类型名。
 - 写操作（增/改/删/记录）会由界面再次向用户确认，你照常调用即可，不用自己问"要不要执行"。
+- 项目/决策/知识：list_projects/get_project_detail/list_decisions/add_decision/list_knowledge/add_knowledge/get_daily_journal 可查询和管理这些新模块。
+- 汇报生成：generate_report_narrative 可基于所有工作数据生成 AI 工作总结文案。用户提到"汇报/总结/周报/月报"时主动用该工具或 generate_defense_report。
 - 可生成文档：generate_pptx / generate_xlsx / generate_docx。把内容组织成结构化参数。要"导出我的任务/杂项"时，先用查询工具拿真实数据，再组织成文档结构调用生成工具。生成会弹确认卡，照常调用即可。
-- 🎓 转正答辩：generate_defense_report（基于杂项数据生成答辩大纲）和 summarize_case（总结单条案例）。用户提到"答辩/转正/汇报"时主动使用。数据看板也有"导出答辩PPT"按钮生成结构化PPT。
+- 🎓 转正答辩：generate_defense_report（基于杂项数据生成答辩大纲）和 summarize_case（总结单条案例）。用户提到"答辩/转正/汇报"时主动使用。
 - 用户上传/粘贴表格后：先 inspect_excel 看结构，再 query_excel 做筛选/分组聚合/排序得到结果并解读；需要落地文件时 export_processed_xlsx 导出（会弹确认卡）。绝不臆造数据。
-- 复杂/任意分析，或需要透视、多表关联、复杂计算时，可用 run_python（浏览器内置 pandas，已注入 df 和 sheets）。简单的筛选/汇总仍优先用 query_excel（快、免加载）。run_python 仅在用户启用高级分析后可用；若返回未启用提示，请转告用户点对话框里的「⚡ 启用高级分析」按钮。要生成下载文件就写到 /output/，用 CSV（to_csv）；run_python 不支持生成 .xlsx，要 Excel 文件请改用 generate_xlsx/export_processed_xlsx。用了 run_python 后，回复里简述「我运行了这段代码…」并解读结果。
+- 复杂/任意分析，或需要透视、多表关联、复杂计算时，可用 run_python（浏览器内置 pandas，已注入 df 和 sheets）。简单的筛选/汇总仍优先用 query_excel（快、免加载）。run_python 仅在用户启用高级分析后可用；若返回未启用提示，请转告用户点对话框里的「⚡ 启用高级分析」按钮。
 - 回复用中文，简洁明了。`;
 }
 
@@ -6194,6 +7024,12 @@ function aiToolActivity(name) {
   if (name === 'query_excel') return '🔍 正在分析表格…';
   if (name === 'generate_chart') return '📈 正在生成图表…';
   if (name === 'run_python') return '🐍 正在运行 Python…';
+  if (name === 'list_projects') return '📁 正在查询项目…';
+  if (name === 'get_project_detail') return '📁 正在读取项目详情…';
+  if (name === 'list_decisions') return '📋 正在查询决策…';
+  if (name === 'list_knowledge') return '📇 正在查询知识卡片…';
+  if (name === 'get_daily_journal') return '📝 正在读取日报…';
+  if (name === 'generate_report_narrative') return '🤖 正在生成汇报文案…';
   return '🔧 ' + name;
 }
 
@@ -6313,10 +7149,79 @@ async function executeAITool(name, args) {
         return { ok:true, message:'已生成图表 PNG' };
       }
       case 'generate_defense_report': {
-        return await handleDefenseReport(args);
+        // 基于全量杂项数据生成答辩/汇报大纲文本
+        const allRecs = miscRecords.slice();
+        const closedRecs = allRecs.filter(r => r.status === 'closed');
+        const totalRecs = allRecs.length;
+        const closeRate = totalRecs > 0 ? Math.round(closedRecs.length / totalRecs * 100) : 0;
+        let totalCloseDays = 0, closeCount = 0;
+        for (const r of closedRecs) {
+          if (r.closeDate && r.occurredAt) {
+            totalCloseDays += Math.max(0, Math.round((new Date(r.closeDate) - new Date(r.occurredAt)) / 86400000));
+            closeCount++;
+          }
+        }
+        const avgCloseDays = closeCount > 0 ? (totalCloseDays / closeCount).toFixed(1) : '-';
+        // 分类分布
+        const typeAgg = {};
+        for (const r of allRecs) { typeAgg[r.typeId] = (typeAgg[r.typeId] || 0) + r.count; }
+        const typeSummary = Object.entries(typeAgg).map(([tid, total]) => {
+          const ty = miscTypes.find(t => t.id === tid);
+          return (ty ? ty.icon + ' ' + ty.name : '(已删除)') + '：' + total + ' ' + (ty ? ty.unit : '');
+        });
+        // 月度趋势
+        const monthAgg = {}; let months = [];
+        const now = new Date();
+        for (let m = 5; m >= 0; m--) {
+          const d = new Date(now.getFullYear(), now.getMonth() - m, 1);
+          months.push(d.toISOString().substring(0, 7));
+        }
+        for (const r of allRecs) {
+          if (r.occurredAt) {
+            const prefix = r.occurredAt.substring(0, 7);
+            if (months.includes(prefix)) {
+              if (!monthAgg[prefix]) monthAgg[prefix] = { created: 0, closed: 0 };
+              monthAgg[prefix].created += r.count;
+              if (r.status === 'closed') monthAgg[prefix].closed += r.count;
+            }
+          }
+        }
+        const monthLines = months.filter(m => monthAgg[m]).map(m =>
+          m.substring(5) + '月：新增 ' + monthAgg[m].created + '，关闭 ' + monthAgg[m].closed
+        );
+        // 重大案例
+        const majorCases = closedRecs.filter(r => r.severity === 'major' && r.rootCause);
+        const caseLines = majorCases.slice(0, 5).map((r, i) => {
+          const ty = miscTypes.find(t => t.id === r.typeId);
+          return (i + 1) + '. ' + r.occurredAt + ' | ' + (ty ? ty.name : '未知') +
+            '\n   根因：' + (r.rootCause || '-') + '\n   措施：' + (r.measures || '-') +
+            '\n   效果：' + (r.effect || '-') + '\n   避免损失：' + (r.lossAvoided || '-');
+        });
+        const period = args.period || '';
+        let report = (period ? period + '工作汇报大纲' : '工作汇报大纲') + '\n' + '━'.repeat(30) + '\n\n';
+        report += '📊 工作量总览\n  累计记录：' + totalRecs + ' 条，关闭率 ' + closeRate + '%，平均关闭周期 ' + avgCloseDays + ' 天\n\n';
+        if (typeSummary.length) report += '📂 分类分布\n  ' + typeSummary.join(' | ') + '\n\n';
+        if (monthLines.length) report += '📈 月度趋势\n  ' + monthLines.join('\n  ') + '\n\n';
+        if (caseLines.length) report += '🔴 重大案例 (' + caseLines.length + ' 个)\n' + caseLines.join('\n\n') + '\n\n';
+        report += '💡 总结建议：请结合上述数据与实际情况撰写总结与展望。';
+        return { ok: true, report };
       }
       case 'summarize_case': {
-        return await handleSummarizeCase(args);
+        const recId = args.recordId;
+        const rec = miscRecords.find(r => r.id === recId);
+        if (!rec) return { ok: false, message: '找不到记录 id=' + recId + '。先用 query_misc_records 获取记录列表找到目标 id。' };
+        const ty = miscTypes.find(t => t.id === rec.typeId);
+        const summary = '📋 案例总结\n' + '━'.repeat(20) + '\n\n' +
+          '类型：' + (ty ? ty.icon + ' ' + ty.name : '未知') + '\n' +
+          '日期：' + (rec.occurredAt || '-') + '\n' +
+          '数量：' + rec.count + (ty ? ' ' + ty.unit : '') + '\n' +
+          '严重程度：' + (rec.severity === 'major' ? '重大' : rec.severity === 'minor' ? '轻微' : '一般') + '\n' +
+          '状态：' + (rec.status === 'closed' ? '已关闭 (' + (rec.closeDate || '') + ')' : '处理中') + '\n\n' +
+          '🔍 根因分析\n' + (rec.rootCause || '（未填写）') + '\n\n' +
+          '🔧 采取措施\n' + (rec.measures || '（未填写）') + '\n\n' +
+          '✅ 效果验证\n' + (rec.effect || '（未填写）') + '\n\n' +
+          '💰 避免损失\n' + (rec.lossAvoided || '（未填写）');
+        return { ok: true, summary };
       }
       case 'run_python': {
         if(!_pyodide) return { ok:false, message:'高级分析未启用。请用户点对话框里的「⚡ 启用高级分析」按钮（首次约下载 35MB）。' };
@@ -6324,6 +7229,59 @@ async function executeAITool(name, args) {
           const out = await runUserPython(args.code || '');
           return { ok:true, stdout: out.stdout.slice(0, 4000), files: out.files, ranCode: args.code };
         } catch(e){ return { ok:false, message:'Python 执行出错：'+String(e && e.message || e) }; }
+      }
+      case 'list_projects': {
+        let list = projects.slice();
+        if (args.status && args.status !== 'all') list = list.filter(p => p.status === args.status);
+        return { ok:true, count: list.length, projects: list.map(p => ({ id:p.id, name:p.name, icon:p.icon, status:p.status, description:p.description })) };
+      }
+      case 'get_project_detail': {
+        const p = projects.find(x => x.id === args.projectId);
+        if (!p) return { ok:false, message:'找不到项目 id='+args.projectId };
+        const links = getProjectLinks(p.id);
+        const relatedDecs = decisions.filter(d => d.projectId === p.id);
+        return { ok:true, project: p, links: { taskCount:links.tasks.length, miscTypeCount:links.miscTypes.length, issueCount:links.issues.length, mindmapCount:links.mindmaps.length }, decisions: relatedDecs.slice(0, 10).map(d => ({ id:d.id, title:d.title, date:d.date, status:d.status })) };
+      }
+      case 'list_decisions': {
+        let list = decisions.slice();
+        if (args.status) list = list.filter(d => d.status === args.status);
+        if (args.projectId) list = list.filter(d => d.projectId === args.projectId);
+        if (args.search) { const q = args.search.toLowerCase(); list = list.filter(d => d.title.toLowerCase().includes(q) || (d.decision||'').toLowerCase().includes(q)); }
+        list.sort((a,b) => (b.date||'').localeCompare(a.date||''));
+        return { ok:true, count: list.length, decisions: list.slice(0, 30).map(d => ({ id:d.id, title:d.title, date:d.date, status:d.status, decision:d.decision, tags:d.tags })) };
+      }
+      case 'add_decision': {
+        if (!args.title || !args.decision) return { ok:false, message:'缺少标题或决策内容' };
+        const d = await addDecision({ title:args.title, decision:args.decision, context:args.context||'', problem:args.problem||'', rationale:args.rationale||'', date:args.date||undefined, status:args.status||'decided', tags:args.tags||[], projectId:args.projectId||null });
+        return { ok:true, id:d.id, title:d.title };
+      }
+      case 'list_knowledge': {
+        let list = knowledgeCards.slice();
+        if (args.category) list = list.filter(k => k.category === args.category);
+        if (args.search) { const q = args.search.toLowerCase(); list = list.filter(k => k.title.toLowerCase().includes(q) || (k.content||'').toLowerCase().includes(q)); }
+        list.sort((a,b) => (b.createdAt||'').localeCompare(a.createdAt||''));
+        return { ok:true, count: list.length, cards: list.slice(0, 30).map(k => ({ id:k.id, title:k.title, category:k.category, tags:k.tags, content:(k.content||'').substring(0, 200) })) };
+      }
+      case 'add_knowledge': {
+        if (!args.title || !args.content) return { ok:false, message:'缺少标题或内容' };
+        const k = await addKnowledgeCard({ title:args.title, content:args.content, category:args.category||'', tags:args.tags||[] });
+        return { ok:true, id:k.id, title:k.title };
+      }
+      case 'get_daily_journal': {
+        const dateStr = args.date || toDateStr(new Date());
+        const j = loadDailyJournal(dateStr);
+        return { ok:true, date: j.date, content: j.content, mood: j.mood, highlights: j.highlights, metrics: j.metrics };
+      }
+      case 'generate_report_narrative': {
+        // Build a stats dump and return it — the AI in the next turn will synthesize it
+        const todayStr = toDateStr(new Date());
+        const taskStats = '任务：共' + todos.length + '个，完成' + todos.filter(t => t.status==='completed').length + '个，进行中' + todos.filter(t => t.status==='in-progress').length + '个';
+        const miscStats = '杂项记录：共' + miscRecords.length + '条，已关闭' + miscRecords.filter(r => r.status==='closed').length + '条';
+        const issueStats = '问题：共' + (issues?issues.length:0) + '个，未解决' + (issues?issues.filter(x => x.status==='open').length:0) + '个';
+        const decStats = '决策：共' + decisions.length + '条';
+        const projStats = '活跃项目：' + projects.filter(p => p.status==='active').length + '个';
+        const narrative = '基于所有工作数据整合如下：\n' + [taskStats, miscStats, issueStats, decStats, projStats].join('\n') + '\n\n请据此生成一段工作总结。';
+        return { ok:true, narrative, note:'以上为后台整合的统计数据，AI 将在下一轮对话中基于此生成叙事文案。' };
       }
     }
     return { ok:false, message:'未知工具 '+name };
@@ -6373,6 +7331,12 @@ function aiConfirmText(name, args) {
       return '将导出处理结果 Excel：《'+(args.filename||'处理结果')+'》';
     case 'generate_chart':
       return '将生成图表：《'+(args.title||args.filename||'chart')+'》（'+(args.type||'bar')+'）';
+    case 'add_decision':
+      return '记录决策：「'+(args.title||'')+'」';
+    case 'add_knowledge':
+      return '新建知识卡片：「'+(args.title||'')+'」';
+    case 'generate_report_narrative':
+      return '将生成'+(args.period||'本月')+'工作总结文案';
   }
   return name;
 }
@@ -6555,6 +7519,8 @@ function renderView(view) {
     case 'report': renderReport(); break;
     case 'issues': renderIssues(); break;
     case 'mindmap': renderMindmap(); break;
+    case 'projects': renderProjects(); break;
+    case 'knowledge': renderKnowledge(); break;
   }
 }
 
@@ -6586,6 +7552,11 @@ function updateNavBadges() {
   if (miscBadge) {
     const todayMisc = miscRecords.filter(r => r.occurredAt === todayStr).reduce((s, r) => s + r.count, 0);
     miscBadge.textContent = todayMisc;
+  }
+  const projBadge = document.getElementById('navCountProjects');
+  if (projBadge) {
+    const activeProjects = projects ? projects.filter(p => p.status === 'active').length : 0;
+    projBadge.textContent = activeProjects;
   }
 }
 
@@ -6901,9 +7872,11 @@ document.addEventListener('keydown', function(e) {
       else if (ev.key === 'o') switchView('list');
       else if (ev.key === 'c') switchView('calendar');
       else if (ev.key === 'g') switchView('gantt');
+      else if (ev.key === 'p') switchView('projects');
       else if (ev.key === 'i') switchView('issues');
       else if (ev.key === 'm') switchView('mindmap');
       else if (ev.key === 'x') switchView('misc');
+      else if (ev.key === 'k') switchView('knowledge');
       else if (ev.key === 'r') switchView('report');
       else if (ev.key === 'a') openAIPopup();
     };
@@ -7016,6 +7989,349 @@ async function fixParentStatuses() {
   await saveTodos();
 }
 
+// ============================================================
+// RENDER: Projects
+// ============================================================
+let projectFilterStatus = 'all';
+
+function renderProjects() {
+  const c = document.getElementById('projectsContent');
+  if (!c) return;
+  let list = projects.slice();
+  if (projectFilterStatus !== 'all') list = list.filter(p => p.status === projectFilterStatus);
+  list.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+
+  // Bind filter buttons
+  document.querySelectorAll('#projectStatusFilter .filter-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.status === projectFilterStatus);
+  });
+
+  if (list.length === 0) {
+    c.innerHTML = '<div class="report-empty">还没有项目。<br>点击"+ 新建项目"创建第一个项目，把任务和记录关联起来。</div>';
+    return;
+  }
+
+  let html = '<div class="misc-card-grid">';
+  for (const p of list) {
+    const links = getProjectLinks(p.id);
+    const taskCount = links.tasks.length;
+    const miscCount = links.miscTypes.length;
+    const issueCount = links.issues.length;
+    const decCount = decisions.filter(d => d.projectId === p.id).length;
+    const statParts = [];
+    if (taskCount > 0) statParts.push(taskCount + ' 任务');
+    if (miscCount > 0) statParts.push(miscCount + ' 类型');
+    if (issueCount > 0) statParts.push(issueCount + ' 问题');
+    if (decCount > 0) statParts.push(decCount + ' 决策');
+    const statText = statParts.length > 0 ? statParts.join(' · ') : '暂无关联';
+    const statusLabel = p.status === 'active' ? '进行中' : p.status === 'completed' ? '已完成' : '已归档';
+    const statusCls = p.status === 'active' ? 'dash-badge dash-badge-open' : p.status === 'completed' ? 'dash-badge dash-badge-closed' : '';
+    html += `
+      <div class="misc-card" style="border-left-color:${escHtml(p.color)};cursor:pointer;" onclick="openProjectModal('${p.id}')">
+        <div class="misc-card-header">
+          <span class="misc-card-icon">${escHtml(p.icon)}</span>
+          <span class="misc-card-name">${escHtml(p.name)}</span>
+          <button class="misc-card-menu" onclick="event.stopPropagation();openProjectModal('${p.id}')" title="编辑">⋯</button>
+        </div>
+        <div class="misc-card-count" style="font-size:13px;color:var(--text-secondary);">${escHtml(statText)}</div>
+        <div class="misc-card-meta"><span class="${statusCls}">${statusLabel}</span>${p.startDate ? ' · ' + p.startDate : ''}${p.endDate ? ' ~ ' + p.endDate : ''}</div>
+      </div>`;
+  }
+  html += `<div class="misc-card-add" onclick="openProjectModal(null)">+ 新建项目</div></div>`;
+  c.innerHTML = html;
+}
+
+// Project status filter click handling
+document.addEventListener('click', function(e) {
+  const btn = e.target.closest('#projectStatusFilter .filter-btn');
+  if (btn) {
+    projectFilterStatus = btn.dataset.status;
+    renderProjects();
+  }
+});
+
+function openProjectModal(id) {
+  const p = id ? projects.find(x => x.id === id) : null;
+  const isNew = !p;
+  const html = `
+    <div class="misc-modal-overlay show" id="projectModalOverlay" onclick="if(event.target===this)closeProjectModal()">
+      <div class="misc-modal" onclick="event.stopPropagation()">
+        <div class="modal-actions" style="margin-bottom:16px;">
+          <strong style="font-size:16px;">${isNew ? '新建项目' : '编辑项目'}</strong>
+          <button class="btn btn-ghost btn-sm" onclick="closeProjectModal()">✕</button>
+        </div>
+        <div class="field"><label>名称</label><input id="projName" value="${escHtml(p?p.name:'')}" placeholder="项目名称"></div>
+        <div class="field"><label>描述</label><textarea id="projDesc" rows="2">${escHtml(p?p.description:'')}</textarea></div>
+        <div class="field"><label>图标</label><input id="projIcon" value="${escHtml(p?p.icon:'📁')}" placeholder="📁"></div>
+        <div class="field"><label>开始日期</label><input type="date" id="projStart" value="${p&&p.startDate?p.startDate:''}"></div>
+        <div class="field"><label>结束日期</label><input type="date" id="projEnd" value="${p&&p.endDate?p.endDate:''}"></div>
+        <div class="field"><label>颜色</label>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">${MISC_COLOR_PALETTE.map(clr =>
+            '<span style="display:inline-block;width:28px;height:28px;border-radius:50%;background:'+clr+';cursor:pointer;border:2px solid '+(p&&p.color===clr?'var(--text)':'transparent')+';" onclick="document.getElementById(\'projColor\').value=\''+clr+'\';this.parentElement.querySelectorAll(\'span\').forEach(s=>s.style.borderColor=\'transparent\');this.style.borderColor=\'var(--text)\';"></span>'
+          ).join('')}</div>
+          <input type="hidden" id="projColor" value="${escHtml(p?p.color:MISC_COLOR_PALETTE[0])}">
+        </div>
+        <div class="field"><label>状态</label>
+          <select id="projStatus">
+            <option value="active"${p&&p.status==='active'?' selected':''}>进行中</option>
+            <option value="completed"${p&&p.status==='completed'?' selected':''}>已完成</option>
+            <option value="archived"${p&&p.status==='archived'?' selected':''}>已归档</option>
+          </select>
+        </div>
+        <div class="modal-actions" style="margin-top:12px;">
+          ${!isNew ? '<button class="btn btn-danger btn-sm" style="margin-right:auto;" onclick="deleteProject(\''+p.id+'\');closeProjectModal();">删除</button>' : ''}
+          <button class="btn btn-ghost btn-sm" onclick="closeProjectModal()">取消</button>
+          <button class="btn btn-primary btn-sm" onclick="saveProject('${isNew?'':'id'}')">${isNew?'创建':'保存'}</button>
+        </div>
+      </div>
+    </div>`;
+  const wrap = document.createElement('div');
+  wrap.id = 'projectModalWrap';
+  wrap.innerHTML = html;
+  document.body.appendChild(wrap);
+  // Store edit id
+  wrap._editId = id;
+}
+
+function closeProjectModal() {
+  const wrap = document.getElementById('projectModalWrap');
+  if (wrap) wrap.remove();
+}
+
+async function saveProject(editId) {
+  const wrap = document.getElementById('projectModalWrap');
+  if (!wrap) return;
+  const name = document.getElementById('projName').value.trim();
+  if (!name) { showToast('请填写项目名称'); return; }
+  const data = {
+    name,
+    description: document.getElementById('projDesc').value.trim(),
+    icon: document.getElementById('projIcon').value.trim() || '📁',
+    startDate: document.getElementById('projStart').value || null,
+    endDate: document.getElementById('projEnd').value || null,
+    color: document.getElementById('projColor').value,
+    status: document.getElementById('projStatus').value
+  };
+  if (editId && editId !== 'id') {
+    await updateProject(editId, data);
+  } else {
+    await addProject(data);
+  }
+  closeProjectModal();
+  renderProjects();
+  updateNavBadges();
+}
+
+// ============================================================
+// RENDER: Knowledge Base
+// ============================================================
+let kbTab = 'decisions';
+
+function switchKbTab(tab) {
+  kbTab = tab;
+  // Update buttons
+  document.querySelectorAll('[data-kb-tab]').forEach(b => b.classList.toggle('active', b.dataset.kbTab === tab));
+  // Update add button
+  const btn = document.getElementById('kbBtnAdd');
+  if (btn) {
+    btn.textContent = tab === 'decisions' ? '+ 新决策' : '+ 新卡片';
+    btn.onclick = tab === 'decisions' ? function(){openDecisionModal(null);} : function(){openKnowledgeModal(null);};
+  }
+  renderKnowledge();
+}
+
+function renderKnowledge() {
+  if (kbTab === 'decisions') renderDecisionsList();
+  else renderKnowledgeCardsList();
+}
+
+function renderDecisionsList() {
+  const c = document.getElementById('kbDecisionsList');
+  const cardsC = document.getElementById('kbCardsList');
+  if (c) c.style.display = '';
+  if (cardsC) cardsC.style.display = 'none';
+
+  if (!c) return;
+  let list = decisions.slice();
+  list.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  if (list.length === 0) {
+    c.innerHTML = '<div class="report-empty">还没有决策记录。<br>记录项目中的关键决策，方便汇报时回顾。</div>';
+    return;
+  }
+  const statusMap = { proposed: '提议', decided: '已决定', implemented: '已实施', deprecated: '已废弃' };
+  let html = '';
+  for (const d of list) {
+    const proj = d.projectId ? projects.find(p => p.id === d.projectId) : null;
+    html += `
+      <div class="case-card" style="cursor:pointer;" onclick="openDecisionModal('${d.id}')">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+          <strong style="font-size:14px;">${escHtml(d.title)}</strong>
+          <span class="dash-badge ${d.status==='decided'||d.status==='implemented'?'dash-badge-closed':'dash-badge-open'}">${statusMap[d.status]||d.status}</span>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">${d.date}${proj?' · 📁 '+escHtml(proj.name):''}</div>
+        ${d.decision ? '<div style="font-size:13px;color:var(--text-secondary);margin-top:6px;">决策：'+escHtml(d.decision)+'</div>' : ''}
+        ${d.tags && d.tags.length ? '<div style="margin-top:6px;">'+d.tags.map(t=>'<span class="tag-chip">'+escHtml(t)+'</span>').join(' ')+'</div>' : ''}
+      </div>`;
+  }
+  c.innerHTML = html;
+}
+
+function renderKnowledgeCardsList() {
+  const c = document.getElementById('kbCardsList');
+  const decsC = document.getElementById('kbDecisionsList');
+  if (c) c.style.display = '';
+  if (decsC) decsC.style.display = 'none';
+
+  if (!c) return;
+  let list = knowledgeCards.slice();
+  list.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+  if (list.length === 0) {
+    c.innerHTML = '<div class="report-empty">还没有知识卡片。<br>把工作中的 know-how 沉淀下来。</div>';
+    return;
+  }
+  let html = '<div class="misc-card-grid">';
+  for (const k of list) {
+    html += `
+      <div class="misc-card" style="cursor:pointer;" onclick="openKnowledgeModal('${k.id}')">
+        <div class="misc-card-header">
+          <span class="misc-card-name">${escHtml(k.title)}</span>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);">${k.category ? escHtml(k.category)+' · ' : ''}${k.tags ? k.tags.map(t=>escHtml(t)).join(', ') : ''}</div>
+        <div style="font-size:12px;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml((k.content||'').substring(0, 80))}</div>
+      </div>`;
+  }
+  html += `<div class="misc-card-add" onclick="openKnowledgeModal(null)">+ 新建卡片</div></div>`;
+  c.innerHTML = html;
+}
+
+// Decision Modal
+function openDecisionModal(id) {
+  const d = id ? decisions.find(x => x.id === id) : null;
+  const isNew = !d;
+  const statusOpts = ['proposed','decided','implemented','deprecated'].map(s =>
+    '<option value="'+s+'"'+(d&&d.status===s?' selected':'')+'>'+({proposed:'提议',decided:'已决定',implemented:'已实施',deprecated:'已废弃'}[s])+'</option>'
+  ).join('');
+  const projOpts = '<option value="">（无）</option>' + projects.filter(p=>p.status==='active').map(p=>'<option value="'+p.id+'"'+(d&&d.projectId===p.id?' selected':'')+'>'+escHtml(p.icon+' '+p.name)+'</option>').join('');
+  const html = `
+    <div class="misc-modal-overlay show" id="decisionModalOverlay" onclick="if(event.target===this)closeDecisionModal()">
+      <div class="misc-modal" onclick="event.stopPropagation()" style="max-height:90vh;overflow-y:auto;">
+        <div class="modal-actions" style="margin-bottom:16px;">
+          <strong style="font-size:16px;">${isNew ? '新决策' : '编辑决策'}</strong>
+          <button class="btn btn-ghost btn-sm" onclick="closeDecisionModal()">✕</button>
+        </div>
+        <div class="field"><label>标题</label><input id="decTitle" value="${escHtml(d?d.title:'')}"></div>
+        <div class="field"><label>日期</label><input type="date" id="decDate" value="${d?d.date:toDateStr(new Date())}"></div>
+        <div class="field"><label>背景 (Context)</label><textarea id="decContext" rows="2">${escHtml(d?d.context:'')}</textarea></div>
+        <div class="field"><label>问题 (Problem)</label><textarea id="decProblem" rows="2">${escHtml(d?d.problem:'')}</textarea></div>
+        <div class="field"><label>决策</label><textarea id="decDecision" rows="2">${escHtml(d?d.decision:'')}</textarea></div>
+        <div class="field"><label>理由</label><textarea id="decRationale" rows="2">${escHtml(d?d.rationale:'')}</textarea></div>
+        <div class="field"><label>影响</label><textarea id="decConsequences" rows="2">${escHtml(d?d.consequences:'')}</textarea></div>
+        <div class="field"><label>状态</label><select id="decStatus">${statusOpts}</select></div>
+        <div class="field"><label>标签 (逗号分隔)</label><input id="decTags" value="${d&&d.tags?d.tags.join(','):''}"></div>
+        <div class="field"><label>关联项目</label><select id="decProjectId">${projOpts}</select></div>
+        <div class="modal-actions" style="margin-top:12px;">
+          ${!isNew ? '<button class="btn btn-danger btn-sm" style="margin-right:auto;" onclick="deleteDecision(\''+d.id+'\');closeDecisionModal();">删除</button>' : ''}
+          <button class="btn btn-ghost btn-sm" onclick="closeDecisionModal()">取消</button>
+          <button class="btn btn-primary btn-sm" onclick="saveDecision('${isNew?'':'id'}')">${isNew?'创建':'保存'}</button>
+        </div>
+      </div>
+    </div>`;
+  const wrap = document.createElement('div');
+  wrap.id = 'decisionModalWrap';
+  wrap.innerHTML = html;
+  document.body.appendChild(wrap);
+  wrap._editId = id;
+}
+
+function closeDecisionModal() {
+  const wrap = document.getElementById('decisionModalWrap');
+  if (wrap) wrap.remove();
+}
+
+async function saveDecision(editId) {
+  const wrap = document.getElementById('decisionModalWrap');
+  if (!wrap) return;
+  const title = document.getElementById('decTitle').value.trim();
+  if (!title) { showToast('请填写标题'); return; }
+  const tagsStr = document.getElementById('decTags').value.trim();
+  const data = {
+    title,
+    date: document.getElementById('decDate').value,
+    context: document.getElementById('decContext').value.trim(),
+    problem: document.getElementById('decProblem').value.trim(),
+    decision: document.getElementById('decDecision').value.trim(),
+    rationale: document.getElementById('decRationale').value.trim(),
+    consequences: document.getElementById('decConsequences').value.trim(),
+    status: document.getElementById('decStatus').value,
+    tags: tagsStr ? tagsStr.split(',').map(s=>s.trim()).filter(Boolean) : [],
+    projectId: document.getElementById('decProjectId').value || null
+  };
+  if (editId && editId !== 'id') {
+    await updateDecision(editId, data);
+  } else {
+    await addDecision(data);
+  }
+  closeDecisionModal();
+  renderKnowledge();
+}
+
+// Knowledge Card Modal
+function openKnowledgeModal(id) {
+  const k = id ? knowledgeCards.find(x => x.id === id) : null;
+  const isNew = !k;
+  const html = `
+    <div class="misc-modal-overlay show" id="knowledgeModalOverlay" onclick="if(event.target===this)closeKnowledgeModal()">
+      <div class="misc-modal" onclick="event.stopPropagation()">
+        <div class="modal-actions" style="margin-bottom:16px;">
+          <strong style="font-size:16px;">${isNew ? '新知识卡片' : '编辑知识卡片'}</strong>
+          <button class="btn btn-ghost btn-sm" onclick="closeKnowledgeModal()">✕</button>
+        </div>
+        <div class="field"><label>标题</label><input id="knTitle" value="${escHtml(k?k.title:'')}"></div>
+        <div class="field"><label>分类</label><input id="knCategory" value="${escHtml(k?k.category:'')}" placeholder="如：前端、后端、DevOps"></div>
+        <div class="field"><label>标签 (逗号分隔)</label><input id="knTags" value="${k&&k.tags?k.tags.join(','):''}"></div>
+        <div class="field"><label>内容 (支持 Markdown)</label><textarea id="knContent" rows="8">${escHtml(k?k.content:'')}</textarea></div>
+        <div class="field"><label>来源</label><input id="knSource" value="${escHtml(k?k.source:'')}" placeholder="来自什么项目/什么地方学到的"></div>
+        <div class="modal-actions" style="margin-top:12px;">
+          ${!isNew ? '<button class="btn btn-danger btn-sm" style="margin-right:auto;" onclick="deleteKnowledgeCard(\''+k.id+'\');closeKnowledgeModal();">删除</button>' : ''}
+          <button class="btn btn-ghost btn-sm" onclick="closeKnowledgeModal()">取消</button>
+          <button class="btn btn-primary btn-sm" onclick="saveKnowledgeCard('${isNew?'':'id'}')">${isNew?'创建':'保存'}</button>
+        </div>
+      </div>
+    </div>`;
+  const wrap = document.createElement('div');
+  wrap.id = 'knowledgeModalWrap';
+  wrap.innerHTML = html;
+  document.body.appendChild(wrap);
+  wrap._editId = id;
+}
+
+function closeKnowledgeModal() {
+  const wrap = document.getElementById('knowledgeModalWrap');
+  if (wrap) wrap.remove();
+}
+
+async function saveKnowledgeCard(editId) {
+  const wrap = document.getElementById('knowledgeModalWrap');
+  if (!wrap) return;
+  const title = document.getElementById('knTitle').value.trim();
+  if (!title) { showToast('请填写标题'); return; }
+  const tagsStr = document.getElementById('knTags').value.trim();
+  const data = {
+    title,
+    category: document.getElementById('knCategory').value.trim(),
+    content: document.getElementById('knContent').value,
+    tags: tagsStr ? tagsStr.split(',').map(s=>s.trim()).filter(Boolean) : [],
+    source: document.getElementById('knSource').value.trim()
+  };
+  if (editId && editId !== 'id') {
+    await updateKnowledgeCard(editId, data);
+  } else {
+    await addKnowledgeCard(data);
+  }
+  closeKnowledgeModal();
+  renderKnowledge();
+}
+
 async function initApp() {
   document.getElementById('fabBtn').title = `快速添加 (${MOD_LABEL}+K)`;
 
@@ -7029,6 +8345,19 @@ async function initApp() {
     updateNavBadges();
   }).catch(e => {
     console.warn('loadMiscData failed:', e);
+  });
+
+  // Kick off new data models load in parallel (projects, decisions, knowledge)
+  const newDataPromise = Promise.all([
+    loadProjectsCloud(),
+    loadDecisionsCloud(),
+    loadKnowledgeCloud()
+  ]).then(() => {
+    if (currentView === 'projects' || currentView === 'knowledge') {
+      renderView(currentView);
+    }
+  }).catch(e => {
+    console.warn('newDataPromise load failed:', e);
   });
 
   try {
