@@ -2026,6 +2026,111 @@ body::before {
 .view-header h2 {
   font-size: 28px; font-weight: 700; letter-spacing: -0.03em;
 }
+
+/* ============================================================
+   WELCOME PAGE — Aurora Hero Style
+   ============================================================ */
+@property --au { syntax: "<color>"; inherits: true; initial-value: #9b87f5; }
+@keyframes welcomeAurora {
+  0% { --au: #9b87f5; } 33% { --au: #5af5d2; }
+  66% { --au: #8aa0ff; } 100% { --au: #c77dff; }
+}
+@media (prefers-reduced-motion: reduce) { #view-welcome { animation: none; } }
+
+#view-welcome {
+  background: #0a0616;
+  animation: welcomeAurora 16s ease-in-out infinite alternate;
+  position: relative; overflow: hidden;
+  align-items: center; justify-content: center;
+}
+#view-welcome::before {
+  content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(135% 100% at 50% -22%, transparent 38%, color-mix(in srgb, var(--au) 52%, transparent) 70%, transparent 97%),
+    radial-gradient(58% 48% at 82% 6%, color-mix(in srgb, var(--au) 16%, transparent), transparent 70%),
+    radial-gradient(54% 46% at 13% 42%, color-mix(in srgb, var(--au) 9%, transparent), transparent 72%);
+}
+/* Orb */
+#view-welcome::after {
+  content: ""; position: absolute; left: 50%; bottom: -46%;
+  width: min(900px, 120vw); height: min(900px, 120vw);
+  transform: translateX(-50%); z-index: 0; pointer-events: none;
+  background: radial-gradient(circle at 50% 0, color-mix(in srgb, var(--au) 22%, transparent), color-mix(in srgb, var(--au) 0%, transparent) 42%);
+  border-radius: 50%;
+}
+
+.welcome-content {
+  position: relative; z-index: 3; width: 100%; max-width: 780px;
+  padding: 40px 24px; text-align: center; overflow-y: auto; max-height: 100vh;
+}
+.welcome-pill {
+  display: inline-block; margin-bottom: 20px;
+  border: 1px solid color-mix(in srgb, var(--au) 50%, transparent);
+  border-radius: 999px; padding: 6px 16px;
+  font-size: 11px; letter-spacing: 2px; font-family: ui-monospace, Menlo, monospace;
+  color: color-mix(in srgb, var(--au) 80%, #fff);
+}
+.welcome-title {
+  font-size: clamp(28px, 5vw, 52px); font-weight: 300; line-height: 1.12;
+  letter-spacing: -.5px; color: #fff; margin-bottom: 12px;
+}
+.welcome-title .accent { color: color-mix(in srgb, var(--au) 82%, #fff); font-weight: 500; }
+.welcome-date {
+  font-size: 15px; color: rgba(255,255,255,.55); margin-bottom: 32px;
+}
+.welcome-date .weather { color: color-mix(in srgb, var(--au) 78%, #fff); }
+
+.welcome-stats {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
+  margin-bottom: 24px; max-width: 600px; margin-left: auto; margin-right: auto;
+}
+.welcome-stat-card {
+  background: rgba(20,14,40,.55); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border: 1px solid color-mix(in srgb, var(--au) 20%, transparent);
+  border-radius: 16px; padding: 18px 12px; text-align: center;
+}
+.welcome-stat-num { font-size: 28px; font-weight: 700; color: #fff; }
+.welcome-stat-label { font-size: 11px; color: rgba(255,255,255,.5); margin-top: 4px; text-transform: uppercase; letter-spacing: .08em; }
+
+.welcome-charts {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+  max-width: 660px; margin: 0 auto 28px;
+}
+.welcome-chart-card {
+  background: rgba(20,14,40,.55); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border: 1px solid color-mix(in srgb, var(--au) 20%, transparent);
+  border-radius: 16px; padding: 16px;
+}
+.welcome-chart-card h3 {
+  font-size: 12px; font-weight: 600; color: rgba(255,255,255,.55);
+  text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px;
+}
+.welcome-chart-wrap { position: relative; height: 140px; }
+.welcome-chart-wrap canvas { width: 100% !important; height: 100% !important; }
+
+.welcome-luck {
+  font-size: 18px; color: color-mix(in srgb, var(--au) 78%, #fff);
+  margin-bottom: 28px; font-weight: 300;
+}
+
+.welcome-cta {
+  position: relative; overflow: hidden;
+  display: inline-block; border-radius: 999px;
+  border: 1px solid var(--au);
+  background: linear-gradient(to bottom, rgba(255,255,255,.1), rgba(255,255,255,.04));
+  padding: 14px 36px; color: #fff; font-size: 15px; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+  box-shadow: 0 4px 24px -4px var(--au);
+  transition: transform .2s, box-shadow .3s;
+}
+.welcome-cta:hover { transform: scale(1.02); box-shadow: 0 6px 32px -2px var(--au); }
+.welcome-cta:active { transform: scale(.985); }
+
+@media (max-width: 600px) {
+  .welcome-stats { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .welcome-stat-num { font-size: 22px; }
+  .welcome-charts { grid-template-columns: 1fr; }
+}
 </style>
 <script>
   /* 防闪烁：首屏绘制前就定主题 */
@@ -2145,8 +2250,21 @@ body::before {
 
   <!-- Main Area -->
   <main class="main-area" id="mainArea">
+    <!-- View: Welcome -->
+    <div class="view-panel" id="view-welcome" style="display:flex;">
+      <div class="welcome-content">
+        <div class="welcome-pill">Helix · 工作操作系统</div>
+        <h1 class="welcome-title">Welcome back, <span class="accent">gentlemen!</span></h1>
+        <div class="welcome-date" id="welcomeDateLine">加载中…</div>
+        <div class="welcome-stats" id="welcomeStats"></div>
+        <div class="welcome-charts" id="welcomeCharts"></div>
+        <div class="welcome-luck" id="welcomeLuck"></div>
+        <button class="welcome-cta" onclick="enterWorkspace()">进入工作台 →</button>
+      </div>
+    </div>
+
     <!-- View: Task List -->
-    <div class="view-panel" id="view-list" style="display:flex;">
+    <div class="view-panel" id="view-list" style="display:none;">
       <div class="view-header">
         <h2>总任务列表</h2>
         <div class="view-actions">
@@ -4068,7 +4186,7 @@ function updateFocusPresets(min) {
 // ============================================================
 // STATE
 // ============================================================
-let currentView = 'list';
+let currentView = 'welcome';
 let detailTaskId = null;
 let expandedIds = new Set();
 let calendarYear, calendarMonth;
@@ -7511,6 +7629,7 @@ function switchView(view) {
 
 function renderView(view) {
   switch (view) {
+    case 'welcome': renderWelcome(); break;
     case 'list': renderList(); break;
     case 'daily': renderDaily(); break;
     case 'calendar': renderCalendar(); break;
@@ -8332,6 +8451,180 @@ async function saveKnowledgeCard(editId) {
   renderKnowledge();
 }
 
+// ============================================================
+// WELCOME PAGE
+// ============================================================
+let welcomeWeather = null; // cached weather data
+
+function enterWorkspace() {
+  switchView('list');
+}
+
+async function fetchWeather() {
+  // Check cache (30 min)
+  try {
+    const cached = JSON.parse(localStorage.getItem('helix_weather_cache') || 'null');
+    if (cached && cached.ts && (Date.now() - cached.ts < 30 * 60 * 1000)) {
+      return cached.data;
+    }
+  } catch {}
+
+  // Default fallback
+  let weather = { desc: '今日', emoji: '📅', temp: '', city: '' };
+
+  try {
+    // Get position (timeout 5s)
+    const pos = await new Promise((resolve, reject) => {
+      if (!navigator.geolocation) return reject(new Error('no geolocation'));
+      navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000, maximumAge: 600000 });
+    });
+    const { latitude, longitude } = pos.coords;
+
+    // Open-Meteo (free, no key)
+    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude.toFixed(2)}&longitude=${longitude.toFixed(2)}&current_weather=true&timezone=auto`);
+    if (!res.ok) throw new Error('API error');
+    const data = await res.json();
+    const cw = data.current_weather;
+    if (cw) {
+      const code = cw.weathercode;
+      const emojiMap = { 0: '☀️', 1: '🌤️', 2: '⛅', 3: '☁️', 45: '🌫️', 48: '🌫️', 51: '🌦️', 53: '🌦️', 55: '🌧️', 61: '🌧️', 63: '🌧️', 65: '🌧️', 71: '🌨️', 73: '🌨️', 75: '🌨️', 80: '🌦️', 81: '🌧️', 82: '⛈️', 95: '⛈️', 96: '⛈️', 99: '⛈️' };
+      const descMap = { 0: '晴朗', 1: '大部晴', 2: '多云', 3: '阴', 45: '雾', 48: '雾凇', 51: '小毛毛雨', 53: '毛毛雨', 55: '大毛毛雨', 61: '小雨', 63: '中雨', 65: '大雨', 71: '小雪', 73: '中雪', 75: '大雪', 80: '阵雨', 81: '大阵雨', 82: '暴阵雨', 95: '雷暴', 96: '雷暴+冰雹', 99: '强雷暴+冰雹' };
+      weather = { emoji: emojiMap[code] || '🌡️', desc: descMap[code] || '未知', temp: Math.round(cw.temperature) + '°C', city: '' };
+    }
+  } catch (e) {
+    console.warn('Weather fetch failed:', e.message || e);
+  }
+
+  // Cache
+  try { localStorage.setItem('helix_weather_cache', JSON.stringify({ ts: Date.now(), data: weather })); } catch {}
+  return weather;
+}
+
+function getTodayInfo() {
+  const now = new Date();
+  const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+  return {
+    dateStr: now.getFullYear() + '年' + (now.getMonth() + 1) + '月' + now.getDate() + '日',
+    weekDay: weekDays[now.getDay()]
+  };
+}
+
+async function renderWelcome() {
+  const todayInfo = getTodayInfo();
+
+  // Kick off weather fetch (don't block render)
+  const weatherPromise = fetchWeather();
+
+  // Compute stats
+  const totalTasks = todos.length;
+  const completedTasks = todos.filter(t => t.status === 'completed').length;
+  const inProgressTasks = todos.filter(t => t.status === 'in-progress').length;
+  const completionRate = totalTasks > 0 ? Math.round(completedTasks / totalTasks * 100) : 0;
+  const activeProjects = projects.filter(p => p.status === 'active').length;
+  const todayMisc = miscRecords.filter(r => r.occurredAt === toDateStr(new Date())).reduce((s, r) => s + r.count, 0);
+
+  // Render stats
+  document.getElementById('welcomeStats').innerHTML = `
+    <div class="welcome-stat-card">
+      <div class="welcome-stat-num">${inProgressTasks}</div>
+      <div class="welcome-stat-label">进行中任务</div>
+    </div>
+    <div class="welcome-stat-card">
+      <div class="welcome-stat-num">${completionRate}%</div>
+      <div class="welcome-stat-label">完成率</div>
+    </div>
+    <div class="welcome-stat-card">
+      <div class="welcome-stat-num">${activeProjects}</div>
+      <div class="welcome-stat-label">活跃项目</div>
+    </div>
+  `;
+
+  // Charts (two mini cards)
+  document.getElementById('welcomeCharts').innerHTML = `
+    <div class="welcome-chart-card">
+      <h3>📈 近期完成任务趋势</h3>
+      <div class="welcome-chart-wrap"><canvas id="welcomeTrendChart"></canvas></div>
+    </div>
+    <div class="welcome-chart-card">
+      <h3>📊 任务状态分布</h3>
+      <div class="welcome-chart-wrap"><canvas id="welcomeStatusChart"></canvas></div>
+    </div>
+  `;
+
+  // Luck message
+  const luckMessages = ['🍀 Good luck today!', '💪 You got this!', '✨ Make it happen!', '🚀 Let\'s go!', '⭐ Today is your day!'];
+  document.getElementById('welcomeLuck').textContent = luckMessages[new Date().getDay() % luckMessages.length];
+
+  // Wait for weather
+  const weather = await weatherPromise;
+  document.getElementById('welcomeDateLine').innerHTML =
+    todayInfo.dateStr + ' ' + todayInfo.weekDay + ' · <span class="weather">' + weather.emoji + ' ' + weather.desc + (weather.temp ? ' ' + weather.temp : '') + '</span>';
+
+  // Charts (after Chart.js is available)
+  await ensureChartJs();
+  if (typeof Chart !== 'undefined') renderWelcomeCharts();
+}
+
+function renderWelcomeCharts() {
+  if (typeof Chart === 'undefined') return;
+
+  // Destroy previous instances
+  ['welcomeTrendChart', 'welcomeStatusChart'].forEach(id => {
+    const inst = Chart.getChart(id);
+    if (inst) inst.destroy();
+  });
+
+  // Trend: last 7 days completed tasks
+  const days = [];
+  const completedByDay = [];
+  const now = new Date();
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+    const ds = toDateStr(d);
+    days.push((d.getMonth() + 1) + '/' + d.getDate());
+    completedByDay.push(todos.filter(t => t.status === 'completed' && t.updatedAt && t.updatedAt.substring(0, 10) === ds).length);
+  }
+
+  const trendCanvas = document.getElementById('welcomeTrendChart');
+  if (trendCanvas) {
+    new Chart(trendCanvas, {
+      type: 'line',
+      data: {
+        labels: days,
+        datasets: [{ data: completedByDay, borderColor: '#c77dff', backgroundColor: 'rgba(199,125,255,0.1)', fill: true, tension: .4, pointRadius: 3, pointBackgroundColor: '#c77dff', borderWidth: 2 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { color: 'rgba(255,255,255,.4)', font: { size: 10 } }, grid: { display: false } },
+          y: { ticks: { color: 'rgba(255,255,255,.4)', font: { size: 10 }, precision: 0 }, grid: { color: 'rgba(255,255,255,.06)' }, beginAtZero: true }
+        }
+      }
+    });
+  }
+
+  // Status: donut
+  const notStarted = todos.filter(t => t.status === 'not-started').length;
+  const inProgress = todos.filter(t => t.status === 'in-progress').length;
+  const completed = todos.filter(t => t.status === 'completed').length;
+
+  const statusCanvas = document.getElementById('welcomeStatusChart');
+  if (statusCanvas) {
+    new Chart(statusCanvas, {
+      type: 'doughnut',
+      data: {
+        labels: ['未开始', '进行中', '已完成'],
+        datasets: [{ data: [notStarted, inProgress, completed], backgroundColor: ['rgba(255,255,255,.15)', '#8aa0ff', '#5af5d2'], borderWidth: 0 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { color: 'rgba(255,255,255,.5)', font: { size: 10 }, padding: 12, usePointStyle: true } } }
+      }
+    });
+  }
+}
+
 async function initApp() {
   document.getElementById('fabBtn').title = `快速添加 (${MOD_LABEL}+K)`;
 
@@ -8366,7 +8659,7 @@ async function initApp() {
     await fixParentStatuses();
     getRootTasks().forEach(t => expandedIds.add(t.id));
     updateSidebarDate();
-    if (currentView === 'list') switchView('list');
+    if (currentView === 'welcome') switchView('welcome');
     renderSidebarTags();
     updateNavBadges();
     updateSidebarProgress();
